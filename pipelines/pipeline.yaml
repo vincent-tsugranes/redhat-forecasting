@@ -124,45 +124,47 @@ spec:
           value: "true"
 
     # Task 4: Update Kubernetes manifests (optional - for GitOps)
-    - name: update-manifests
-      runAfter:
-        - build-backend
-        - build-frontend
-      taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: git-cli
-          - name: namespace
-            value: openshift-pipelines
-      workspaces:
-        - name: source
-          workspace: shared-workspace
-      params:
-        - name: GIT_USER_NAME
-          value: "Tekton Pipeline"
-        - name: GIT_USER_EMAIL
-          value: "tekton@pipeline.local"
-        - name: GIT_SCRIPT
-          value: |
-            #!/bin/sh
-            set -e
-
-            cd $(workspaces.source.path)
-
-            # Update image tags in kustomization
-            sed -i "s|newTag:.*|newTag: \"$(params.image-tag)\"|g" k8s/overlays/dev/kustomization.yaml
-
-            # Check if there are changes
-            if git diff --quiet; then
-              echo "No changes to commit"
-              exit 0
-            fi
-
-            # Commit and push changes
-            git add k8s/overlays/dev/kustomization.yaml
-            git commit -m "Update image tags to $(params.image-tag) [skip ci]"
-
-            echo "Manifest updates complete. Push manually or configure git credentials."
+    # Disabled: Not needed when using 'latest' tag with ArgoCD auto-sync
+    # The git-cli task cleanup conflicts with using the shared workspace
+    # - name: update-manifests
+    #   runAfter:
+    #     - build-backend
+    #     - build-frontend
+    #   taskRef:
+    #     resolver: cluster
+    #     params:
+    #       - name: kind
+    #         value: task
+    #       - name: name
+    #         value: git-cli
+    #       - name: namespace
+    #         value: openshift-pipelines
+    #   workspaces:
+    #     - name: source
+    #       workspace: shared-workspace
+    #   params:
+    #     - name: GIT_USER_NAME
+    #       value: "Tekton Pipeline"
+    #     - name: GIT_USER_EMAIL
+    #       value: "tekton@pipeline.local"
+    #     - name: GIT_SCRIPT
+    #       value: |
+    #         #!/bin/sh
+    #         set -e
+    #
+    #         cd $(workspaces.source.path)
+    #
+    #         # Update image tags in kustomization
+    #         sed -i "s|newTag:.*|newTag: \"$(params.image-tag)\"|g" k8s/overlays/dev/kustomization.yaml
+    #
+    #         # Check if there are changes
+    #         if git diff --quiet; then
+    #           echo "No changes to commit"
+    #           exit 0
+    #         fi
+    #
+    #         # Commit and push changes
+    #         git add k8s/overlays/dev/kustomization.yaml
+    #         git commit -m "Update image tags to $(params.image-tag) [skip ci]"
+    #
+    #         echo "Manifest updates complete. Push manually or configure git credentials."
