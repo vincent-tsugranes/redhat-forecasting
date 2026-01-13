@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - configmap.yaml
+  - secret.yaml
+  - deployment.yaml
+  - service.yaml
+
+commonLabels:
+  app.kubernetes.io/name: backend
+  app.kubernetes.io/component: api
+  app.kubernetes.io/part-of: weather-dashboard
+
+images:
+  - name: quay.io/quarkus/ubi-quarkus-native-binary-s2i
+    newTag: "2.0"

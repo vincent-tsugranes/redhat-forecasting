@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: weather-dashboard-dev
+
+bases:
+  - ../../base
+
+namePrefix: dev-
+
+commonLabels:
+  environment: dev
+
+patchesStrategicMerge:
+  - backend-patch.yaml
+  - frontend-patch.yaml
+
+images:
+  - name: quay.io/quarkus/ubi-quarkus-native-binary-s2i
+    newTag: "2.0"
+  - name: nginx
+    newTag: "1.25-alpine"
