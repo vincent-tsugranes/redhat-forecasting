@@ -34,7 +34,7 @@ COPY --from=build --chown=quarkus:quarkus /app/target/quarkus-app/quarkus/ /app/
 RUN mkdir -p /app/data && chown quarkus:quarkus /app/data
 
 # Copy airports CSV file
-COPY --chown=quarkus:quarkus ../data/airports.csv /app/data/airports.csv
+COPY --chown=quarkus:quarkus airports.csv /app/data/airports.csv
 
 # Switch to non-root user
 USER quarkus
