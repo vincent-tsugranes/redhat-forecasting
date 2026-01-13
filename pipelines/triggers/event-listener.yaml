@@ -27,19 +27,6 @@ spec:
       template:
         ref: weather-dashboard-trigger-template
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: el-weather-dashboard-event-listener
-  namespace: weather-dashboard-dev
-spec:
-  ports:
-    - port: 8080
-      protocol: TCP
-      targetPort: 8080
-  selector:
-    eventlistener: weather-dashboard-event-listener
----
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:

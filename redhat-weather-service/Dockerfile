@@ -1,7 +1,7 @@
 # Multi-stage Dockerfile for Quarkus application
 
 # Build stage
-FROM maven:3.9-eclipse-temurin-21-alpine AS build
+FROM docker.io/library/maven:3.9-eclipse-temurin-21-alpine AS build
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests -B
 
 # Runtime stage
-FROM eclipse-temurin:21-jre-alpine
+FROM docker.io/library/eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 

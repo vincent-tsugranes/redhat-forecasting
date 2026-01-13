@@ -1,7 +1,7 @@
 # Multi-stage Dockerfile for Vue.js application
 
 # Build stage
-FROM node:20-alpine AS build
+FROM docker.io/library/node:20-alpine AS build
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ COPY . .
 RUN npm run build
 
 # Runtime stage
-FROM nginx:1.25-alpine
+FROM docker.io/library/nginx:1.25-alpine
 
 # Copy nginx configuration
 COPY --from=build /app/dist /usr/share/nginx/html
