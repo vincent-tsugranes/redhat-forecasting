@@ -22,7 +22,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/YOUR_ORG/redhat-forecasting.git
+        repoURL: https://github.com/vincent-tsugranes/redhat-forecasting.git
         targetRevision: main
         path: '{{repoPath}}'
       destination:
