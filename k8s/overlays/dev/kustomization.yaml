@@ -6,8 +6,6 @@ namespace: weather-dashboard-dev
 bases:
   - ../../base
 
-namePrefix: dev-
-
 commonLabels:
   environment: dev
 
