@@ -20,7 +20,7 @@ spec:
           command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done']
       containers:
         - name: backend
-          image: quay.io/vincent-tsugranes/weather-backend:latest
+          image: quay.io/vtsugran/weather-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8090

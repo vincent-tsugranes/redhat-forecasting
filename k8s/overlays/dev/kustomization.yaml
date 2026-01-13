@@ -16,7 +16,7 @@ patchesStrategicMerge:
   - frontend-patch.yaml
 
 images:
-  - name: quay.io/vincent-tsugranes/weather-backend
+  - name: quay.io/vtsugran/weather-backend
     newTag: "latest"
-  - name: quay.io/vincent-tsugranes/weather-frontend
+  - name: quay.io/vtsugran/weather-frontend
     newTag: "latest"

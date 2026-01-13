@@ -15,7 +15,7 @@ spec:
     - name: image-registry
       value: quay.io
     - name: image-namespace
-      value: vincent-tsugranes
+      value: vtsugran
     - name: backend-image-name
       value: weather-backend
     - name: frontend-image-name

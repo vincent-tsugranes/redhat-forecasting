@@ -20,7 +20,7 @@ spec:
     - name: image-namespace
       type: string
       description: Container registry namespace/username
-      default: vincent-tsugranes
+      default: vtsugran
     - name: backend-image-name
       type: string
       description: Backend image name

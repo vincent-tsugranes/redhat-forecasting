@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: quay.io/vincent-tsugranes/weather-frontend:latest
+          image: quay.io/vtsugran/weather-frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80
