@@ -1,0 +1,12 @@
+target/
+.mvn/
+*.md
+.git/
+.gitignore
+*.iml
+.idea/
+.vscode/
+.settings/
+.project
+.classpath
+*.log
