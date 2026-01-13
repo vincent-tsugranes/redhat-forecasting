@@ -1,0 +1,42 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: weather-dashboard-build-
+  namespace: weather-dashboard-dev
+spec:
+  pipelineRef:
+    name: weather-dashboard-pipeline
+
+  params:
+    - name: git-url
+      value: https://github.com/vincent-tsugranes/redhat-forecasting.git
+    - name: git-revision
+      value: main
+    - name: image-registry
+      value: quay.io
+    - name: image-namespace
+      value: vincent-tsugranes
+    - name: backend-image-name
+      value: weather-backend
+    - name: frontend-image-name
+      value: weather-frontend
+    - name: image-tag
+      value: "$(tt.params.git-revision)-$(tt.params.timestamp)"
+
+  workspaces:
+    - name: shared-workspace
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 2Gi
+
+    - name: docker-credentials
+      secret:
+        secretName: registry-credentials
+
+  serviceAccountName: pipeline-sa
+
+  timeout: 1h0m0s

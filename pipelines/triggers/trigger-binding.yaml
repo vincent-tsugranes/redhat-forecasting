@@ -1,0 +1,17 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: weather-dashboard-trigger-binding
+  namespace: weather-dashboard-dev
+spec:
+  params:
+    - name: git-revision
+      value: $(body.ref)
+    - name: git-commit-message
+      value: $(body.head_commit.message)
+    - name: git-repo-url
+      value: $(body.repository.clone_url)
+    - name: git-repo-name
+      value: $(body.repository.name)
+    - name: git-commit-sha
+      value: $(body.head_commit.id)

@@ -1,0 +1,65 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: weather-dashboard-trigger-template
+  namespace: weather-dashboard-dev
+spec:
+  params:
+    - name: git-revision
+      description: The git revision
+      default: main
+    - name: git-commit-message
+      description: The git commit message
+      default: ""
+    - name: git-repo-url
+      description: The git repository url
+    - name: git-repo-name
+      description: The name of the deployment to be created / patched
+    - name: git-commit-sha
+      description: The git commit SHA
+
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: weather-dashboard-$(tt.params.git-commit-sha)-
+        namespace: weather-dashboard-dev
+        labels:
+          app.kubernetes.io/name: weather-dashboard
+          tekton.dev/pipeline: weather-dashboard-pipeline
+          git.commit: $(tt.params.git-commit-sha)
+      spec:
+        pipelineRef:
+          name: weather-dashboard-pipeline
+
+        params:
+          - name: git-url
+            value: $(tt.params.git-repo-url)
+          - name: git-revision
+            value: $(tt.params.git-revision)
+          - name: image-registry
+            value: quay.io
+          - name: image-namespace
+            value: vincent-tsugranes
+          - name: backend-image-name
+            value: weather-backend
+          - name: frontend-image-name
+            value: weather-frontend
+          - name: image-tag
+            value: $(tt.params.git-commit-sha)
+
+        workspaces:
+          - name: shared-workspace
+            volumeClaimTemplate:
+              spec:
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 2Gi
+          - name: docker-credentials
+            secret:
+              secretName: registry-credentials
+
+        serviceAccountName: pipeline-sa
+        timeout: 1h0m0s

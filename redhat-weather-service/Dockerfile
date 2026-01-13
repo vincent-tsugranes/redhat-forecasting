@@ -30,6 +30,10 @@ COPY --from=build --chown=quarkus:quarkus /app/target/quarkus-app/*.jar /app/
 COPY --from=build --chown=quarkus:quarkus /app/target/quarkus-app/app/ /app/app/
 COPY --from=build --chown=quarkus:quarkus /app/target/quarkus-app/quarkus/ /app/quarkus/
 
+# Create data directory and copy airports CSV
+# Note: airports.csv should be provided via volume mount or build arg for production
+RUN mkdir -p /app/data && chown quarkus:quarkus /app/data
+
 # Switch to non-root user
 USER quarkus
 

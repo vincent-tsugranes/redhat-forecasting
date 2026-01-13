@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: nginx:1.25-alpine
-          imagePullPolicy: IfNotPresent
+          image: quay.io/vincent-tsugranes/weather-frontend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
               name: http

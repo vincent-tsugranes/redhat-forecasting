@@ -20,8 +20,8 @@ spec:
           command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done']
       containers:
         - name: backend
-          image: quay.io/quarkus/ubi-quarkus-native-binary-s2i:2.0
-          imagePullPolicy: IfNotPresent
+          image: quay.io/vincent-tsugranes/weather-backend:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8090
               name: http

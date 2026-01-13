@@ -1,0 +1,144 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: weather-dashboard-pipeline
+  namespace: weather-dashboard-dev
+spec:
+  params:
+    - name: git-url
+      type: string
+      description: Git repository URL
+      default: https://github.com/vincent-tsugranes/redhat-forecasting.git
+    - name: git-revision
+      type: string
+      description: Git revision to checkout
+      default: main
+    - name: image-registry
+      type: string
+      description: Container registry URL
+      default: quay.io
+    - name: image-namespace
+      type: string
+      description: Container registry namespace/username
+      default: vincent-tsugranes
+    - name: backend-image-name
+      type: string
+      description: Backend image name
+      default: weather-backend
+    - name: frontend-image-name
+      type: string
+      description: Frontend image name
+      default: weather-frontend
+    - name: image-tag
+      type: string
+      description: Image tag
+      default: latest
+
+  workspaces:
+    - name: shared-workspace
+      description: Shared workspace for pipeline tasks
+    - name: docker-credentials
+      description: Docker registry credentials
+
+  tasks:
+    # Task 1: Clone the repository
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+        - name: deleteExisting
+          value: "true"
+
+    # Task 2: Build and push backend image
+    - name: build-backend
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      runAfter:
+        - fetch-repository
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+        - name: dockerconfig
+          workspace: docker-credentials
+      params:
+        - name: IMAGE
+          value: "$(params.image-registry)/$(params.image-namespace)/$(params.backend-image-name):$(params.image-tag)"
+        - name: CONTEXT
+          value: "redhat-weather-service"
+        - name: DOCKERFILE
+          value: "redhat-weather-service/Dockerfile"
+        - name: FORMAT
+          value: "oci"
+        - name: TLSVERIFY
+          value: "true"
+
+    # Task 3: Build and push frontend image
+    - name: build-frontend
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      runAfter:
+        - fetch-repository
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+        - name: dockerconfig
+          workspace: docker-credentials
+      params:
+        - name: IMAGE
+          value: "$(params.image-registry)/$(params.image-namespace)/$(params.frontend-image-name):$(params.image-tag)"
+        - name: CONTEXT
+          value: "redhat-weather-dashboard"
+        - name: DOCKERFILE
+          value: "redhat-weather-dashboard/Dockerfile"
+        - name: FORMAT
+          value: "oci"
+        - name: TLSVERIFY
+          value: "true"
+
+    # Task 4: Update Kubernetes manifests (optional - for GitOps)
+    - name: update-manifests
+      runAfter:
+        - build-backend
+        - build-frontend
+      taskRef:
+        name: git-cli
+        kind: ClusterTask
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: GIT_USER_NAME
+          value: "Tekton Pipeline"
+        - name: GIT_USER_EMAIL
+          value: "tekton@pipeline.local"
+        - name: GIT_SCRIPT
+          value: |
+            #!/bin/sh
+            set -e
+
+            cd $(workspaces.source.path)
+
+            # Update image tags in kustomization
+            sed -i "s|newTag:.*|newTag: \"$(params.image-tag)\"|g" k8s/overlays/dev/kustomization.yaml
+
+            # Check if there are changes
+            if git diff --quiet; then
+              echo "No changes to commit"
+              exit 0
+            fi
+
+            # Commit and push changes
+            git add k8s/overlays/dev/kustomization.yaml
+            git commit -m "Update image tags to $(params.image-tag) [skip ci]"
+
+            echo "Manifest updates complete. Push manually or configure git credentials."
