@@ -72,7 +72,7 @@ RUN echo 'server { \
         proxy_set_header X-Forwarded-Proto $scheme; \
     } \
 }' > /etc/nginx/conf.d/default.conf && \
-    echo 'pid /var/run/nginx.pid;' > /etc/nginx/nginx.conf.d/pid.conf
+    sed -i '1s/^/pid \/var\/run\/nginx.pid;\n/' /etc/nginx/nginx.conf
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
