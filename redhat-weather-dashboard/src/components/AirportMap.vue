@@ -76,6 +76,83 @@ function initializeMap() {
   map.value.addLayer(markerClusterGroup.value)
 }
 
+async function fetchWeatherForAirport(lat: number, lon: number) {
+  try {
+    const forecasts = await weatherService.getCurrentForecast(lat, lon)
+    if (forecasts && forecasts.length > 0) {
+      return forecasts[0]
+    }
+    return null
+  } catch (error) {
+    console.error('Error fetching weather:', error)
+    return null
+  }
+}
+
+function createPopupContent(airport: Location, lat: number, lon: number) {
+  return `
+    <div class="airport-popup">
+      <div class="popup-header">
+        <strong>${airport.airportCode}</strong>
+      </div>
+      <div class="popup-name">${airport.name}</div>
+      <div class="popup-location">${airport.state || ''}, ${airport.country || ''}</div>
+      <div class="popup-coords">${lat.toFixed(4)}, ${lon.toFixed(4)}</div>
+      <div class="weather-container">
+        <div class="weather-loading">⏳ Loading weather...</div>
+      </div>
+    </div>
+  `
+}
+
+function updatePopupWithWeather(popup: L.Popup, weather: any) {
+  const popupElement = popup.getElement()
+  if (!popupElement) return
+
+  const weatherContainer = popupElement.querySelector('.weather-container')
+  if (!weatherContainer) return
+
+  if (weather) {
+    const tempF = weather.temperatureFahrenheit
+    const tempC = weather.temperatureCelsius
+    const windMph = weather.windSpeedMph
+    const humidity = weather.humidity
+    const description = weather.weatherDescription || weather.weatherShortDescription || 'N/A'
+
+    weatherContainer.innerHTML = `
+      <div class="weather-divider"></div>
+      <div class="weather-title">🌤️ Current Weather</div>
+      <div class="weather-info">
+        <div class="weather-item">
+          <span class="weather-label">Temperature:</span>
+          <span class="weather-value">${tempF}°F / ${tempC}°C</span>
+        </div>
+        <div class="weather-item">
+          <span class="weather-label">Conditions:</span>
+          <span class="weather-value">${description}</span>
+        </div>
+        ${windMph ? `
+          <div class="weather-item">
+            <span class="weather-label">Wind:</span>
+            <span class="weather-value">${windMph} mph</span>
+          </div>
+        ` : ''}
+        ${humidity ? `
+          <div class="weather-item">
+            <span class="weather-label">Humidity:</span>
+            <span class="weather-value">${humidity}%</span>
+          </div>
+        ` : ''}
+      </div>
+    `
+  } else {
+    weatherContainer.innerHTML = `
+      <div class="weather-divider"></div>
+      <div class="weather-error">⚠️ Weather data unavailable</div>
+    `
+  }
+}
+
 function initializeMarkers() {
   if (!markerClusterGroup.value) return
 
@@ -96,18 +173,16 @@ function initializeMarkers() {
         }),
       })
 
-      const popupContent = `
-        <div class="airport-popup">
-          <div class="popup-header">
-            <strong>${airport.airportCode}</strong>
-          </div>
-          <div class="popup-name">${airport.name}</div>
-          <div class="popup-location">${airport.state || ''}, ${airport.country || ''}</div>
-          <div class="popup-coords">${lat.toFixed(4)}, ${lon.toFixed(4)}</div>
-        </div>
-      `
+      const popupContent = createPopupContent(airport, lat, lon)
+      const popup = L.popup().setContent(popupContent)
+      marker.bindPopup(popup)
 
-      marker.bindPopup(popupContent)
+      // Fetch weather when popup opens
+      marker.on('popupopen', async () => {
+        const weather = await fetchWeatherForAirport(lat, lon)
+        updatePopupWithWeather(popup, weather)
+      })
+
       markers.push(marker)
     }
   })
@@ -293,8 +368,64 @@ onMounted(async () => {
   font-family: monospace;
 }
 
+:deep(.weather-container) {
+  margin-top: 8px;
+}
+
+:deep(.weather-divider) {
+  height: 1px;
+  background: #e0e0e0;
+  margin: 8px 0;
+}
+
+:deep(.weather-loading) {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  padding: 8px 0;
+}
+
+:deep(.weather-error) {
+  font-size: 12px;
+  color: #f44336;
+  text-align: center;
+  padding: 8px 0;
+}
+
+:deep(.weather-title) {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+:deep(.weather-info) {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+:deep(.weather-item) {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  gap: 8px;
+}
+
+:deep(.weather-label) {
+  color: #666;
+  font-weight: 500;
+}
+
+:deep(.weather-value) {
+  color: #333;
+  font-weight: 600;
+  text-align: right;
+}
+
 :deep(.leaflet-popup-content-wrapper) {
   border-radius: 8px;
+  min-width: 240px;
 }
 
 :deep(.marker-cluster) {
