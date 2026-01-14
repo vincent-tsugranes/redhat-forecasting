@@ -1,4 +1,4 @@
-import weatherApi from './api'
+import { weatherApi } from './api'
 
 export interface Location {
   id: number
