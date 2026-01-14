@@ -103,7 +103,7 @@ function createPopupContent(airport: Location, lat: number, lon: number) {
   `
 }
 
-function updatePopupWithWeather(popup: L.Popup, weather: any) {
+function updatePopupWithWeather(popup: L.Popup, weather: any, airport: Location) {
   const popupElement = popup.getElement()
   if (!popupElement) return
 
@@ -164,9 +164,18 @@ function updatePopupWithWeather(popup: L.Popup, weather: any) {
       </div>
     `
   } else {
+    // Show helpful airport info instead when weather unavailable
     weatherContainer.innerHTML = `
       <div class="weather-divider"></div>
-      <div class="weather-error">⚠️ No recent weather data</div>
+      <div class="weather-info-alt">
+        <div class="info-note">
+          <span class="info-icon">ℹ️</span>
+          <span>Live weather data coming soon</span>
+        </div>
+        <div class="airport-actions">
+          <a href="/airports?code=${airport.airportCode}" class="action-link">View Details →</a>
+        </div>
+      </div>
     `
   }
 }
@@ -199,7 +208,7 @@ function initializeMarkers() {
       marker.on('popupopen', async () => {
         if (airport.airportCode) {
           const weather = await fetchWeatherForAirport(airport.airportCode)
-          updatePopupWithWeather(popup, weather)
+          updatePopupWithWeather(popup, weather, airport)
         }
       })
 
@@ -450,6 +459,48 @@ onMounted(async () => {
   padding-top: 6px;
   border-top: 1px solid #eee;
   text-align: center;
+}
+
+:deep(.weather-info-alt) {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+:deep(.info-note) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #666;
+}
+
+:deep(.info-icon) {
+  font-size: 16px;
+}
+
+:deep(.airport-actions) {
+  text-align: center;
+}
+
+:deep(.action-link) {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #ee0000;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+:deep(.action-link:hover) {
+  background: #cc0000;
 }
 
 :deep(.leaflet-popup-content-wrapper) {
