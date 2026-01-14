@@ -2,6 +2,8 @@
   <div class="container">
     <h1>Weather Dashboard</h1>
 
+    <DataStatusCard />
+
     <div v-if="loading" class="loading">Loading weather data...</div>
     <div v-if="error" class="error">{{ error }}</div>
 
@@ -53,6 +55,7 @@
 import { ref, onMounted } from 'vue'
 import weatherService, { type Location } from '../services/weatherService'
 import AirportMap from '../components/AirportMap.vue'
+import DataStatusCard from '../components/DataStatusCard.vue'
 
 const locations = ref<Location[]>([])
 const loading = ref(false)
