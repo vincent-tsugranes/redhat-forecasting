@@ -76,15 +76,13 @@ function initializeMap() {
   map.value.addLayer(markerClusterGroup.value)
 }
 
-async function fetchWeatherForAirport(lat: number, lon: number) {
+async function fetchWeatherForAirport(airportCode: string) {
   try {
-    const forecasts = await weatherService.getCurrentForecast(lat, lon)
-    if (forecasts && forecasts.length > 0) {
-      return forecasts[0]
-    }
-    return null
+    // Fetch latest METAR (current airport weather conditions)
+    const metar = await weatherService.getLatestMetar(airportCode)
+    return metar
   } catch (error) {
-    console.error('Error fetching weather:', error)
+    console.error('Error fetching airport weather:', error)
     return null
   }
 }
@@ -113,42 +111,62 @@ function updatePopupWithWeather(popup: L.Popup, weather: any) {
   if (!weatherContainer) return
 
   if (weather) {
-    const tempF = weather.temperatureFahrenheit
+    // Convert Celsius to Fahrenheit
     const tempC = weather.temperatureCelsius
-    const windMph = weather.windSpeedMph
-    const humidity = weather.humidity
-    const description = weather.weatherDescription || weather.weatherShortDescription || 'N/A'
+    const tempF = tempC !== null && tempC !== undefined ? Math.round((tempC * 9/5) + 32) : null
+    const windKnots = weather.windSpeedKnots
+    const windMph = windKnots ? Math.round(windKnots * 1.151) : null
+    const visibility = weather.visibilityMiles
+    const flightCategory = weather.flightCategory
+    const observationTime = weather.observationTime ? new Date(weather.observationTime).toLocaleString() : null
+
+    // Flight category colors
+    const categoryColors: Record<string, string> = {
+      'VFR': '#4caf50',
+      'MVFR': '#2196f3',
+      'IFR': '#ff9800',
+      'LIFR': '#f44336'
+    }
 
     weatherContainer.innerHTML = `
       <div class="weather-divider"></div>
-      <div class="weather-title">🌤️ Current Weather</div>
+      <div class="weather-title">✈️ METAR Conditions</div>
       <div class="weather-info">
-        <div class="weather-item">
-          <span class="weather-label">Temperature:</span>
-          <span class="weather-value">${tempF}°F / ${tempC}°C</span>
-        </div>
-        <div class="weather-item">
-          <span class="weather-label">Conditions:</span>
-          <span class="weather-value">${description}</span>
-        </div>
+        ${tempC !== null && tempC !== undefined ? `
+          <div class="weather-item">
+            <span class="weather-label">Temperature:</span>
+            <span class="weather-value">${tempF}°F / ${tempC}°C</span>
+          </div>
+        ` : ''}
         ${windMph ? `
           <div class="weather-item">
             <span class="weather-label">Wind:</span>
-            <span class="weather-value">${windMph} mph</span>
+            <span class="weather-value">${windMph} mph (${windKnots} kts)</span>
           </div>
         ` : ''}
-        ${humidity ? `
+        ${visibility !== null && visibility !== undefined ? `
           <div class="weather-item">
-            <span class="weather-label">Humidity:</span>
-            <span class="weather-value">${humidity}%</span>
+            <span class="weather-label">Visibility:</span>
+            <span class="weather-value">${visibility} mi</span>
           </div>
+        ` : ''}
+        ${flightCategory ? `
+          <div class="weather-item">
+            <span class="weather-label">Flight Category:</span>
+            <span class="weather-value" style="color: ${categoryColors[flightCategory] || '#666'}; font-weight: bold;">
+              ${flightCategory}
+            </span>
+          </div>
+        ` : ''}
+        ${observationTime ? `
+          <div class="weather-time">Updated: ${observationTime}</div>
         ` : ''}
       </div>
     `
   } else {
     weatherContainer.innerHTML = `
       <div class="weather-divider"></div>
-      <div class="weather-error">⚠️ Weather data unavailable</div>
+      <div class="weather-error">⚠️ No recent weather data</div>
     `
   }
 }
@@ -179,8 +197,10 @@ function initializeMarkers() {
 
       // Fetch weather when popup opens
       marker.on('popupopen', async () => {
-        const weather = await fetchWeatherForAirport(lat, lon)
-        updatePopupWithWeather(popup, weather)
+        if (airport.airportCode) {
+          const weather = await fetchWeatherForAirport(airport.airportCode)
+          updatePopupWithWeather(popup, weather)
+        }
       })
 
       markers.push(marker)
@@ -423,9 +443,18 @@ onMounted(async () => {
   text-align: right;
 }
 
+:deep(.weather-time) {
+  font-size: 11px;
+  color: #999;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid #eee;
+  text-align: center;
+}
+
 :deep(.leaflet-popup-content-wrapper) {
   border-radius: 8px;
-  min-width: 240px;
+  min-width: 260px;
 }
 
 :deep(.marker-cluster) {
