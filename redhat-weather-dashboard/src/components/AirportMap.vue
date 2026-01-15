@@ -169,12 +169,10 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, airport: Location)
       <div class="weather-divider"></div>
       <div class="weather-info-alt">
         <div class="info-note">
-          <span class="info-icon">ℹ️</span>
-          <span>Live weather data coming soon</span>
+          <span class="info-icon">📡</span>
+          <span>Weather data updates every 15 minutes</span>
         </div>
-        <div class="airport-actions">
-          <a href="/airports?code=${airport.airportCode}" class="action-link">View Details →</a>
-        </div>
+        <div class="weather-hint">Click refresh or check back soon for live METAR conditions</div>
       </div>
     `
   }
@@ -483,24 +481,11 @@ onMounted(async () => {
   font-size: 16px;
 }
 
-:deep(.airport-actions) {
+:deep(.weather-hint) {
+  font-size: 12px;
+  color: #999;
   text-align: center;
-}
-
-:deep(.action-link) {
-  display: inline-block;
-  padding: 8px 16px;
-  background: #ee0000;
-  color: white;
-  text-decoration: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  transition: background 0.2s;
-}
-
-:deep(.action-link:hover) {
-  background: #cc0000;
+  font-style: italic;
 }
 
 :deep(.leaflet-popup-content-wrapper) {
