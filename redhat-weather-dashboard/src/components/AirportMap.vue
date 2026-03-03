@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
@@ -62,7 +62,7 @@ function initializeMap() {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
     maxZoom: 18,
-  }).addTo(map.value)
+  }).addTo(map.value as L.Map)
 
   // Create marker cluster group
   markerClusterGroup.value = L.markerClusterGroup({
@@ -73,7 +73,7 @@ function initializeMap() {
     zoomToBoundsOnClick: true,
   })
 
-  map.value.addLayer(markerClusterGroup.value)
+  ;(map.value as L.Map).addLayer(markerClusterGroup.value as unknown as L.Layer)
 }
 
 async function fetchWeatherForAirport(airportCode: string) {
@@ -103,7 +103,7 @@ function createPopupContent(airport: Location, lat: number, lon: number) {
   `
 }
 
-function updatePopupWithWeather(popup: L.Popup, weather: any, airport: Location) {
+function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location) {
   const popupElement = popup.getElement()
   if (!popupElement) return
 

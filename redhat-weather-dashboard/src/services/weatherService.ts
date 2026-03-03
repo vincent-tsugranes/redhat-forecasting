@@ -37,7 +37,7 @@ export interface AirportWeather {
   observationTime: string
   latitude: number
   longitude: number
-  visibility Miles?: number
+  visibilityMiles?: number
   ceilingFeet?: number
   windSpeedKnots?: number
   windDirection?: number
