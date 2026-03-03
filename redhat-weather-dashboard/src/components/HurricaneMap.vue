@@ -1,6 +1,6 @@
 <template>
   <div class="hurricane-map-container">
-    <div ref="mapContainer" class="map-container"></div>
+    <div ref="mapContainer" class="map-container" role="application" aria-label="Hurricane tracking map"></div>
   </div>
 </template>
 

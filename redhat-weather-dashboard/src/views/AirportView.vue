@@ -4,7 +4,8 @@
 
     <div class="card">
       <h2>Select Airport</h2>
-      <select v-model="selectedAirportCode" @change="loadAirportWeather" style="width: 100%; padding: 10px; font-size: 16px;">
+      <label for="airport-select" class="sr-only">Select airport</label>
+      <select id="airport-select" v-model="selectedAirportCode" @change="loadAirportWeather" style="width: 100%; padding: 10px; font-size: 16px;">
         <option value="">-- Select an airport --</option>
         <option v-for="airport in airports" :key="airport.id" :value="airport.airportCode">
           {{ airport.airportCode }} - {{ airport.name }}
@@ -30,19 +31,19 @@
         </div>
         <div class="report-raw">{{ metar.rawText }}</div>
         <div class="report-details">
-          <div v-if="metar.flightCategory" class="flight-category" :class="'category-' + metar.flightCategory">
+          <div v-if="metar.flightCategory" class="flight-category" :class="'category-' + metar.flightCategory" :aria-label="'Flight category: ' + metar.flightCategory">
             {{ metar.flightCategory }}
           </div>
-          <div v-if="metar.temperatureCelsius != null">🌡️ {{ Math.round(metar.temperatureCelsius) }}°C</div>
-          <div v-if="metar.dewpointCelsius != null">💧 Dew {{ Math.round(metar.dewpointCelsius) }}°C</div>
+          <div v-if="metar.temperatureCelsius != null"><span aria-hidden="true">🌡️</span> {{ Math.round(metar.temperatureCelsius) }}°C</div>
+          <div v-if="metar.dewpointCelsius != null"><span aria-hidden="true">💧</span> Dew {{ Math.round(metar.dewpointCelsius) }}°C</div>
           <div v-if="metar.windSpeedKnots != null">
-            💨 {{ metar.windDirection != null ? metar.windDirection + '° at ' : '' }}{{ metar.windSpeedKnots }} kts{{ metar.windGustKnots ? ', gusts ' + metar.windGustKnots + ' kts' : '' }}
+            <span aria-hidden="true">💨</span> {{ metar.windDirection != null ? metar.windDirection + '° at ' : '' }}{{ metar.windSpeedKnots }} kts{{ metar.windGustKnots ? ', gusts ' + metar.windGustKnots + ' kts' : '' }}
           </div>
-          <div v-if="metar.visibilityMiles != null">👁️ {{ metar.visibilityMiles }} mi</div>
-          <div v-if="metar.ceilingFeet != null">☁️ Ceiling {{ metar.ceilingFeet }} ft</div>
-          <div v-if="metar.altimeterInches != null">📊 Altimeter {{ metar.altimeterInches }} inHg</div>
-          <div v-if="metar.skyCondition">🌤️ Sky: {{ metar.skyCondition }}</div>
-          <div v-if="metar.weatherConditions">🌧️ {{ metar.weatherConditions }}</div>
+          <div v-if="metar.visibilityMiles != null"><span aria-hidden="true">👁️</span> Visibility: {{ metar.visibilityMiles }} mi</div>
+          <div v-if="metar.ceilingFeet != null"><span aria-hidden="true">☁️</span> Ceiling {{ metar.ceilingFeet }} ft</div>
+          <div v-if="metar.altimeterInches != null"><span aria-hidden="true">📊</span> Altimeter {{ metar.altimeterInches }} inHg</div>
+          <div v-if="metar.skyCondition"><span aria-hidden="true">🌤️</span> Sky: {{ metar.skyCondition }}</div>
+          <div v-if="metar.weatherConditions"><span aria-hidden="true">🌧️</span> {{ metar.weatherConditions }}</div>
         </div>
       </div>
     </div>

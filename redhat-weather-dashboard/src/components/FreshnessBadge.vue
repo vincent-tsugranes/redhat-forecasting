@@ -1,5 +1,5 @@
 <template>
-  <span v-if="fetchedAt" class="freshness-badge" :class="freshnessClass" :title="tooltipText">
+  <span v-if="fetchedAt" class="freshness-badge" :class="freshnessClass" :title="tooltipText" role="status" :aria-label="relativeTime + ' - ' + (freshnessLevel === 'fresh' ? 'Data is current' : freshnessLevel === 'aging' ? 'Data may be refreshing soon' : 'Data is overdue for refresh')">
     {{ relativeTime }}
   </span>
 </template>

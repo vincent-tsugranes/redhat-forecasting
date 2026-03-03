@@ -7,25 +7,37 @@
     <div class="card search-card">
       <h2>Search Location</h2>
       <div class="search-wrapper">
+        <label for="location-search" class="sr-only">Search locations by name or state</label>
         <input
+          id="location-search"
           v-model="searchQuery"
           type="text"
           placeholder="Search locations by name or state..."
           class="search-input"
+          role="combobox"
+          aria-autocomplete="list"
+          :aria-expanded="searchResults.length > 0 && showResults && !!searchQuery"
+          aria-controls="search-listbox"
+          :aria-activedescendant="activeDescendant"
           @input="onSearchInput"
           @focus="showResults = true"
+          @keydown="onSearchKeydown"
         />
-        <div v-if="searchResults.length > 0 && showResults && searchQuery" class="search-results">
-          <div
-            v-for="loc in searchResults"
+        <ul v-if="searchResults.length > 0 && showResults && searchQuery" id="search-listbox" class="search-results" role="listbox">
+          <li
+            v-for="(loc, index) in searchResults"
+            :id="'search-option-' + loc.id"
             :key="loc.id"
             class="search-result-item"
+            :class="{ 'search-result-active': highlightedIndex === index }"
+            role="option"
+            :aria-selected="highlightedIndex === index"
             @click="selectLocation(loc)"
           >
             <div class="result-name">{{ loc.name }}</div>
             <div class="result-state">{{ loc.state }}, {{ loc.country }}</div>
-          </div>
-        </div>
+          </li>
+        </ul>
       </div>
     </div>
 
@@ -50,10 +62,10 @@
           <strong>{{ formatDate(forecast.validFrom) }}</strong> - {{ formatDate(forecast.validTo) }}
         </div>
         <div class="forecast-details">
-          <div>🌡️ {{ forecast.temperatureFahrenheit }}°F ({{ forecast.temperatureCelsius }}°C)</div>
-          <div>💨 Wind: {{ forecast.windSpeedMph }} mph</div>
-          <div v-if="forecast.precipitationProbability != null">☔ Precip: {{ forecast.precipitationProbability }}%</div>
-          <div v-if="forecast.humidity != null">💧 Humidity: {{ forecast.humidity }}%</div>
+          <div><span aria-hidden="true">🌡️</span> {{ forecast.temperatureFahrenheit }}°F ({{ forecast.temperatureCelsius }}°C)</div>
+          <div><span aria-hidden="true">💨</span> Wind: {{ forecast.windSpeedMph }} mph</div>
+          <div v-if="forecast.precipitationProbability != null"><span aria-hidden="true">☔</span> Precip: {{ forecast.precipitationProbability }}%</div>
+          <div v-if="forecast.humidity != null"><span aria-hidden="true">💧</span> Humidity: {{ forecast.humidity }}%</div>
         </div>
         <div class="forecast-description">
           {{ forecast.weatherDescription || forecast.weatherShortDescription }}
@@ -69,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import weatherService, { type Location, type WeatherForecast } from '../services/weatherService'
 import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
@@ -82,8 +94,16 @@ const selectedLocationId = ref<string>('')
 const searchQuery = ref('')
 const searchResults = ref<Location[]>([])
 const showResults = ref(false)
+const highlightedIndex = ref(-1)
 const loading = ref(false)
 const error = ref<string | null>(null)
+
+const activeDescendant = computed(() => {
+  if (highlightedIndex.value >= 0 && highlightedIndex.value < searchResults.value.length) {
+    return 'search-option-' + searchResults.value[highlightedIndex.value].id
+  }
+  return undefined
+})
 
 async function loadLocations() {
   try {
@@ -94,6 +114,7 @@ async function loadLocations() {
 }
 
 function onSearchInput() {
+  highlightedIndex.value = -1
   if (!searchQuery.value || searchQuery.value.length < 2) {
     searchResults.value = []
     return
@@ -108,6 +129,32 @@ function onSearchInput() {
     )
     .slice(0, 10)
   showResults.value = true
+}
+
+function onSearchKeydown(event: KeyboardEvent) {
+  if (!showResults.value || searchResults.value.length === 0) return
+
+  switch (event.key) {
+    case 'ArrowDown':
+      event.preventDefault()
+      highlightedIndex.value = Math.min(highlightedIndex.value + 1, searchResults.value.length - 1)
+      break
+    case 'ArrowUp':
+      event.preventDefault()
+      highlightedIndex.value = Math.max(highlightedIndex.value - 1, 0)
+      break
+    case 'Enter':
+      event.preventDefault()
+      if (highlightedIndex.value >= 0) {
+        selectLocation(searchResults.value[highlightedIndex.value])
+      }
+      break
+    case 'Escape':
+      event.preventDefault()
+      showResults.value = false
+      highlightedIndex.value = -1
+      break
+  }
 }
 
 function selectLocation(loc: Location) {
@@ -191,7 +238,8 @@ onMounted(() => {
   border-bottom: none;
 }
 
-.search-result-item:hover {
+.search-result-item:hover,
+.search-result-active {
   background-color: var(--bg-code, #f5f5f5);
 }
 

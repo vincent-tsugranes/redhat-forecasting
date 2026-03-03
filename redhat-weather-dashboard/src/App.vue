@@ -10,8 +10,8 @@
             <router-link to="/airports">Airports</router-link>
             <router-link to="/hurricanes">Hurricanes</router-link>
           </nav>
-          <button class="theme-toggle" @click="toggleTheme" :title="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
-            {{ theme === 'dark' ? '☀️' : '🌙' }}
+          <button class="theme-toggle" @click="toggleTheme" :title="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'" :aria-label="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+            <span aria-hidden="true">{{ theme === 'dark' ? '☀️' : '🌙' }}</span>
           </button>
         </div>
       </div>

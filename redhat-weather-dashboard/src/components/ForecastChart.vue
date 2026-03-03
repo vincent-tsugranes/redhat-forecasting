@@ -1,5 +1,5 @@
 <template>
-  <div class="forecast-chart-container">
+  <div class="forecast-chart-container" role="img" aria-label="Weather forecast chart showing temperature, wind speed, precipitation, and humidity trends">
     <Line :data="chartData" :options="chartOptions" />
   </div>
 </template>

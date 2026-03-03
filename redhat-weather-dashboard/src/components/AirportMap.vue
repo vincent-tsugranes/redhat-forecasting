@@ -1,10 +1,12 @@
 <template>
   <div class="airport-map-container">
     <div class="search-bar">
+      <label for="airport-map-search" class="sr-only">Search airports on map</label>
       <input
+        id="airport-map-search"
         v-model="searchQuery"
         type="text"
-        placeholder="🔍 Search airports by name, code, or location..."
+        placeholder="Search airports by name, code, or location..."
         class="search-input"
         @input="onSearchInput"
       />
@@ -24,7 +26,7 @@
       </div>
     </div>
     <div v-if="loadError" class="map-error">Failed to load airport data. Please try refreshing the page.</div>
-    <div ref="mapContainer" class="map-container"></div>
+    <div ref="mapContainer" class="map-container" role="application" aria-label="Interactive airport map"></div>
   </div>
 </template>
 
@@ -250,7 +252,7 @@ function initializeMarkers() {
       const marker = L.marker([lat, lon], {
         icon: L.divIcon({
           className: 'airport-marker',
-          html: '<div class="marker-icon">✈️</div>',
+          html: '<div class="marker-icon" aria-hidden="true">✈️</div>',
           iconSize: [20, 20],
         }),
       })

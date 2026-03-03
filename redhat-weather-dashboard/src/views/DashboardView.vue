@@ -9,7 +9,7 @@
 
     <div v-if="!loading" class="grid">
       <div class="card">
-        <h2>📍 Locations</h2>
+        <h2><span aria-hidden="true">📍</span> Locations</h2>
         <p><strong>{{ locations.length }}</strong> locations monitored</p>
         <ul v-if="locations.length > 0" style="list-style: none; padding: 0;">
           <li v-for="loc in locations.slice(0, 5)" :key="loc.id">
@@ -19,13 +19,13 @@
       </div>
 
       <div class="card">
-        <h2>🌤️ Weather Forecasts</h2>
+        <h2><span aria-hidden="true">🌤️</span> Weather Forecasts</h2>
         <p>Automatic updates every 30 minutes from NOAA</p>
-        <button @click="loadData">Refresh Data</button>
+        <button @click="loadData" aria-label="Refresh weather data">Refresh Data</button>
       </div>
 
       <div class="card">
-        <h2>✈️ Airport Weather</h2>
+        <h2><span aria-hidden="true">✈️</span> Airport Weather</h2>
         <p>METAR/TAF updates every 15 minutes</p>
         <router-link to="/airports">
           <button>View Airports</button>
@@ -33,7 +33,7 @@
       </div>
 
       <div class="card">
-        <h2>🌀 Hurricane Tracking</h2>
+        <h2><span aria-hidden="true">🌀</span> Hurricane Tracking</h2>
         <p>Active tropical systems monitoring</p>
         <router-link to="/hurricanes">
           <button>View Hurricanes</button>
@@ -42,7 +42,7 @@
     </div>
 
     <div v-if="!loading" class="card" style="margin-top: 20px;">
-      <h2>🗺️ Global Airport Map</h2>
+      <h2><span aria-hidden="true">🗺️</span> Global Airport Map</h2>
       <p style="margin-bottom: 15px; color: #666;">
         Explore {{ locations.length }} airports worldwide. Click clusters to zoom in, or search for a specific airport.
       </p>

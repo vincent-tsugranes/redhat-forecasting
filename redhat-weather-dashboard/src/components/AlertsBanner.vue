@@ -3,13 +3,14 @@
     Failed to load weather alerts
   </div>
   <div v-if="alerts.length > 0" class="alerts-banner" :class="'severity-' + highestSeverity">
-    <div class="alerts-header" @click="expanded = !expanded">
+    <button class="alerts-header" @click="expanded = !expanded" :aria-expanded="expanded" aria-label="Toggle weather alerts">
       <div class="alerts-title">
-        <span class="alert-icon">{{ severityIcon }}</span>
+        <span class="alert-icon" aria-hidden="true">{{ severityIcon }}</span>
+        <span class="sr-only">Severity: {{ highestSeverity }}</span>
         <strong>{{ alerts.length }} Active Weather Alert{{ alerts.length > 1 ? 's' : '' }}</strong>
       </div>
-      <button class="expand-btn">{{ expanded ? 'Hide' : 'Show' }}</button>
-    </div>
+      <span class="expand-btn">{{ expanded ? 'Hide' : 'Show' }}</span>
+    </button>
 
     <div v-if="expanded" class="alerts-list">
       <div v-for="alert in alerts" :key="alert.id" class="alert-item" :class="'severity-' + (alert.severity || 'Unknown').toLowerCase()">
@@ -126,6 +127,12 @@ onUnmounted(() => {
   align-items: center;
   padding: 12px 16px;
   cursor: pointer;
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
 }
 
 .alerts-title {

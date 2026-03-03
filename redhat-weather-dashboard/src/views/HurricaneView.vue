@@ -30,7 +30,7 @@
         <div class="storm-info">
           <div class="info-item">
             <strong>Category:</strong>
-            <span class="category" :class="'cat-' + (storm.category || 0)">
+            <span class="category" :class="'cat-' + (storm.category || 0)" :aria-label="'Hurricane category: ' + getCategoryLabel(storm.category)">
               {{ getCategoryLabel(storm.category) }}
             </span>
           </div>
@@ -66,7 +66,7 @@
     </div>
 
     <div v-else-if="!loading" class="card">
-      <p>✅ No active tropical systems at this time.</p>
+      <p><span aria-hidden="true">✅</span> No active tropical systems at this time.</p>
       <p>Hurricane season in the Atlantic runs from June 1 to November 30.</p>
       <p>Data is automatically fetched from the National Hurricane Center every hour during hurricane season.</p>
     </div>

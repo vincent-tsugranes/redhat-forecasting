@@ -1,6 +1,6 @@
 <template>
   <div class="status-card">
-    <h3>📊 Data Status</h3>
+    <h3><span aria-hidden="true">📊</span> Data Status</h3>
     <div v-if="loading" class="loading">Loading status...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else class="status-content">
@@ -18,12 +18,12 @@
         <span class="label">Total Locations:</span>
         <span class="value">{{ status.totalLocations?.toLocaleString() }}</span>
       </div>
-      <div class="progress-bar" v-if="status.percentLoaded !== undefined">
+      <div class="progress-bar" v-if="status.percentLoaded !== undefined" role="progressbar" :aria-valuenow="status.percentLoaded" aria-valuemin="0" aria-valuemax="100" aria-label="Airport data loading progress">
         <div class="progress-fill" :style="{ width: status.percentLoaded + '%' }"></div>
         <span class="progress-text">{{ status.percentLoaded }}%</span>
       </div>
-      <div class="status-badge" :class="status.loadingComplete ? 'success' : 'warning'">
-        {{ status.loadingComplete ? '✓ Data Ready' : '⚠ Loading...' }}
+      <div class="status-badge" :class="status.loadingComplete ? 'success' : 'warning'" role="status">
+        <span aria-hidden="true">{{ status.loadingComplete ? '✓' : '⚠' }}</span> {{ status.loadingComplete ? 'Data Ready' : 'Loading...' }}
       </div>
       <div v-if="freshness.forecast || freshness.airport || freshness.hurricane" class="freshness-section">
         <h4>Data Freshness</h4>
