@@ -108,6 +108,6 @@ ul {
 
 ul li {
   padding: 5px 0;
-  color: #666;
+  color: var(--text-secondary, #666);
 }
 </style>

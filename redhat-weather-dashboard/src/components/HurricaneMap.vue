@@ -184,7 +184,7 @@ onMounted(() => {
 <style scoped>
 .hurricane-map-container {
   width: 100%;
-  height: 500px;
+  height: clamp(300px, 50vh, 500px);
   margin-bottom: 20px;
 }
 

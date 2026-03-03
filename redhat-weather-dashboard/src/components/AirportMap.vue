@@ -323,7 +323,7 @@ onMounted(async () => {
 .airport-map-container {
   position: relative;
   width: 100%;
-  height: 600px;
+  height: clamp(300px, 50vh, 600px);
 }
 
 .search-bar {

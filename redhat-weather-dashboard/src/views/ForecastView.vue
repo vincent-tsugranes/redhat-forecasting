@@ -152,11 +152,13 @@ onMounted(() => {
   width: 100%;
   padding: 10px 16px;
   font-size: 16px;
-  border: 2px solid #ddd;
+  border: 2px solid var(--border-color, #ddd);
   border-radius: 8px;
   outline: none;
   transition: border-color 0.3s;
   box-sizing: border-box;
+  background: var(--bg-input, #fff);
+  color: var(--text-primary, #333);
 }
 
 .search-input:focus {
@@ -169,10 +171,10 @@ onMounted(() => {
   left: 0;
   right: 0;
   margin-top: 4px;
-  background: white;
-  border: 1px solid #ddd;
+  background: var(--bg-card, white);
+  border: 1px solid var(--border-color, #ddd);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px var(--shadow-md, rgba(0, 0, 0, 0.15));
   max-height: 300px;
   overflow-y: auto;
   z-index: 100;
@@ -181,7 +183,7 @@ onMounted(() => {
 .search-result-item {
   padding: 10px 16px;
   cursor: pointer;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-light, #eee);
   transition: background-color 0.2s;
 }
 
@@ -190,7 +192,7 @@ onMounted(() => {
 }
 
 .search-result-item:hover {
-  background-color: #f5f5f5;
+  background-color: var(--bg-code, #f5f5f5);
 }
 
 .result-name {
@@ -200,16 +202,16 @@ onMounted(() => {
 
 .result-state {
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary, #666);
   margin-top: 2px;
 }
 
 .forecast-item {
-  border: 1px solid #eee;
+  border: 1px solid var(--border-light, #eee);
   border-radius: 8px;
   padding: 15px;
   margin: 10px 0;
-  background: #f9f9f9;
+  background: var(--bg-code, #f9f9f9);
 }
 
 .forecast-header {
@@ -226,12 +228,12 @@ onMounted(() => {
 }
 
 .forecast-details div {
-  color: #666;
+  color: var(--text-secondary, #666);
 }
 
 .forecast-description {
   margin-top: 10px;
-  color: #333;
+  color: var(--text-primary, #333);
   font-style: italic;
 }
 </style>

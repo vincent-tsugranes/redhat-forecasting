@@ -204,7 +204,7 @@ onMounted(() => {
 .storm-location,
 .storm-time {
   margin: 10px 0;
-  color: #666;
+  color: var(--text-secondary, #666);
 }
 
 .card-selected {

@@ -149,7 +149,7 @@ onMounted(() => {
 
 <style scoped>
 .weather-report {
-  background: #f9f9f9;
+  background: var(--bg-code, #f9f9f9);
   border-radius: 8px;
   padding: 15px;
 }
@@ -162,14 +162,15 @@ onMounted(() => {
 }
 
 .report-raw {
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--bg-input, #fff);
+  border: 1px solid var(--border-color, #ddd);
   border-radius: 4px;
   padding: 10px;
   font-family: monospace;
   margin: 10px 0;
   white-space: pre-wrap;
   word-break: break-all;
+  color: var(--text-primary, #333);
 }
 
 .report-details {

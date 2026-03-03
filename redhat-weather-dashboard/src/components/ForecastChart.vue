@@ -132,7 +132,7 @@ const chartOptions = computed(() => ({
 <style scoped>
 .forecast-chart-container {
   position: relative;
-  height: 350px;
+  height: clamp(250px, 40vh, 350px);
   margin-bottom: 20px;
 }
 </style>
