@@ -1,6 +1,44 @@
-import axios from 'axios'
+import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8090'
+
+const MAX_RETRIES = 2
+const RETRY_BASE_DELAY = 1000
+
+interface RetryConfig extends InternalAxiosRequestConfig {
+  __retryCount?: number
+}
+
+function shouldRetry(error: any): boolean {
+  // Retry on network errors (no response)
+  if (!error.response) return true
+  // Retry on 5xx server errors
+  return error.response.status >= 500
+}
+
+function addRetryInterceptor(instance: AxiosInstance) {
+  instance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const config = error.config as RetryConfig
+      if (!config) return Promise.reject(error)
+
+      config.__retryCount = config.__retryCount || 0
+
+      if (config.__retryCount >= MAX_RETRIES || !shouldRetry(error)) {
+        console.error('API Error:', error.response?.status, config.url, error.message)
+        return Promise.reject(error)
+      }
+
+      config.__retryCount++
+      const delay = RETRY_BASE_DELAY * Math.pow(2, config.__retryCount - 1)
+      console.warn(`API retry ${config.__retryCount}/${MAX_RETRIES} for ${config.url} in ${delay}ms`)
+
+      await new Promise((resolve) => setTimeout(resolve, delay))
+      return instance(config)
+    }
+  )
+}
 
 // General API instance for all endpoints
 const api = axios.create({
@@ -20,50 +58,7 @@ export const weatherApi = axios.create({
   timeout: 15000
 })
 
-// Request interceptor for general API
-api.interceptors.request.use(
-  (config) => {
-    console.log('API Request:', config.method?.toUpperCase(), config.url)
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
-
-// Response interceptor for general API
-api.interceptors.response.use(
-  (response) => {
-    console.log('API Response:', response.status, response.config.url)
-    return response
-  },
-  (error) => {
-    console.error('API Error:', error.response?.status, error.config?.url, error.message)
-    return Promise.reject(error)
-  }
-)
-
-// Request interceptor for weather API
-weatherApi.interceptors.request.use(
-  (config) => {
-    console.log('API Request:', config.method?.toUpperCase(), config.url)
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
-
-// Response interceptor for weather API
-weatherApi.interceptors.response.use(
-  (response) => {
-    console.log('API Response:', response.status, response.config.url)
-    return response
-  },
-  (error) => {
-    console.error('API Error:', error.response?.status, error.config?.url, error.message)
-    return Promise.reject(error)
-  }
-)
+addRetryInterceptor(api)
+addRetryInterceptor(weatherApi)
 
 export default api

@@ -23,6 +23,7 @@
         </div>
       </div>
     </div>
+    <div v-if="loadError" class="map-error">Failed to load airport data. Please try refreshing the page.</div>
     <div ref="mapContainer" class="map-container"></div>
   </div>
 </template>
@@ -43,15 +44,18 @@ const searchResults = ref<Location[]>([])
 const airports = ref<Location[]>([])
 const map = ref<L.Map | null>(null)
 const markerClusterGroup = ref<L.MarkerClusterGroup | null>(null)
+const loadError = ref(false)
 
 async function loadAirports() {
   try {
     airports.value = await weatherService.getAirports()
+    loadError.value = false
     if (map.value && airports.value.length > 0) {
       initializeMarkers()
     }
-  } catch (error) {
-    console.error('Error loading airports:', error)
+  } catch (err) {
+    console.error('Error loading airports:', err)
+    loadError.value = true
   }
 }
 
@@ -578,5 +582,19 @@ onMounted(async () => {
   background-color: rgba(238, 0, 0, 0.8);
   color: white;
   font-weight: bold;
+}
+
+.map-error {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: var(--error-bg, #fee);
+  color: var(--error-text, #c00);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 </style>

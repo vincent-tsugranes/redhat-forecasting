@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import api from '../services/api'
 import { weatherApi } from '../services/api'
 import FreshnessBadge from './FreshnessBadge.vue'
@@ -112,39 +112,49 @@ const fetchFreshness = async () => {
   } catch { /* airport data may not be available yet */ }
 }
 
+let refreshInterval: ReturnType<typeof setInterval> | null = null
+
 onMounted(() => {
   fetchStatus()
   fetchFreshness()
   // Refresh every 30 seconds if not complete
-  const interval = setInterval(() => {
+  refreshInterval = setInterval(() => {
     if (!status.value.loadingComplete) {
       fetchStatus()
     } else {
-      clearInterval(interval)
+      if (refreshInterval) clearInterval(refreshInterval)
+      refreshInterval = null
     }
   }, 30000)
+})
+
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval)
+    refreshInterval = null
+  }
 })
 </script>
 
 <style scoped>
 .status-card {
-  background: white;
+  background: var(--bg-card, white);
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--shadow, rgba(0, 0, 0, 0.1));
   margin-bottom: 20px;
 }
 
 h3 {
   margin: 0 0 15px 0;
-  color: #333;
+  color: var(--text-primary, #333);
   font-size: 1.2rem;
 }
 
 .loading, .error {
   padding: 10px;
   text-align: center;
-  color: #666;
+  color: var(--text-secondary, #666);
 }
 
 .error {
@@ -162,17 +172,17 @@ h3 {
   justify-content: space-between;
   align-items: center;
   padding: 8px 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-light, #eee);
 }
 
 .label {
   font-weight: 500;
-  color: #666;
+  color: var(--text-secondary, #666);
 }
 
 .value {
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary, #333);
 }
 
 .value.complete {
@@ -182,7 +192,7 @@ h3 {
 .progress-bar {
   position: relative;
   height: 30px;
-  background: #f0f0f0;
+  background: var(--bg-code, #f0f0f0);
   border-radius: 15px;
   overflow: hidden;
   margin: 10px 0;
@@ -200,7 +210,7 @@ h3 {
   left: 50%;
   transform: translate(-50%, -50%);
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary, #333);
   font-size: 0.9rem;
 }
 
@@ -225,13 +235,13 @@ h3 {
 .freshness-section {
   margin-top: 15px;
   padding-top: 15px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-light, #eee);
 }
 
 .freshness-section h4 {
   margin: 0 0 10px 0;
   font-size: 0.95rem;
-  color: #333;
+  color: var(--text-primary, #333);
 }
 
 .freshness-row {

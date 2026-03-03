@@ -1,4 +1,7 @@
 <template>
+  <div v-if="alertError" class="alerts-error">
+    Failed to load weather alerts
+  </div>
   <div v-if="alerts.length > 0" class="alerts-banner" :class="'severity-' + highestSeverity">
     <div class="alerts-header" @click="expanded = !expanded">
       <div class="alerts-title">
@@ -35,6 +38,7 @@ import { formatDate } from '../utils/dateUtils'
 
 const alerts = ref<WeatherAlert[]>([])
 const expanded = ref(false)
+const alertError = ref(false)
 let refreshInterval: ReturnType<typeof setInterval> | null = null
 
 const severityRank: Record<string, number> = {
@@ -67,8 +71,10 @@ const severityIcon = computed(() => {
 async function loadAlerts() {
   try {
     alerts.value = await weatherService.getActiveAlerts()
-  } catch (error) {
-    console.error('Error loading weather alerts:', error)
+    alertError.value = false
+  } catch (err) {
+    console.error('Error loading weather alerts:', err)
+    alertError.value = true
   }
 }
 
@@ -211,5 +217,15 @@ onUnmounted(() => {
   line-height: 1.5;
   max-height: 200px;
   overflow-y: auto;
+}
+
+.alerts-error {
+  background: var(--error-bg, #fee);
+  color: var(--error-text, #c00);
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  text-align: center;
 }
 </style>

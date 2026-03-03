@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import weatherService, { type Location, type AirportWeather } from '../services/weatherService'
 import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
@@ -81,6 +81,7 @@ const taf = ref<AirportWeather | null>(null)
 const loading = ref(false)
 const refreshing = ref(false)
 const error = ref<string | null>(null)
+let refreshTimeout: ReturnType<typeof setTimeout> | null = null
 
 async function loadAirports() {
   try {
@@ -132,8 +133,10 @@ async function refreshWeather() {
   try {
     await weatherService.refreshAirportWeather(selectedAirportCode.value)
     // Wait a moment for the data to be fetched
-    setTimeout(() => {
-      loadAirportWeather()
+    refreshTimeout = setTimeout(() => {
+      loadAirportWeather().catch((err) => {
+        console.error('Error reloading airport weather:', err)
+      })
       refreshing.value = false
     }, 2000)
   } catch (err: any) {
@@ -144,6 +147,13 @@ async function refreshWeather() {
 
 onMounted(() => {
   loadAirports()
+})
+
+onUnmounted(() => {
+  if (refreshTimeout) {
+    clearTimeout(refreshTimeout)
+    refreshTimeout = null
+  }
 })
 </script>
 

@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import weatherService, { type Hurricane } from '../services/weatherService'
 import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
@@ -85,6 +85,7 @@ const loading = ref(false)
 const refreshing = ref(false)
 const error = ref<string | null>(null)
 const selectedStormId = ref<string | null>(null)
+let refreshTimeout: ReturnType<typeof setTimeout> | null = null
 
 function onStormSelected(stormId: string) {
   selectedStormId.value = stormId
@@ -111,8 +112,10 @@ async function refreshHurricanes() {
   try {
     await weatherService.refreshHurricaneData()
     // Wait a moment for the data to be fetched
-    setTimeout(() => {
-      loadHurricanes()
+    refreshTimeout = setTimeout(() => {
+      loadHurricanes().catch((err) => {
+        console.error('Error reloading hurricanes:', err)
+      })
       refreshing.value = false
     }, 2000)
   } catch (err: any) {
@@ -129,6 +132,13 @@ function getCategoryLabel(category: number | undefined): string {
 
 onMounted(() => {
   loadHurricanes()
+})
+
+onUnmounted(() => {
+  if (refreshTimeout) {
+    clearTimeout(refreshTimeout)
+    refreshTimeout = null
+  }
 })
 </script>
 
