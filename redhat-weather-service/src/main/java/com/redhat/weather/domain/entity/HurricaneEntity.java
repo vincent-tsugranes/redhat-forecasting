@@ -2,6 +2,7 @@ package com.redhat.weather.domain.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -22,6 +23,8 @@ public class HurricaneEntity extends PanacheEntityBase {
     public Long id;
 
     // Hurricane identification
+    @NotBlank
+    @Size(max = 50)
     @Column(name = "storm_id", nullable = false, length = 50)
     public String stormId;
 
@@ -38,9 +41,11 @@ public class HurricaneEntity extends PanacheEntityBase {
     public Integer year;
 
     // Time information
+    @NotNull
     @Column(name = "advisory_time", nullable = false)
     public LocalDateTime advisoryTime;
 
+    @NotNull
     @Column(name = "forecast_time", nullable = false)
     public LocalDateTime forecastTime;
 
@@ -48,13 +53,17 @@ public class HurricaneEntity extends PanacheEntityBase {
     public LocalDateTime fetchedAt;
 
     // Current position
+    @NotNull
     @Column(name = "latitude", nullable = false, precision = 10, scale = 7)
     public BigDecimal latitude;
 
+    @NotNull
     @Column(name = "longitude", nullable = false, precision = 10, scale = 7)
     public BigDecimal longitude;
 
     // Hurricane data
+    @Min(0)
+    @Max(5)
     @Column(name = "category")
     public Integer category;
 

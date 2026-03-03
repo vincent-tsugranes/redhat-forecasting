@@ -2,6 +2,7 @@ package com.redhat.weather.domain.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -25,10 +26,13 @@ public class AirportWeatherEntity extends PanacheEntityBase {
     @JoinColumn(name = "location_id", nullable = false)
     public LocationEntity location;
 
+    @NotBlank
+    @Size(max = 10)
     @Column(name = "airport_code", nullable = false, length = 10)
     public String airportCode;
 
     // Time information
+    @NotNull
     @Column(name = "observation_time", nullable = false)
     public LocalDateTime observationTime;
 
@@ -36,16 +40,21 @@ public class AirportWeatherEntity extends PanacheEntityBase {
     public LocalDateTime fetchedAt;
 
     // Coordinates
+    @NotNull
     @Column(name = "latitude", nullable = false, precision = 10, scale = 7)
     public BigDecimal latitude;
 
+    @NotNull
     @Column(name = "longitude", nullable = false, precision = 10, scale = 7)
     public BigDecimal longitude;
 
     // METAR/TAF data
+    @NotBlank
+    @Size(max = 10)
     @Column(name = "report_type", nullable = false, length = 10)
     public String reportType;
 
+    @NotBlank
     @Column(name = "raw_text", columnDefinition = "TEXT", nullable = false)
     public String rawText;
 

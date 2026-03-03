@@ -2,6 +2,7 @@ package com.redhat.weather.domain.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -20,24 +21,37 @@ public class LocationEntity extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
+    @NotBlank
+    @Size(max = 255)
     @Column(name = "name", nullable = false)
     public String name;
 
+    @NotNull
+    @DecimalMin("-90")
+    @DecimalMax("90")
     @Column(name = "latitude", nullable = false, precision = 10, scale = 7)
     public BigDecimal latitude;
 
+    @NotNull
+    @DecimalMin("-180")
+    @DecimalMax("180")
     @Column(name = "longitude", nullable = false, precision = 10, scale = 7)
     public BigDecimal longitude;
 
+    @NotBlank
+    @Size(max = 50)
     @Column(name = "location_type", nullable = false, length = 50)
     public String locationType;
 
+    @Size(max = 10)
     @Column(name = "airport_code", length = 10)
     public String airportCode;
 
+    @Size(max = 100)
     @Column(name = "state", length = 100)
     public String state;
 
+    @Size(max = 100)
     @Column(name = "country", length = 100)
     public String country;
 

@@ -2,6 +2,7 @@ package com.redhat.weather.domain.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -25,16 +26,21 @@ public class WeatherForecastEntity extends PanacheEntityBase {
     @JoinColumn(name = "location_id", nullable = false)
     public LocationEntity location;
 
+    @NotBlank
+    @Size(max = 50)
     @Column(name = "source", nullable = false, length = 50)
     public String source;
 
     // Time information
+    @NotNull
     @Column(name = "forecast_time", nullable = false)
     public LocalDateTime forecastTime;
 
+    @NotNull
     @Column(name = "valid_from", nullable = false)
     public LocalDateTime validFrom;
 
+    @NotNull
     @Column(name = "valid_to", nullable = false)
     public LocalDateTime validTo;
 
@@ -42,9 +48,11 @@ public class WeatherForecastEntity extends PanacheEntityBase {
     public LocalDateTime fetchedAt;
 
     // Coordinates (denormalized)
+    @NotNull
     @Column(name = "latitude", nullable = false, precision = 10, scale = 7)
     public BigDecimal latitude;
 
+    @NotNull
     @Column(name = "longitude", nullable = false, precision = 10, scale = 7)
     public BigDecimal longitude;
 
@@ -60,15 +68,21 @@ public class WeatherForecastEntity extends PanacheEntityBase {
     @Column(name = "temperature_celsius", precision = 5, scale = 2)
     public BigDecimal temperatureCelsius;
 
+    @Min(0)
+    @Max(100)
     @Column(name = "precipitation_probability")
     public Integer precipitationProbability;
 
     @Column(name = "wind_speed_mph", precision = 5, scale = 2)
     public BigDecimal windSpeedMph;
 
+    @Min(0)
+    @Max(360)
     @Column(name = "wind_direction")
     public Integer windDirection;
 
+    @Min(0)
+    @Max(100)
     @Column(name = "humidity")
     public Integer humidity;
 

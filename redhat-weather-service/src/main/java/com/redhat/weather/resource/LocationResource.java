@@ -3,6 +3,7 @@ package com.redhat.weather.resource;
 import com.redhat.weather.domain.entity.LocationEntity;
 import com.redhat.weather.service.LocationService;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -88,7 +89,7 @@ public class LocationResource {
     @Operation(summary = "Create location", description = "Create a new location")
     @APIResponse(responseCode = "201", description = "Location created")
     @APIResponse(responseCode = "400", description = "Invalid input")
-    public Response createLocation(LocationEntity location) {
+    public Response createLocation(@Valid LocationEntity location) {
         LocationEntity created = locationService.createLocation(location);
         return Response.status(Response.Status.CREATED).entity(created).build();
     }
@@ -98,7 +99,7 @@ public class LocationResource {
     @Operation(summary = "Update location", description = "Update an existing location")
     @APIResponse(responseCode = "200", description = "Location updated")
     @APIResponse(responseCode = "404", description = "Location not found")
-    public Response updateLocation(@PathParam("id") @Parameter(description = "Location ID") Long id, LocationEntity location) {
+    public Response updateLocation(@PathParam("id") @Parameter(description = "Location ID") Long id, @Valid LocationEntity location) {
         LocationEntity updated = locationService.updateLocation(id, location);
         if (updated != null) {
             return Response.ok(updated).build();

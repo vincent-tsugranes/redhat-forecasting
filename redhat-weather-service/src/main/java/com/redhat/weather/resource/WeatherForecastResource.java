@@ -3,6 +3,7 @@ package com.redhat.weather.resource;
 import com.redhat.weather.domain.entity.WeatherForecastEntity;
 import com.redhat.weather.service.WeatherForecastService;
 import jakarta.inject.Inject;
+import jakarta.validation.constraints.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -41,16 +42,10 @@ public class WeatherForecastResource {
     @APIResponse(responseCode = "200", description = "List of forecasts")
     @APIResponse(responseCode = "400", description = "Invalid parameters")
     public Response getForecastsByCoordinates(
-            @QueryParam("lat") @Parameter(description = "Latitude", required = true) BigDecimal latitude,
-            @QueryParam("lon") @Parameter(description = "Longitude", required = true) BigDecimal longitude,
+            @QueryParam("lat") @NotNull @DecimalMin("-90") @DecimalMax("90") @Parameter(description = "Latitude", required = true) BigDecimal latitude,
+            @QueryParam("lon") @NotNull @DecimalMin("-180") @DecimalMax("180") @Parameter(description = "Longitude", required = true) BigDecimal longitude,
             @QueryParam("from") @Parameter(description = "Start time (ISO-8601)") String from,
             @QueryParam("to") @Parameter(description = "End time (ISO-8601)") String to) {
-
-        if (latitude == null || longitude == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity("Latitude and longitude are required")
-                .build();
-        }
 
         try {
             LocalDateTime fromTime = from != null ?
@@ -80,14 +75,8 @@ public class WeatherForecastResource {
     @APIResponse(responseCode = "400", description = "Invalid parameters")
     @APIResponse(responseCode = "404", description = "No forecast found")
     public Response getCurrentForecast(
-            @QueryParam("lat") @Parameter(description = "Latitude", required = true) BigDecimal latitude,
-            @QueryParam("lon") @Parameter(description = "Longitude", required = true) BigDecimal longitude) {
-
-        if (latitude == null || longitude == null) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity("Latitude and longitude are required")
-                .build();
-        }
+            @QueryParam("lat") @NotNull @DecimalMin("-90") @DecimalMax("90") @Parameter(description = "Latitude", required = true) BigDecimal latitude,
+            @QueryParam("lon") @NotNull @DecimalMin("-180") @DecimalMax("180") @Parameter(description = "Longitude", required = true) BigDecimal longitude) {
 
         List<WeatherForecastEntity> forecasts = weatherForecastService.getCurrentForecast(latitude, longitude);
 

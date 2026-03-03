@@ -2,6 +2,7 @@ package com.redhat.weather.domain.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -21,9 +22,11 @@ public class WeatherAlertEntity extends PanacheEntityBase {
     public Long id;
 
     // Alert identification
+    @NotBlank
     @Column(name = "alert_id", nullable = false, unique = true, length = 255)
     public String alertId;
 
+    @NotBlank
     @Column(name = "event", nullable = false, length = 200)
     public String event;
 
@@ -34,12 +37,15 @@ public class WeatherAlertEntity extends PanacheEntityBase {
     @Column(name = "description", columnDefinition = "TEXT")
     public String description;
 
+    @Size(max = 20)
     @Column(name = "severity", length = 20)
     public String severity;
 
+    @Size(max = 20)
     @Column(name = "certainty", length = 20)
     public String certainty;
 
+    @Size(max = 20)
     @Column(name = "urgency", length = 20)
     public String urgency;
 
@@ -59,6 +65,7 @@ public class WeatherAlertEntity extends PanacheEntityBase {
     public String senderName;
 
     // Full alert data
+    @NotBlank
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "alert_data", columnDefinition = "jsonb", nullable = false)
     public String alertData;

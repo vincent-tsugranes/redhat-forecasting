@@ -30,7 +30,7 @@ public class AirportWeatherResource {
     public Response getAirportWeather(
             @PathParam("code") @Parameter(description = "ICAO airport code (e.g., KJFK)") String code) {
 
-        List<AirportWeatherEntity> weather = airportWeatherService.getAirportWeather(code);
+        List<AirportWeatherEntity> weather = airportWeatherService.getAirportWeather(code.toUpperCase());
 
         if (weather.isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND)
@@ -49,7 +49,7 @@ public class AirportWeatherResource {
     public Response getLatestMetar(
             @PathParam("code") @Parameter(description = "ICAO airport code") String code) {
 
-        return airportWeatherService.getLatestMetar(code)
+        return airportWeatherService.getLatestMetar(code.toUpperCase())
             .map(metar -> Response.ok(metar).build())
             .orElse(Response.status(Response.Status.NOT_FOUND)
                 .entity("No METAR found for airport: " + code)
@@ -64,7 +64,7 @@ public class AirportWeatherResource {
     public Response getLatestTaf(
             @PathParam("code") @Parameter(description = "ICAO airport code") String code) {
 
-        return airportWeatherService.getLatestTaf(code)
+        return airportWeatherService.getLatestTaf(code.toUpperCase())
             .map(taf -> Response.ok(taf).build())
             .orElse(Response.status(Response.Status.NOT_FOUND)
                 .entity("No TAF found for airport: " + code)
@@ -79,8 +79,9 @@ public class AirportWeatherResource {
             @PathParam("code") @Parameter(description = "ICAO airport code") String code) {
 
         try {
-            airportWeatherService.fetchAndStoreMETAR(code);
-            airportWeatherService.fetchAndStoreTAF(code);
+            String upperCode = code.toUpperCase();
+            airportWeatherService.fetchAndStoreMETAR(upperCode);
+            airportWeatherService.fetchAndStoreTAF(upperCode);
 
             return Response.status(Response.Status.ACCEPTED)
                 .entity("Weather refresh triggered for airport: " + code)
