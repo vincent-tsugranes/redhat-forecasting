@@ -16,6 +16,11 @@
     <div v-if="error" class="error">{{ error }}</div>
 
     <div v-if="forecasts.length > 0" class="card">
+      <h2>Forecast Trends</h2>
+      <ForecastChart :forecasts="forecasts" />
+    </div>
+
+    <div v-if="forecasts.length > 0" class="card">
       <h2>Forecast Data</h2>
       <p><strong>{{ forecasts.length }}</strong> forecast periods available</p>
       <p v-if="forecasts[0]">Source: <strong>{{ forecasts[0].source.toUpperCase() }}</strong></p>
@@ -50,6 +55,7 @@ import { ref, onMounted } from 'vue'
 import weatherService, { type Location, type WeatherForecast } from '../services/weatherService'
 import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
+import ForecastChart from '../components/ForecastChart.vue'
 
 const locations = ref<Location[]>([])
 const forecasts = ref<WeatherForecast[]>([])

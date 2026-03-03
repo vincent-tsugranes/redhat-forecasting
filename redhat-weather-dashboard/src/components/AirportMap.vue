@@ -104,6 +104,11 @@ function createPopupContent(airport: Location, lat: number, lon: number) {
   `
 }
 
+function degreesToCompass(deg: number): string {
+  const dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+  return dirs[Math.round(deg / 22.5) % 16]
+}
+
 function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location) {
   const popupElement = popup.getElement()
   if (!popupElement) return
@@ -115,9 +120,17 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
     // Convert Celsius to Fahrenheit
     const tempC = weather.temperatureCelsius
     const tempF = tempC !== null && tempC !== undefined ? Math.round((tempC * 9/5) + 32) : null
+    const dewC = weather.dewpointCelsius
+    const dewF = dewC !== null && dewC !== undefined ? Math.round((dewC * 9/5) + 32) : null
     const windKnots = weather.windSpeedKnots
     const windMph = windKnots ? Math.round(windKnots * 1.151) : null
+    const gustKnots = weather.windGustKnots
+    const gustMph = gustKnots ? Math.round(gustKnots * 1.151) : null
+    const windDir = weather.windDirection
+    const windDirStr = windDir != null ? degreesToCompass(windDir) : null
     const visibility = weather.visibilityMiles
+    const ceiling = weather.ceilingFeet
+    const skyCondition = weather.skyCondition
     const flightCategory = weather.flightCategory
     const observationTime = weather.observationTime ? new Date(weather.observationTime).toLocaleString() : null
     const fetchedAt = weather.fetchedAt || null
@@ -132,6 +145,14 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
       'LIFR': '#f44336'
     }
 
+    // Build wind string
+    let windStr = ''
+    if (windMph) {
+      windStr = `${windMph} mph`
+      if (windDirStr) windStr += ` from ${windDirStr}`
+      if (gustMph) windStr += `, gusts ${gustMph}`
+    }
+
     weatherContainer.innerHTML = `
       <div class="weather-divider"></div>
       <div class="weather-title">✈️ METAR Conditions</div>
@@ -142,16 +163,34 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
             <span class="weather-value">${tempF}°F / ${tempC}°C</span>
           </div>
         ` : ''}
-        ${windMph ? `
+        ${dewF !== null ? `
+          <div class="weather-item">
+            <span class="weather-label">Dew Point:</span>
+            <span class="weather-value">${dewF}°F / ${dewC}°C</span>
+          </div>
+        ` : ''}
+        ${windStr ? `
           <div class="weather-item">
             <span class="weather-label">Wind:</span>
-            <span class="weather-value">${windMph} mph (${windKnots} kts)</span>
+            <span class="weather-value">${windStr}</span>
           </div>
         ` : ''}
         ${visibility !== null && visibility !== undefined ? `
           <div class="weather-item">
             <span class="weather-label">Visibility:</span>
             <span class="weather-value">${visibility} mi</span>
+          </div>
+        ` : ''}
+        ${ceiling != null ? `
+          <div class="weather-item">
+            <span class="weather-label">Ceiling:</span>
+            <span class="weather-value">${ceiling} ft</span>
+          </div>
+        ` : ''}
+        ${skyCondition ? `
+          <div class="weather-item">
+            <span class="weather-label">Sky:</span>
+            <span class="weather-value">${skyCondition}</span>
           </div>
         ` : ''}
         ${flightCategory ? `

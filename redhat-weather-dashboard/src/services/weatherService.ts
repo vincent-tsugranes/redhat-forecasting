@@ -44,6 +44,10 @@ export interface AirportWeather {
   windDirection?: number
   temperatureCelsius?: number
   dewpointCelsius?: number
+  windGustKnots?: number
+  altimeterInches?: number
+  skyCondition?: string
+  weatherConditions?: string
   flightCategory?: string
   fetchedAt?: string
 }

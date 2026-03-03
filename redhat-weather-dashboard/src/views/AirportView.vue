@@ -33,10 +33,16 @@
           <div v-if="metar.flightCategory" class="flight-category" :class="'category-' + metar.flightCategory">
             {{ metar.flightCategory }}
           </div>
-          <div v-if="metar.temperatureCelsius">🌡️ {{ Math.round(metar.temperatureCelsius) }}°C</div>
-          <div v-if="metar.windSpeedKnots">💨 {{ metar.windSpeedKnots }} knots</div>
-          <div v-if="metar.visibilityMiles">👁️ {{ metar.visibilityMiles }} mi</div>
-          <div v-if="metar.ceilingFeet">☁️ {{ metar.ceilingFeet }} ft</div>
+          <div v-if="metar.temperatureCelsius != null">🌡️ {{ Math.round(metar.temperatureCelsius) }}°C</div>
+          <div v-if="metar.dewpointCelsius != null">💧 Dew {{ Math.round(metar.dewpointCelsius) }}°C</div>
+          <div v-if="metar.windSpeedKnots != null">
+            💨 {{ metar.windDirection != null ? metar.windDirection + '° at ' : '' }}{{ metar.windSpeedKnots }} kts{{ metar.windGustKnots ? ', gusts ' + metar.windGustKnots + ' kts' : '' }}
+          </div>
+          <div v-if="metar.visibilityMiles != null">👁️ {{ metar.visibilityMiles }} mi</div>
+          <div v-if="metar.ceilingFeet != null">☁️ Ceiling {{ metar.ceilingFeet }} ft</div>
+          <div v-if="metar.altimeterInches != null">📊 Altimeter {{ metar.altimeterInches }} inHg</div>
+          <div v-if="metar.skyCondition">🌤️ Sky: {{ metar.skyCondition }}</div>
+          <div v-if="metar.weatherConditions">🌧️ {{ metar.weatherConditions }}</div>
         </div>
       </div>
     </div>
