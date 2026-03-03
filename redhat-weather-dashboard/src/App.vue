@@ -2,15 +2,20 @@
   <div id="app">
     <header class="app-header">
       <div class="container header-content">
-        <h1>Red Hat Weather Dashboard</h1>
+        <h1>{{ $t('app.title') }}</h1>
         <div class="header-controls">
           <nav>
-            <router-link to="/">Dashboard</router-link>
-            <router-link to="/forecasts">Forecasts</router-link>
-            <router-link to="/airports">Airports</router-link>
-            <router-link to="/hurricanes">Hurricanes</router-link>
+            <router-link to="/">{{ $t('nav.dashboard') }}</router-link>
+            <router-link to="/forecasts">{{ $t('nav.forecasts') }}</router-link>
+            <router-link to="/airports">{{ $t('nav.airports') }}</router-link>
+            <router-link to="/hurricanes">{{ $t('nav.hurricanes') }}</router-link>
           </nav>
-          <button class="theme-toggle" @click="toggleTheme" :title="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'" :aria-label="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'">
+          <button
+            class="theme-toggle"
+            :title="theme === 'dark' ? $t('app.themeLight') : $t('app.themeDark')"
+            :aria-label="theme === 'dark' ? $t('app.themeLight') : $t('app.themeDark')"
+            @click="toggleTheme"
+          >
             <span aria-hidden="true">{{ theme === 'dark' ? '☀️' : '🌙' }}</span>
           </button>
         </div>
@@ -23,7 +28,9 @@
 
     <footer class="app-footer">
       <div class="container">
-        <p>&copy; 2024 Red Hat Weather Service. Data from NOAA, Aviation Weather Center, NHC, and OpenWeatherMap.</p>
+        <p>
+          {{ $t('app.footer') }}
+        </p>
       </div>
     </footer>
   </div>
@@ -34,7 +41,7 @@ import { ref, onMounted } from 'vue'
 
 const theme = ref(
   localStorage.getItem('theme') ||
-  (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
 )
 
 function applyTheme(t: string) {

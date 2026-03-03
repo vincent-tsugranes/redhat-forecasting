@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import i18n from '../../i18n'
 import DataStatusCard from '../../components/DataStatusCard.vue'
 
 // Mock the API modules
@@ -24,7 +25,7 @@ vi.mock('../../services/api', () => ({
 
 describe('DataStatusCard', () => {
   it('renders heading with aria-hidden emoji', async () => {
-    const wrapper = mount(DataStatusCard)
+    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const heading = wrapper.find('h3')
@@ -34,7 +35,7 @@ describe('DataStatusCard', () => {
   })
 
   it('progress bar has role="progressbar"', async () => {
-    const wrapper = mount(DataStatusCard)
+    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const progressBar = wrapper.find('[role="progressbar"]')
@@ -42,7 +43,7 @@ describe('DataStatusCard', () => {
   })
 
   it('progress bar has aria-valuenow, aria-valuemin, aria-valuemax', async () => {
-    const wrapper = mount(DataStatusCard)
+    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const progressBar = wrapper.find('[role="progressbar"]')
@@ -52,7 +53,7 @@ describe('DataStatusCard', () => {
   })
 
   it('status badge has role="status"', async () => {
-    const wrapper = mount(DataStatusCard)
+    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const badge = wrapper.find('[role="status"]')
@@ -60,7 +61,7 @@ describe('DataStatusCard', () => {
   })
 
   it('status badge emoji has aria-hidden', async () => {
-    const wrapper = mount(DataStatusCard)
+    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const badge = wrapper.find('.status-badge')
