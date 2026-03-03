@@ -1,61 +1,94 @@
 <template>
   <div class="container">
-    <h1>Airport Weather</h1>
+    <h1>{{ $t('airport.title') }}</h1>
 
     <div class="card">
-      <h2>Select Airport</h2>
-      <label for="airport-select" class="sr-only">Select airport</label>
-      <select id="airport-select" v-model="selectedAirportCode" @change="loadAirportWeather" style="width: 100%; padding: 10px; font-size: 16px;">
-        <option value="">-- Select an airport --</option>
+      <h2>{{ $t('airport.selectAirport') }}</h2>
+      <label for="airport-select" class="sr-only">{{ $t('airport.selectAriaLabel') }}</label>
+      <select
+        id="airport-select"
+        v-model="selectedAirportCode"
+        style="width: 100%; padding: 10px; font-size: 16px"
+        @change="loadAirportWeather"
+      >
+        <option value="">{{ $t('airport.selectPlaceholder') }}</option>
         <option v-for="airport in airports" :key="airport.id" :value="airport.airportCode">
           {{ airport.airportCode }} - {{ airport.name }}
         </option>
       </select>
-      <button v-if="selectedAirportCode" @click="refreshWeather" :disabled="refreshing" style="margin-top: 10px;">
-        {{ refreshing ? 'Refreshing...' : 'Refresh Weather' }}
+      <button
+        v-if="selectedAirportCode"
+        :disabled="refreshing"
+        style="margin-top: 10px"
+        @click="refreshWeather"
+      >
+        {{ refreshing ? $t('airport.refreshing') : $t('airport.refreshWeather') }}
       </button>
     </div>
 
-    <div v-if="loading" class="loading">Loading airport weather...</div>
+    <AirportSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
     <div v-if="metar" class="card">
-      <h2>METAR (Current Observation)</h2>
+      <h2>{{ $t('airport.metar') }}</h2>
       <div class="weather-report">
         <div class="report-header">
           <strong>{{ selectedAirportCode }}</strong>
           <span>{{ formatDate(metar.observationTime) }}</span>
         </div>
-        <div v-if="metar.fetchedAt" style="margin-bottom: 10px;">
+        <div v-if="metar.fetchedAt" style="margin-bottom: 10px">
           <FreshnessBadge :fetched-at="metar.fetchedAt" data-type="airport" />
         </div>
         <div class="report-raw">{{ metar.rawText }}</div>
         <div class="report-details">
-          <div v-if="metar.flightCategory" class="flight-category" :class="'category-' + metar.flightCategory" :aria-label="'Flight category: ' + metar.flightCategory">
+          <div
+            v-if="metar.flightCategory"
+            class="flight-category"
+            :class="'category-' + metar.flightCategory"
+            :aria-label="'Flight category: ' + metar.flightCategory"
+          >
             {{ metar.flightCategory }}
           </div>
-          <div v-if="metar.temperatureCelsius != null"><span aria-hidden="true">🌡️</span> {{ Math.round(metar.temperatureCelsius) }}°C</div>
-          <div v-if="metar.dewpointCelsius != null"><span aria-hidden="true">💧</span> Dew {{ Math.round(metar.dewpointCelsius) }}°C</div>
-          <div v-if="metar.windSpeedKnots != null">
-            <span aria-hidden="true">💨</span> {{ metar.windDirection != null ? metar.windDirection + '° at ' : '' }}{{ metar.windSpeedKnots }} kts{{ metar.windGustKnots ? ', gusts ' + metar.windGustKnots + ' kts' : '' }}
+          <div v-if="metar.temperatureCelsius != null">
+            <span aria-hidden="true">🌡️</span> {{ Math.round(metar.temperatureCelsius) }}°C
           </div>
-          <div v-if="metar.visibilityMiles != null"><span aria-hidden="true">👁️</span> Visibility: {{ metar.visibilityMiles }} mi</div>
-          <div v-if="metar.ceilingFeet != null"><span aria-hidden="true">☁️</span> Ceiling {{ metar.ceilingFeet }} ft</div>
-          <div v-if="metar.altimeterInches != null"><span aria-hidden="true">📊</span> Altimeter {{ metar.altimeterInches }} inHg</div>
-          <div v-if="metar.skyCondition"><span aria-hidden="true">🌤️</span> Sky: {{ metar.skyCondition }}</div>
-          <div v-if="metar.weatherConditions"><span aria-hidden="true">🌧️</span> {{ metar.weatherConditions }}</div>
+          <div v-if="metar.dewpointCelsius != null">
+            <span aria-hidden="true">💧</span> Dew {{ Math.round(metar.dewpointCelsius) }}°C
+          </div>
+          <div v-if="metar.windSpeedKnots != null">
+            <span aria-hidden="true">💨</span>
+            {{ metar.windDirection != null ? metar.windDirection + '° at ' : ''
+            }}{{ metar.windSpeedKnots }} kts{{
+              metar.windGustKnots ? ', gusts ' + metar.windGustKnots + ' kts' : ''
+            }}
+          </div>
+          <div v-if="metar.visibilityMiles != null">
+            <span aria-hidden="true">👁️</span> Visibility: {{ metar.visibilityMiles }} mi
+          </div>
+          <div v-if="metar.ceilingFeet != null">
+            <span aria-hidden="true">☁️</span> Ceiling {{ metar.ceilingFeet }} ft
+          </div>
+          <div v-if="metar.altimeterInches != null">
+            <span aria-hidden="true">📊</span> Altimeter {{ metar.altimeterInches }} inHg
+          </div>
+          <div v-if="metar.skyCondition">
+            <span aria-hidden="true">🌤️</span> Sky: {{ metar.skyCondition }}
+          </div>
+          <div v-if="metar.weatherConditions">
+            <span aria-hidden="true">🌧️</span> {{ metar.weatherConditions }}
+          </div>
         </div>
       </div>
     </div>
 
     <div v-if="taf" class="card">
-      <h2>TAF (Terminal Aerodrome Forecast)</h2>
+      <h2>{{ $t('airport.taf') }}</h2>
       <div class="weather-report">
         <div class="report-header">
           <strong>{{ selectedAirportCode }}</strong>
           <span>{{ formatDate(taf.observationTime) }}</span>
         </div>
-        <div v-if="taf.fetchedAt" style="margin-bottom: 10px;">
+        <div v-if="taf.fetchedAt" style="margin-bottom: 10px">
           <FreshnessBadge :fetched-at="taf.fetchedAt" data-type="airport" />
         </div>
         <div class="report-raw">{{ taf.rawText }}</div>
@@ -63,19 +96,24 @@
     </div>
 
     <div v-if="!loading && !metar && selectedAirportCode" class="card">
-      <p>No weather data available for this airport yet.</p>
-      <p>Click "Refresh Weather" to fetch the latest data.</p>
+      <p>{{ $t('airport.noData') }}</p>
+      <p>{{ $t('airport.noDataHint') }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import weatherService, { type Location, type AirportWeather } from '../services/weatherService'
+import { storeToRefs } from 'pinia'
+import { useWeatherStore } from '../stores/weatherStore'
+import weatherService, { type AirportWeather } from '../services/weatherService'
 import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
+import AirportSkeleton from '../components/skeletons/AirportSkeleton.vue'
 
-const airports = ref<Location[]>([])
+const store = useWeatherStore()
+const { airports } = storeToRefs(store)
+
 const selectedAirportCode = ref<string>('')
 const metar = ref<AirportWeather | null>(null)
 const taf = ref<AirportWeather | null>(null)
@@ -83,14 +121,6 @@ const loading = ref(false)
 const refreshing = ref(false)
 const error = ref<string | null>(null)
 let refreshTimeout: ReturnType<typeof setTimeout> | null = null
-
-async function loadAirports() {
-  try {
-    airports.value = await weatherService.getAirports()
-  } catch (err: any) {
-    error.value = err.message || 'Failed to load airports'
-  }
-}
 
 async function loadAirportWeather() {
   if (!selectedAirportCode.value) return
@@ -103,7 +133,7 @@ async function loadAirportWeather() {
   try {
     const [metarData, tafData] = await Promise.allSettled([
       weatherService.getLatestMetar(selectedAirportCode.value),
-      weatherService.getLatestTaf(selectedAirportCode.value)
+      weatherService.getLatestTaf(selectedAirportCode.value),
     ])
 
     if (metarData.status === 'fulfilled') {
@@ -117,9 +147,8 @@ async function loadAirportWeather() {
     if (metarData.status === 'rejected' && tafData.status === 'rejected') {
       error.value = 'No weather data available for this airport'
     }
-  } catch (err: any) {
-    error.value = err.message || 'Failed to load airport weather'
-    console.error('Error loading airport weather:', err)
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Failed to load airport weather'
   } finally {
     loading.value = false
   }
@@ -133,21 +162,18 @@ async function refreshWeather() {
 
   try {
     await weatherService.refreshAirportWeather(selectedAirportCode.value)
-    // Wait a moment for the data to be fetched
     refreshTimeout = setTimeout(() => {
-      loadAirportWeather().catch((err) => {
-        console.error('Error reloading airport weather:', err)
-      })
+      loadAirportWeather()
       refreshing.value = false
     }, 2000)
-  } catch (err: any) {
-    error.value = err.message || 'Failed to refresh airport weather'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Failed to refresh airport weather'
     refreshing.value = false
   }
 }
 
 onMounted(() => {
-  loadAirports()
+  store.fetchAirports()
 })
 
 onUnmounted(() => {

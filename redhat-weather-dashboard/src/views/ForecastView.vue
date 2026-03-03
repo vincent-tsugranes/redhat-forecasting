@@ -1,18 +1,18 @@
 <template>
   <div class="container">
-    <h1>Weather Forecasts</h1>
+    <h1>{{ $t('forecast.title') }}</h1>
 
     <AlertsBanner />
 
     <div class="card search-card">
-      <h2>Search Location</h2>
+      <h2>{{ $t('forecast.searchLocation') }}</h2>
       <div class="search-wrapper">
-        <label for="location-search" class="sr-only">Search locations by name or state</label>
+        <label for="location-search" class="sr-only">{{ $t('forecast.searchAriaLabel') }}</label>
         <input
           id="location-search"
           v-model="searchQuery"
           type="text"
-          placeholder="Search locations by name or state..."
+          :placeholder="$t('forecast.searchPlaceholder')"
           class="search-input"
           role="combobox"
           aria-autocomplete="list"
@@ -23,7 +23,12 @@
           @focus="showResults = true"
           @keydown="onSearchKeydown"
         />
-        <ul v-if="searchResults.length > 0 && showResults && searchQuery" id="search-listbox" class="search-results" role="listbox">
+        <ul
+          v-if="searchResults.length > 0 && showResults && searchQuery"
+          id="search-listbox"
+          class="search-results"
+          role="listbox"
+        >
           <li
             v-for="(loc, index) in searchResults"
             :id="'search-option-' + loc.id"
@@ -41,20 +46,24 @@
       </div>
     </div>
 
-    <div v-if="loading" class="loading">Loading forecasts...</div>
+    <ForecastSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
     <div v-if="forecasts.length > 0" class="card">
-      <h2>Forecast Trends</h2>
+      <h2>{{ $t('forecast.forecastTrends') }}</h2>
       <ForecastChart :forecasts="forecasts" />
     </div>
 
     <div v-if="forecasts.length > 0" class="card">
-      <h2>Forecast Data</h2>
-      <p><strong>{{ forecasts.length }}</strong> forecast periods available</p>
-      <p v-if="forecasts[0]">Source: <strong>{{ forecasts[0].source.toUpperCase() }}</strong></p>
+      <h2>{{ $t('forecast.forecastData') }}</h2>
+      <p>
+        <strong>{{ forecasts.length }}</strong> {{ $t('forecast.periodsAvailable', { count: forecasts.length }) }}
+      </p>
+      <p v-if="forecasts[0]">
+        {{ $t('forecast.source') }} <strong>{{ forecasts[0].source.toUpperCase() }}</strong>
+      </p>
       <p v-if="forecasts[0]?.fetchedAt">
-        Data fetched: <FreshnessBadge :fetched-at="forecasts[0].fetchedAt" data-type="forecast" />
+        {{ $t('forecast.dataFetched') }} <FreshnessBadge :fetched-at="forecasts[0].fetchedAt" data-type="forecast" />
       </p>
 
       <div v-for="forecast in forecasts.slice(0, 10)" :key="forecast.id" class="forecast-item">
@@ -62,10 +71,18 @@
           <strong>{{ formatDate(forecast.validFrom) }}</strong> - {{ formatDate(forecast.validTo) }}
         </div>
         <div class="forecast-details">
-          <div><span aria-hidden="true">🌡️</span> {{ forecast.temperatureFahrenheit }}°F ({{ forecast.temperatureCelsius }}°C)</div>
+          <div>
+            <span aria-hidden="true">🌡️</span> {{ forecast.temperatureFahrenheit }}°F ({{
+              forecast.temperatureCelsius
+            }}°C)
+          </div>
           <div><span aria-hidden="true">💨</span> Wind: {{ forecast.windSpeedMph }} mph</div>
-          <div v-if="forecast.precipitationProbability != null"><span aria-hidden="true">☔</span> Precip: {{ forecast.precipitationProbability }}%</div>
-          <div v-if="forecast.humidity != null"><span aria-hidden="true">💧</span> Humidity: {{ forecast.humidity }}%</div>
+          <div v-if="forecast.precipitationProbability != null">
+            <span aria-hidden="true">☔</span> Precip: {{ forecast.precipitationProbability }}%
+          </div>
+          <div v-if="forecast.humidity != null">
+            <span aria-hidden="true">💧</span> Humidity: {{ forecast.humidity }}%
+          </div>
         </div>
         <div class="forecast-description">
           {{ forecast.weatherDescription || forecast.weatherShortDescription }}
@@ -74,29 +91,36 @@
     </div>
 
     <div v-else-if="!loading && selectedLocationId" class="card">
-      <p>No forecast data available for this location yet.</p>
-      <p>The scheduler will fetch data automatically within 30 minutes.</p>
+      <p>{{ $t('forecast.noData') }}</p>
+      <p>{{ $t('forecast.schedulerNote') }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import weatherService, { type Location, type WeatherForecast } from '../services/weatherService'
+import { storeToRefs } from 'pinia'
+import { useWeatherStore } from '../stores/weatherStore'
+import { type Location } from '../services/weatherService'
 import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import ForecastChart from '../components/ForecastChart.vue'
 import AlertsBanner from '../components/AlertsBanner.vue'
+import ForecastSkeleton from '../components/skeletons/ForecastSkeleton.vue'
 
-const locations = ref<Location[]>([])
-const forecasts = ref<WeatherForecast[]>([])
+const store = useWeatherStore()
+const {
+  locations,
+  forecasts,
+  forecastsLoading: loading,
+  forecastsError: error,
+} = storeToRefs(store)
+
 const selectedLocationId = ref<string>('')
 const searchQuery = ref('')
 const searchResults = ref<Location[]>([])
 const showResults = ref(false)
 const highlightedIndex = ref(-1)
-const loading = ref(false)
-const error = ref<string | null>(null)
 
 const activeDescendant = computed(() => {
   if (highlightedIndex.value >= 0 && highlightedIndex.value < searchResults.value.length) {
@@ -104,14 +128,6 @@ const activeDescendant = computed(() => {
   }
   return undefined
 })
-
-async function loadLocations() {
-  try {
-    locations.value = await weatherService.getLocations()
-  } catch (err: any) {
-    error.value = err.message || 'Failed to load locations'
-  }
-}
 
 function onSearchInput() {
   highlightedIndex.value = -1
@@ -123,9 +139,7 @@ function onSearchInput() {
   const query = searchQuery.value.toLowerCase()
   searchResults.value = locations.value
     .filter(
-      (loc) =>
-        loc.name?.toLowerCase().includes(query) ||
-        loc.state?.toLowerCase().includes(query)
+      (loc) => loc.name?.toLowerCase().includes(query) || loc.state?.toLowerCase().includes(query),
     )
     .slice(0, 10)
   showResults.value = true
@@ -162,27 +176,11 @@ function selectLocation(loc: Location) {
   searchQuery.value = `${loc.name}, ${loc.state || loc.country || ''}`
   searchResults.value = []
   showResults.value = false
-  loadForecasts()
-}
-
-async function loadForecasts() {
-  if (!selectedLocationId.value) return
-
-  loading.value = true
-  error.value = null
-
-  try {
-    forecasts.value = await weatherService.getForecastsByLocation(Number(selectedLocationId.value))
-  } catch (err: any) {
-    error.value = err.message || 'Failed to load forecasts'
-    console.error('Error loading forecasts:', err)
-  } finally {
-    loading.value = false
-  }
+  store.fetchForecasts(Number(selectedLocationId.value))
 }
 
 onMounted(() => {
-  loadLocations()
+  store.fetchLocations()
 })
 </script>
 

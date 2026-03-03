@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
+import i18n from '../../i18n'
 import AlertsBanner from '../../components/AlertsBanner.vue'
+import { clearCache } from '../../stores/weatherStore'
 
 // Mock the weather service
 vi.mock('../../services/weatherService', () => ({
@@ -10,8 +13,13 @@ vi.mock('../../services/weatherService', () => ({
 }))
 
 describe('AlertsBanner', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    clearCache()
+  })
+
   it('renders nothing when no alerts', async () => {
-    const wrapper = mount(AlertsBanner)
+    const wrapper = mount(AlertsBanner, { global: { plugins: [i18n] } })
     await flushPromises()
     expect(wrapper.find('.alerts-banner').exists()).toBe(false)
   })
@@ -27,7 +35,7 @@ describe('AlertsBanner', () => {
       },
     ])
 
-    const wrapper = mount(AlertsBanner)
+    const wrapper = mount(AlertsBanner, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const header = wrapper.find('.alerts-header')
@@ -45,7 +53,7 @@ describe('AlertsBanner', () => {
       },
     ])
 
-    const wrapper = mount(AlertsBanner)
+    const wrapper = mount(AlertsBanner, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const header = wrapper.find('.alerts-header')
@@ -63,7 +71,7 @@ describe('AlertsBanner', () => {
       },
     ])
 
-    const wrapper = mount(AlertsBanner)
+    const wrapper = mount(AlertsBanner, { global: { plugins: [i18n] } })
     await flushPromises()
 
     const icon = wrapper.find('.alert-icon')

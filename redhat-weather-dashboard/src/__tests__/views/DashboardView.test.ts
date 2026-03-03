@@ -1,13 +1,31 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
+import i18n from '../../i18n'
 import DashboardView from '../../views/DashboardView.vue'
 
 // Mock the weather service
 vi.mock('../../services/weatherService', () => ({
   default: {
     getLocations: vi.fn().mockResolvedValue([
-      { id: 1, name: 'New York', state: 'NY', country: 'US', latitude: 40.7, longitude: -74.0, locationType: 'city' },
-      { id: 2, name: 'Los Angeles', state: 'CA', country: 'US', latitude: 34.0, longitude: -118.2, locationType: 'city' },
+      {
+        id: 1,
+        name: 'New York',
+        state: 'NY',
+        country: 'US',
+        latitude: 40.7,
+        longitude: -74.0,
+        locationType: 'city',
+      },
+      {
+        id: 2,
+        name: 'Los Angeles',
+        state: 'CA',
+        country: 'US',
+        latitude: 34.0,
+        longitude: -118.2,
+        locationType: 'city',
+      },
     ]),
   },
 }))
@@ -20,9 +38,14 @@ const RouterLink = {
 }
 
 describe('DashboardView', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   it('renders section headings with aria-hidden emojis', async () => {
     const wrapper = mount(DashboardView, {
       global: {
+        plugins: [i18n],
         stubs: {
           DataStatusCard: true,
           AirportMap: true,
@@ -39,6 +62,7 @@ describe('DashboardView', () => {
   it('refresh button has aria-label', async () => {
     const wrapper = mount(DashboardView, {
       global: {
+        plugins: [i18n],
         stubs: {
           DataStatusCard: true,
           AirportMap: true,
@@ -55,6 +79,7 @@ describe('DashboardView', () => {
   it('renders location list', async () => {
     const wrapper = mount(DashboardView, {
       global: {
+        plugins: [i18n],
         stubs: {
           DataStatusCard: true,
           AirportMap: true,

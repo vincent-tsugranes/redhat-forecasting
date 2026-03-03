@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
+import i18n from '../../i18n'
 import AirportView from '../../views/AirportView.vue'
 
 // Mock the weather service
@@ -13,9 +15,14 @@ vi.mock('../../services/weatherService', () => ({
 }))
 
 describe('AirportView', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   it('renders select with associated label', async () => {
     const wrapper = mount(AirportView, {
       global: {
+        plugins: [i18n],
         stubs: {
           FreshnessBadge: true,
         },
@@ -34,6 +41,7 @@ describe('AirportView', () => {
   it('shows loading state initially', () => {
     const wrapper = mount(AirportView, {
       global: {
+        plugins: [i18n],
         stubs: {
           FreshnessBadge: true,
         },

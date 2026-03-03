@@ -1,12 +1,12 @@
 <template>
   <div class="container">
-    <h1>Hurricane Tracking</h1>
+    <h1>{{ $t('hurricane.title') }}</h1>
 
     <div class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2>Active Tropical Systems</h2>
-        <button @click="refreshHurricanes" :disabled="refreshing">
-          {{ refreshing ? 'Refreshing...' : 'Refresh Data' }}
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <h2>{{ $t('hurricane.activeSystems') }}</h2>
+        <button :disabled="refreshing" @click="refreshHurricanes">
+          {{ refreshing ? $t('airport.refreshing') : $t('hurricane.refreshData') }}
         </button>
       </div>
     </div>
@@ -17,11 +17,16 @@
       @storm-selected="onStormSelected"
     />
 
-    <div v-if="loading" class="loading">Loading hurricane data...</div>
+    <HurricaneSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
     <div v-if="hurricanes.length > 0">
-      <div v-for="storm in hurricanes" :key="storm.id" class="card" :class="{ 'card-selected': selectedStormId === storm.stormId }">
+      <div
+        v-for="storm in hurricanes"
+        :key="storm.id"
+        class="card"
+        :class="{ 'card-selected': selectedStormId === storm.stormId }"
+      >
         <div class="storm-header">
           <h2>{{ storm.stormName || 'Unnamed Storm' }}</h2>
           <div class="storm-id">{{ storm.stormId }}</div>
@@ -29,116 +34,101 @@
 
         <div class="storm-info">
           <div class="info-item">
-            <strong>Category:</strong>
-            <span class="category" :class="'cat-' + (storm.category || 0)" :aria-label="'Hurricane category: ' + getCategoryLabel(storm.category)">
+            <strong>{{ $t('hurricane.category') }}</strong>
+            <span
+              class="category"
+              :class="'cat-' + (storm.category || 0)"
+              :aria-label="'Hurricane category: ' + getCategoryLabel(storm.category)"
+            >
               {{ getCategoryLabel(storm.category) }}
             </span>
           </div>
           <div class="info-item">
-            <strong>Max Winds:</strong>
+            <strong>{{ $t('hurricane.maxWinds') }}</strong>
             {{ storm.maxSustainedWindsMph }} mph
           </div>
           <div class="info-item">
-            <strong>Pressure:</strong>
+            <strong>{{ $t('hurricane.pressure') }}</strong>
             {{ storm.minCentralPressureMb }} mb
           </div>
           <div class="info-item">
-            <strong>Status:</strong>
+            <strong>{{ $t('hurricane.statusLabel') }}</strong>
             {{ storm.status }}
           </div>
           <div v-if="storm.movementSpeedMph != null" class="info-item">
-            <strong>Movement:</strong>
-            {{ storm.movementSpeedMph }} mph{{ storm.movementDirection != null ? ` at ${storm.movementDirection}°` : '' }}
+            <strong>{{ $t('hurricane.movement') }}</strong>
+            {{ storm.movementSpeedMph }} mph{{
+              storm.movementDirection != null ? ` at ${storm.movementDirection}°` : ''
+            }}
           </div>
         </div>
 
         <div class="storm-location">
-          <strong>Position:</strong>
+          <strong>{{ $t('hurricane.position') }}</strong>
           {{ storm.latitude }}°{{ storm.latitude >= 0 ? 'N' : 'S' }},
           {{ Math.abs(storm.longitude) }}°{{ storm.longitude >= 0 ? 'E' : 'W' }}
         </div>
 
         <div class="storm-time">
-          <strong>Advisory Time:</strong> {{ formatDate(storm.advisoryTime) }}
-          <FreshnessBadge v-if="storm.fetchedAt" :fetched-at="storm.fetchedAt" data-type="hurricane" />
+          <strong>{{ $t('hurricane.advisoryTime') }}</strong> {{ formatDate(storm.advisoryTime) }}
+          <FreshnessBadge
+            v-if="storm.fetchedAt"
+            :fetched-at="storm.fetchedAt"
+            data-type="hurricane"
+          />
         </div>
       </div>
     </div>
 
     <div v-else-if="!loading" class="card">
-      <p><span aria-hidden="true">✅</span> No active tropical systems at this time.</p>
-      <p>Hurricane season in the Atlantic runs from June 1 to November 30.</p>
-      <p>Data is automatically fetched from the National Hurricane Center every hour during hurricane season.</p>
+      <p><span aria-hidden="true">✅</span> {{ $t('hurricane.noActive') }}</p>
+      <p>{{ $t('hurricane.seasonInfo') }}</p>
+      <p>{{ $t('hurricane.autoFetch') }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import weatherService, { type Hurricane } from '../services/weatherService'
+import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { storeToRefs } from 'pinia'
+import { useWeatherStore } from '../stores/weatherStore'
 import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import HurricaneMap from '../components/HurricaneMap.vue'
+import HurricaneSkeleton from '../components/skeletons/HurricaneSkeleton.vue'
 
-const hurricanes = ref<Hurricane[]>([])
-const loading = ref(false)
+const { t } = useI18n()
+
+const store = useWeatherStore()
+const { hurricanes, hurricanesLoading: loading, hurricanesError: error } = storeToRefs(store)
+
 const refreshing = ref(false)
-const error = ref<string | null>(null)
 const selectedStormId = ref<string | null>(null)
-let refreshTimeout: ReturnType<typeof setTimeout> | null = null
 
 function onStormSelected(stormId: string) {
   selectedStormId.value = stormId
 }
 
-async function loadHurricanes() {
-  loading.value = true
-  error.value = null
-
-  try {
-    hurricanes.value = await weatherService.getActiveStorms()
-  } catch (err: any) {
-    error.value = err.message || 'Failed to load hurricane data'
-    console.error('Error loading hurricanes:', err)
-  } finally {
-    loading.value = false
-  }
-}
-
 async function refreshHurricanes() {
   refreshing.value = true
-  error.value = null
-
   try {
-    await weatherService.refreshHurricaneData()
-    // Wait a moment for the data to be fetched
-    refreshTimeout = setTimeout(() => {
-      loadHurricanes().catch((err) => {
-        console.error('Error reloading hurricanes:', err)
-      })
-      refreshing.value = false
-    }, 2000)
-  } catch (err: any) {
-    error.value = err.message || 'Failed to refresh hurricane data'
+    await store.refreshHurricanes()
+  } catch {
+    // error is set in the store
+  } finally {
     refreshing.value = false
   }
 }
 
 function getCategoryLabel(category: number | undefined): string {
-  if (category === undefined || category === null) return 'N/A'
-  if (category === 0) return 'Tropical Storm'
-  return `Category ${category}`
+  if (category === undefined || category === null) return t('hurricane.na')
+  if (category === 0) return t('hurricane.tropicalStorm')
+  return t('hurricane.categoryN', { n: category })
 }
 
 onMounted(() => {
-  loadHurricanes()
-})
-
-onUnmounted(() => {
-  if (refreshTimeout) {
-    clearTimeout(refreshTimeout)
-    refreshTimeout = null
-  }
+  store.fetchHurricanes()
 })
 </script>
 

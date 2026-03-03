@@ -1,17 +1,19 @@
 <template>
   <div class="container">
-    <h1>Weather Dashboard</h1>
+    <h1>{{ $t('dashboard.title') }}</h1>
 
     <DataStatusCard />
 
-    <div v-if="loading" class="loading">Loading weather data...</div>
+    <DashboardSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
     <div v-if="!loading" class="grid">
       <div class="card">
-        <h2><span aria-hidden="true">📍</span> Locations</h2>
-        <p><strong>{{ locations.length }}</strong> locations monitored</p>
-        <ul v-if="locations.length > 0" style="list-style: none; padding: 0;">
+        <h2><span aria-hidden="true">📍</span> {{ $t('dashboard.locations') }}</h2>
+        <p>
+          <strong>{{ locations.length }}</strong> {{ $t('dashboard.locationsMonitored', { count: locations.length }) }}
+        </p>
+        <ul v-if="locations.length > 0" style="list-style: none; padding: 0">
           <li v-for="loc in locations.slice(0, 5)" :key="loc.id">
             {{ loc.name }}, {{ loc.state }}
           </li>
@@ -19,32 +21,32 @@
       </div>
 
       <div class="card">
-        <h2><span aria-hidden="true">🌤️</span> Weather Forecasts</h2>
-        <p>Automatic updates every 30 minutes from NOAA</p>
-        <button @click="loadData" aria-label="Refresh weather data">Refresh Data</button>
+        <h2><span aria-hidden="true">🌤️</span> {{ $t('dashboard.weatherForecasts') }}</h2>
+        <p>{{ $t('dashboard.forecastUpdates') }}</p>
+        <button :aria-label="$t('dashboard.refreshAriaLabel')" @click="loadData">{{ $t('dashboard.refreshData') }}</button>
       </div>
 
       <div class="card">
-        <h2><span aria-hidden="true">✈️</span> Airport Weather</h2>
-        <p>METAR/TAF updates every 15 minutes</p>
+        <h2><span aria-hidden="true">✈️</span> {{ $t('dashboard.airportWeather') }}</h2>
+        <p>{{ $t('dashboard.metarUpdates') }}</p>
         <router-link to="/airports">
-          <button>View Airports</button>
+          <button>{{ $t('dashboard.viewAirports') }}</button>
         </router-link>
       </div>
 
       <div class="card">
-        <h2><span aria-hidden="true">🌀</span> Hurricane Tracking</h2>
-        <p>Active tropical systems monitoring</p>
+        <h2><span aria-hidden="true">🌀</span> {{ $t('dashboard.hurricaneTracking') }}</h2>
+        <p>{{ $t('dashboard.activeMonitoring') }}</p>
         <router-link to="/hurricanes">
-          <button>View Hurricanes</button>
+          <button>{{ $t('dashboard.viewHurricanes') }}</button>
         </router-link>
       </div>
     </div>
 
-    <div v-if="!loading" class="card" style="margin-top: 20px;">
-      <h2><span aria-hidden="true">🗺️</span> Global Airport Map</h2>
-      <p style="margin-bottom: 15px; color: #666;">
-        Explore {{ locations.length }} airports worldwide. Click clusters to zoom in, or search for a specific airport.
+    <div v-if="!loading" class="card" style="margin-top: 20px">
+      <h2><span aria-hidden="true">🗺️</span> {{ $t('dashboard.globalMap') }}</h2>
+      <p style="margin-bottom: 15px; color: #666">
+        {{ $t('dashboard.mapDescription', { count: locations.length }) }}
       </p>
       <AirportMap />
     </div>
@@ -52,31 +54,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import weatherService, { type Location } from '../services/weatherService'
+import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useWeatherStore } from '../stores/weatherStore'
 import AirportMap from '../components/AirportMap.vue'
 import DataStatusCard from '../components/DataStatusCard.vue'
+import DashboardSkeleton from '../components/skeletons/DashboardSkeleton.vue'
 
-const locations = ref<Location[]>([])
-const loading = ref(false)
-const error = ref<string | null>(null)
+const store = useWeatherStore()
+const { locations, locationsLoading: loading, locationsError: error } = storeToRefs(store)
 
-async function loadData() {
-  loading.value = true
-  error.value = null
-
-  try {
-    locations.value = await weatherService.getLocations()
-  } catch (err: any) {
-    error.value = err.message || 'Failed to load locations'
-    console.error('Error loading locations:', err)
-  } finally {
-    loading.value = false
-  }
+function loadData() {
+  store.refreshLocations()
 }
 
 onMounted(() => {
-  loadData()
+  store.fetchLocations()
 })
 </script>
 
