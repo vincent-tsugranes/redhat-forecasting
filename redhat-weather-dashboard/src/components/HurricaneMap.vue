@@ -1,6 +1,11 @@
 <template>
   <div class="hurricane-map-container">
-    <div ref="mapContainer" class="map-container" role="application" aria-label="Hurricane tracking map"></div>
+    <div
+      ref="mapContainer"
+      class="map-container"
+      role="application"
+      aria-label="Hurricane tracking map"
+    ></div>
   </div>
 </template>
 
@@ -92,7 +97,7 @@ function placeStormMarkers() {
   // Auto-fit bounds if there are storms
   if (props.storms.length > 0) {
     const bounds = L.latLngBounds(
-      props.storms.map((s) => [s.latitude, s.longitude] as [number, number])
+      props.storms.map((s) => [s.latitude, s.longitude] as [number, number]),
     )
     map.value.fitBounds(bounds.pad(0.5), { maxZoom: 6 })
   }
@@ -117,7 +122,7 @@ async function loadTrack(stormId: string) {
           [prev.latitude, prev.longitude],
           [curr.latitude, curr.longitude],
         ],
-        { color, weight: 3, opacity: 0.8 }
+        { color, weight: 3, opacity: 0.8 },
       ).addTo(trackLayer.value!)
     }
 
@@ -158,7 +163,7 @@ async function loadTrack(stormId: string) {
 
     // Fit map to track bounds
     const trackBounds = L.latLngBounds(
-      trackPoints.map((pt) => [pt.latitude, pt.longitude] as [number, number])
+      trackPoints.map((pt) => [pt.latitude, pt.longitude] as [number, number]),
     )
     map.value.fitBounds(trackBounds.pad(0.3), { maxZoom: 8 })
   } catch (error) {
@@ -170,7 +175,7 @@ watch(
   () => props.storms,
   () => {
     placeStormMarkers()
-  }
+  },
 )
 
 onMounted(() => {

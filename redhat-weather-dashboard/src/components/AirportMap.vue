@@ -25,8 +25,15 @@
         </div>
       </div>
     </div>
-    <div v-if="loadError" class="map-error">Failed to load airport data. Please try refreshing the page.</div>
-    <div ref="mapContainer" class="map-container" role="application" aria-label="Interactive airport map"></div>
+    <div v-if="loadError" class="map-error">
+      Failed to load airport data. Please try refreshing the page.
+    </div>
+    <div
+      ref="mapContainer"
+      class="map-container"
+      role="application"
+      aria-label="Interactive airport map"
+    ></div>
   </div>
 </template>
 
@@ -79,7 +86,6 @@ function initializeMap() {
     showCoverageOnHover: false,
     zoomToBoundsOnClick: true,
   })
-
   ;(map.value as L.Map).addLayer(markerClusterGroup.value as unknown as L.Layer)
 }
 
@@ -111,10 +117,28 @@ function createPopupContent(airport: Location, lat: number, lon: number) {
 }
 
 function degreesToCompass(deg: number): string {
-  const dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+  const dirs = [
+    'N',
+    'NNE',
+    'NE',
+    'ENE',
+    'E',
+    'ESE',
+    'SE',
+    'SSE',
+    'S',
+    'SSW',
+    'SW',
+    'WSW',
+    'W',
+    'WNW',
+    'NW',
+    'NNW',
+  ]
   return dirs[Math.round(deg / 22.5) % 16]
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location) {
   const popupElement = popup.getElement()
   if (!popupElement) return
@@ -125,9 +149,9 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
   if (weather) {
     // Convert Celsius to Fahrenheit
     const tempC = weather.temperatureCelsius
-    const tempF = tempC !== null && tempC !== undefined ? Math.round((tempC * 9/5) + 32) : null
+    const tempF = tempC !== null && tempC !== undefined ? Math.round((tempC * 9) / 5 + 32) : null
     const dewC = weather.dewpointCelsius
-    const dewF = dewC !== null && dewC !== undefined ? Math.round((dewC * 9/5) + 32) : null
+    const dewF = dewC !== null && dewC !== undefined ? Math.round((dewC * 9) / 5 + 32) : null
     const windKnots = weather.windSpeedKnots
     const windMph = windKnots ? Math.round(windKnots * 1.151) : null
     const gustKnots = weather.windGustKnots
@@ -139,17 +163,19 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
     const skyCondition = weather.skyCondition
     const weatherConditions = weather.weatherConditions
     const flightCategory = weather.flightCategory
-    const observationTime = weather.observationTime ? new Date(weather.observationTime).toLocaleString() : null
+    const observationTime = weather.observationTime
+      ? new Date(weather.observationTime).toLocaleString()
+      : null
     const fetchedAt = weather.fetchedAt || null
     const relativeTime = fetchedAt ? formatRelativeTime(fetchedAt) : null
     const freshnessLevel = fetchedAt ? getFreshnessLevel(fetchedAt, 'airport') : 'fresh'
 
     // Flight category colors
     const categoryColors: Record<string, string> = {
-      'VFR': '#4caf50',
-      'MVFR': '#2196f3',
-      'IFR': '#ff9800',
-      'LIFR': '#f44336'
+      VFR: '#4caf50',
+      MVFR: '#2196f3',
+      IFR: '#ff9800',
+      LIFR: '#f44336',
     }
 
     // Build wind string
@@ -164,62 +190,98 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
       <div class="weather-divider"></div>
       <div class="weather-title">✈️ METAR Conditions</div>
       <div class="weather-info">
-        ${tempC !== null && tempC !== undefined ? `
+        ${
+          tempC !== null && tempC !== undefined
+            ? `
           <div class="weather-item">
             <span class="weather-label">Temperature:</span>
             <span class="weather-value">${tempF}°F / ${tempC}°C</span>
           </div>
-        ` : ''}
-        ${dewF !== null ? `
+        `
+            : ''
+        }
+        ${
+          dewF !== null
+            ? `
           <div class="weather-item">
             <span class="weather-label">Dew Point:</span>
             <span class="weather-value">${dewF}°F / ${dewC}°C</span>
           </div>
-        ` : ''}
-        ${windStr ? `
+        `
+            : ''
+        }
+        ${
+          windStr
+            ? `
           <div class="weather-item">
             <span class="weather-label">Wind:</span>
             <span class="weather-value">${windStr}</span>
           </div>
-        ` : ''}
-        ${visibility !== null && visibility !== undefined ? `
+        `
+            : ''
+        }
+        ${
+          visibility !== null && visibility !== undefined
+            ? `
           <div class="weather-item">
             <span class="weather-label">Visibility:</span>
             <span class="weather-value">${visibility} mi</span>
           </div>
-        ` : ''}
-        ${ceiling != null ? `
+        `
+            : ''
+        }
+        ${
+          ceiling != null
+            ? `
           <div class="weather-item">
             <span class="weather-label">Ceiling:</span>
             <span class="weather-value">${ceiling} ft</span>
           </div>
-        ` : ''}
-        ${skyCondition ? `
+        `
+            : ''
+        }
+        ${
+          skyCondition
+            ? `
           <div class="weather-item">
             <span class="weather-label">Sky:</span>
             <span class="weather-value">${skyCondition}</span>
           </div>
-        ` : ''}
-        ${weatherConditions ? `
+        `
+            : ''
+        }
+        ${
+          weatherConditions
+            ? `
           <div class="weather-item">
             <span class="weather-label">Weather:</span>
             <span class="weather-value">${weatherConditions}</span>
           </div>
-        ` : ''}
-        ${flightCategory ? `
+        `
+            : ''
+        }
+        ${
+          flightCategory
+            ? `
           <div class="weather-item">
             <span class="weather-label">Flight Category:</span>
             <span class="weather-value" style="color: ${categoryColors[flightCategory] || '#666'}; font-weight: bold;">
               ${flightCategory}
             </span>
           </div>
-        ` : ''}
-        ${observationTime ? `
+        `
+            : ''
+        }
+        ${
+          observationTime
+            ? `
           <div class="weather-time">
             Observed: ${observationTime}
             ${relativeTime ? `<span class="freshness-indicator freshness-${freshnessLevel}">${relativeTime}</span>` : ''}
           </div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
     `
   } else {
@@ -289,7 +351,7 @@ function onSearchInput() {
         airport.name?.toLowerCase().includes(query) ||
         airport.airportCode?.toLowerCase().includes(query) ||
         airport.state?.toLowerCase().includes(query) ||
-        airport.country?.toLowerCase().includes(query)
+        airport.country?.toLowerCase().includes(query),
     )
     .slice(0, 10) // Limit to 10 results
 }
@@ -310,7 +372,10 @@ function selectAirport(airport: Location) {
       markerClusterGroup.value.eachLayer((layer) => {
         if (layer instanceof L.Marker) {
           const markerLatLng = layer.getLatLng()
-          if (Math.abs(markerLatLng.lat - lat) < 0.0001 && Math.abs(markerLatLng.lng - lon) < 0.0001) {
+          if (
+            Math.abs(markerLatLng.lat - lat) < 0.0001 &&
+            Math.abs(markerLatLng.lng - lon) < 0.0001
+          ) {
             layer.openPopup()
           }
         }

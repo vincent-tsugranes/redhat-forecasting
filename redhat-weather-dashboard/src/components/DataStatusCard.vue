@@ -1,42 +1,58 @@
 <template>
   <div class="status-card">
-    <h3><span aria-hidden="true">📊</span> Data Status</h3>
-    <div v-if="loading" class="loading">Loading status...</div>
+    <h3><span aria-hidden="true">📊</span> {{ $t('status.title') }}</h3>
+    <div v-if="loading" class="loading">{{ $t('status.loadingStatus') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else class="status-content">
       <div class="status-item">
-        <span class="label">Airports Loaded:</span>
+        <span class="label">{{ $t('status.airportsLoaded') }}</span>
         <span class="value" :class="{ complete: status.loadingComplete }">
           {{ status.airports?.toLocaleString() }} / {{ status.expectedAirports?.toLocaleString() }}
         </span>
       </div>
       <div class="status-item">
-        <span class="label">Cities:</span>
+        <span class="label">{{ $t('status.cities') }}</span>
         <span class="value">{{ status.cities }}</span>
       </div>
       <div class="status-item">
-        <span class="label">Total Locations:</span>
+        <span class="label">{{ $t('status.totalLocations') }}</span>
         <span class="value">{{ status.totalLocations?.toLocaleString() }}</span>
       </div>
-      <div class="progress-bar" v-if="status.percentLoaded !== undefined" role="progressbar" :aria-valuenow="status.percentLoaded" aria-valuemin="0" aria-valuemax="100" aria-label="Airport data loading progress">
+      <div
+        v-if="status.percentLoaded !== undefined"
+        class="progress-bar"
+        role="progressbar"
+        :aria-valuenow="status.percentLoaded"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        :aria-label="$t('status.loadingProgress')"
+      >
         <div class="progress-fill" :style="{ width: status.percentLoaded + '%' }"></div>
         <span class="progress-text">{{ status.percentLoaded }}%</span>
       </div>
-      <div class="status-badge" :class="status.loadingComplete ? 'success' : 'warning'" role="status">
-        <span aria-hidden="true">{{ status.loadingComplete ? '✓' : '⚠' }}</span> {{ status.loadingComplete ? 'Data Ready' : 'Loading...' }}
+      <div
+        class="status-badge"
+        :class="status.loadingComplete ? 'success' : 'warning'"
+        role="status"
+      >
+        <span aria-hidden="true">{{ status.loadingComplete ? '✓' : '⚠' }}</span>
+        {{ status.loadingComplete ? $t('status.dataReady') : $t('status.loading') }}
       </div>
-      <div v-if="freshness.forecast || freshness.airport || freshness.hurricane" class="freshness-section">
-        <h4>Data Freshness</h4>
+      <div
+        v-if="freshness.forecast || freshness.airport || freshness.hurricane"
+        class="freshness-section"
+      >
+        <h4>{{ $t('status.dataFreshness') }}</h4>
         <div v-if="freshness.forecast" class="freshness-row">
-          <span class="label">Forecasts:</span>
+          <span class="label">{{ $t('status.forecastsFreshness') }}</span>
           <FreshnessBadge :fetched-at="freshness.forecast" data-type="forecast" />
         </div>
         <div v-if="freshness.airport" class="freshness-row">
-          <span class="label">Airport Weather:</span>
+          <span class="label">{{ $t('status.airportFreshness') }}</span>
           <FreshnessBadge :fetched-at="freshness.airport" data-type="airport" />
         </div>
         <div v-if="freshness.hurricane" class="freshness-row">
-          <span class="label">Hurricane Data:</span>
+          <span class="label">{{ $t('status.hurricaneFreshness') }}</span>
           <FreshnessBadge :fetched-at="freshness.hurricane" data-type="hurricane" />
         </div>
       </div>
@@ -67,9 +83,13 @@ const status = ref<DataStatus>({
   airportsLoaded: false,
   expectedAirports: 9313,
   loadingComplete: false,
-  percentLoaded: 0
+  percentLoaded: 0,
 })
-const freshness = ref<{ forecast: string | null; airport: string | null; hurricane: string | null }>({
+const freshness = ref<{
+  forecast: string | null
+  airport: string | null
+  hurricane: string | null
+}>({
   forecast: null,
   airport: null,
   hurricane: null,
@@ -109,7 +129,9 @@ const fetchFreshness = async () => {
     if (metarRes.data?.fetchedAt) {
       freshness.value.airport = metarRes.data.fetchedAt
     }
-  } catch { /* airport data may not be available yet */ }
+  } catch {
+    /* airport data may not be available yet */
+  }
 }
 
 let refreshInterval: ReturnType<typeof setInterval> | null = null
@@ -151,7 +173,8 @@ h3 {
   font-size: 1.2rem;
 }
 
-.loading, .error {
+.loading,
+.error {
   padding: 10px;
   text-align: center;
   color: var(--text-secondary, #666);

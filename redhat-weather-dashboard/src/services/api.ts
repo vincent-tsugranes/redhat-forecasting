@@ -9,6 +9,7 @@ interface RetryConfig extends InternalAxiosRequestConfig {
   __retryCount?: number
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function shouldRetry(error: any): boolean {
   // Retry on network errors (no response)
   if (!error.response) return true
@@ -32,11 +33,13 @@ function addRetryInterceptor(instance: AxiosInstance) {
 
       config.__retryCount++
       const delay = RETRY_BASE_DELAY * Math.pow(2, config.__retryCount - 1)
-      console.warn(`API retry ${config.__retryCount}/${MAX_RETRIES} for ${config.url} in ${delay}ms`)
+      console.warn(
+        `API retry ${config.__retryCount}/${MAX_RETRIES} for ${config.url} in ${delay}ms`,
+      )
 
       await new Promise((resolve) => setTimeout(resolve, delay))
       return instance(config)
-    }
+    },
   )
 }
 
@@ -44,18 +47,18 @@ function addRetryInterceptor(instance: AxiosInstance) {
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   },
-  timeout: 15000
+  timeout: 15000,
 })
 
 // Weather-specific API instance
 export const weatherApi = axios.create({
   baseURL: `${API_BASE_URL}/api/weather`,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   },
-  timeout: 15000
+  timeout: 15000,
 })
 
 addRetryInterceptor(api)

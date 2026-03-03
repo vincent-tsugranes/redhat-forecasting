@@ -3,9 +3,9 @@ export type FreshnessLevel = 'fresh' | 'aging' | 'stale'
 
 // Thresholds in minutes, matched to scheduler refresh intervals
 const STALENESS_THRESHOLDS: Record<DataType, { aging: number; stale: number }> = {
-  forecast:  { aging: 25, stale: 45 },   // refreshes every 30 min
-  airport:   { aging: 12, stale: 20 },   // refreshes every 15 min
-  hurricane: { aging: 50, stale: 90 },   // refreshes every 60 min
+  forecast: { aging: 25, stale: 45 }, // refreshes every 30 min
+  airport: { aging: 12, stale: 20 }, // refreshes every 15 min
+  hurricane: { aging: 50, stale: 90 }, // refreshes every 60 min
 }
 
 export function formatDate(dateString: string): string {

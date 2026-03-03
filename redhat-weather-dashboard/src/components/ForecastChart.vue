@@ -1,5 +1,9 @@
 <template>
-  <div class="forecast-chart-container" role="img" aria-label="Weather forecast chart showing temperature, wind speed, precipitation, and humidity trends">
+  <div
+    class="forecast-chart-container"
+    role="img"
+    aria-label="Weather forecast chart showing temperature, wind speed, precipitation, and humidity trends"
+  >
     <Line :data="chartData" :options="chartOptions" />
   </div>
 </template>
@@ -21,7 +25,16 @@ import {
 import type { WeatherForecast } from '../services/weatherService'
 import { formatDate } from '../utils/dateUtils'
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+)
 
 const props = defineProps<{
   forecasts: WeatherForecast[]
@@ -29,7 +42,7 @@ const props = defineProps<{
 
 const chartData = computed(() => {
   const sorted = [...props.forecasts].sort(
-    (a, b) => new Date(a.validFrom).getTime() - new Date(b.validFrom).getTime()
+    (a, b) => new Date(a.validFrom).getTime() - new Date(b.validFrom).getTime(),
   )
 
   const labels = sorted.map((f) => formatDate(f.validFrom))

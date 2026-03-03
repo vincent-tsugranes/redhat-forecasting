@@ -114,7 +114,7 @@ export const weatherService = {
 
   async getCurrentForecast(lat: number, lon: number): Promise<WeatherForecast[]> {
     const response = await weatherApi.get('/forecasts/current', {
-      params: { lat, lon }
+      params: { lat, lon },
     })
     return response.data
   },
@@ -123,10 +123,10 @@ export const weatherService = {
     lat: number,
     lon: number,
     from?: string,
-    to?: string
+    to?: string,
   ): Promise<WeatherForecast[]> {
     const response = await weatherApi.get('/forecasts/coordinates', {
-      params: { lat, lon, from, to }
+      params: { lat, lon, from, to },
     })
     return response.data
   },
@@ -164,7 +164,7 @@ export const weatherService = {
 
   async getStormTrack(stormId: string, from?: string, to?: string): Promise<Hurricane[]> {
     const response = await weatherApi.get(`/hurricanes/${stormId}/track`, {
-      params: { from, to }
+      params: { from, to },
     })
     return response.data
   },
@@ -186,7 +186,7 @@ export const weatherService = {
 
   async refreshAlerts(): Promise<void> {
     await weatherApi.post('/alerts/refresh')
-  }
+  },
 }
 
 export default weatherService

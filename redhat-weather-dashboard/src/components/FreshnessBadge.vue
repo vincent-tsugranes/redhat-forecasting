@@ -1,12 +1,32 @@
 <template>
-  <span v-if="fetchedAt" class="freshness-badge" :class="freshnessClass" :title="tooltipText" role="status" :aria-label="relativeTime + ' - ' + (freshnessLevel === 'fresh' ? 'Data is current' : freshnessLevel === 'aging' ? 'Data may be refreshing soon' : 'Data is overdue for refresh')">
+  <span
+    v-if="fetchedAt"
+    class="freshness-badge"
+    :class="freshnessClass"
+    :title="tooltipText"
+    role="status"
+    :aria-label="
+      relativeTime +
+      ' - ' +
+      (freshnessLevel === 'fresh'
+        ? 'Data is current'
+        : freshnessLevel === 'aging'
+          ? 'Data may be refreshing soon'
+          : 'Data is overdue for refresh')
+    "
+  >
     {{ relativeTime }}
   </span>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { formatRelativeTime, getFreshnessLevel, type DataType, type FreshnessLevel } from '../utils/dateUtils'
+import {
+  formatRelativeTime,
+  getFreshnessLevel,
+  type DataType,
+  type FreshnessLevel,
+} from '../utils/dateUtils'
 
 const props = defineProps<{
   fetchedAt: string
@@ -17,7 +37,9 @@ const tick = ref(0)
 let intervalId: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
-  intervalId = setInterval(() => { tick.value++ }, 30000)
+  intervalId = setInterval(() => {
+    tick.value++
+  }, 30000)
 })
 
 onUnmounted(() => {
@@ -25,12 +47,12 @@ onUnmounted(() => {
 })
 
 const relativeTime = computed(() => {
-  tick.value
+  void tick.value
   return formatRelativeTime(props.fetchedAt)
 })
 
 const freshnessLevel = computed((): FreshnessLevel => {
-  tick.value
+  void tick.value
   return getFreshnessLevel(props.fetchedAt, props.dataType)
 })
 
@@ -38,9 +60,12 @@ const freshnessClass = computed(() => `freshness-${freshnessLevel.value}`)
 
 const tooltipText = computed(() => {
   const date = new Date(props.fetchedAt)
-  const levelLabel = freshnessLevel.value === 'fresh' ? 'Data is current'
-    : freshnessLevel.value === 'aging' ? 'Data may be refreshing soon'
-    : 'Data is overdue for refresh'
+  const levelLabel =
+    freshnessLevel.value === 'fresh'
+      ? 'Data is current'
+      : freshnessLevel.value === 'aging'
+        ? 'Data may be refreshing soon'
+        : 'Data is overdue for refresh'
   return `Fetched: ${date.toLocaleString()}\n${levelLabel}`
 })
 </script>
