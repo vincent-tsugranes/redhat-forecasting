@@ -96,7 +96,7 @@ public class HurricaneResource {
 
     @POST
     @Path("/refresh")
-    @Bulkhead(value = 1, waitingTaskQueue = 0)
+    @Bulkhead(value = 1, waitingTaskQueue = 1)
     @Operation(summary = "Refresh hurricane data", description = "Manually trigger a refresh of hurricane data")
     @APIResponse(responseCode = "202", description = "Refresh triggered")
     public Response refreshHurricaneData() {

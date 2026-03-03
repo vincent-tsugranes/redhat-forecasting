@@ -78,7 +78,7 @@ public class AirportWeatherResource {
 
     @POST
     @Path("/{code}/refresh")
-    @Bulkhead(value = 1, waitingTaskQueue = 0)
+    @Bulkhead(value = 1, waitingTaskQueue = 1)
     @Operation(summary = "Refresh airport weather", description = "Manually trigger a refresh of airport weather data")
     @APIResponse(responseCode = "202", description = "Refresh triggered")
     public Response refreshAirportWeather(

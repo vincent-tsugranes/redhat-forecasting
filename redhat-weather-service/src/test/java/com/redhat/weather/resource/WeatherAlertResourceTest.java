@@ -3,6 +3,7 @@ package com.redhat.weather.resource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
+import io.restassured.http.ContentType;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 
@@ -30,6 +31,7 @@ class WeatherAlertResourceTest {
     @Test
     void testRefreshAlerts() {
         given()
+            .contentType(ContentType.JSON)
         .when()
             .post("/api/weather/alerts/refresh")
         .then()
