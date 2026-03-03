@@ -73,6 +73,22 @@ export interface Hurricane {
   fetchedAt?: string
 }
 
+export interface WeatherAlert {
+  id: number
+  alertId: string
+  event: string
+  headline?: string
+  description?: string
+  severity?: string
+  certainty?: string
+  urgency?: string
+  areaDesc?: string
+  effective?: string
+  expires?: string
+  senderName?: string
+  fetchedAt?: string
+}
+
 export const weatherService = {
   // Locations
   async getLocations(): Promise<Location[]> {
@@ -155,6 +171,21 @@ export const weatherService = {
 
   async refreshHurricaneData(): Promise<void> {
     await weatherApi.post('/hurricanes/refresh')
+  },
+
+  // Weather Alerts
+  async getActiveAlerts(): Promise<WeatherAlert[]> {
+    const response = await weatherApi.get('/alerts/active')
+    return response.data
+  },
+
+  async getAlertsBySeverity(severity: string): Promise<WeatherAlert[]> {
+    const response = await weatherApi.get(`/alerts/severity/${severity}`)
+    return response.data
+  },
+
+  async refreshAlerts(): Promise<void> {
+    await weatherApi.post('/alerts/refresh')
   }
 }
 

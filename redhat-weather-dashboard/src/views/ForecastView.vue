@@ -2,14 +2,31 @@
   <div class="container">
     <h1>Weather Forecasts</h1>
 
-    <div class="card">
-      <h2>Select Location</h2>
-      <select v-model="selectedLocationId" @change="loadForecasts" style="width: 100%; padding: 10px; font-size: 16px;">
-        <option value="">-- Select a location --</option>
-        <option v-for="loc in locations" :key="loc.id" :value="loc.id">
-          {{ loc.name }}, {{ loc.state }}
-        </option>
-      </select>
+    <AlertsBanner />
+
+    <div class="card search-card">
+      <h2>Search Location</h2>
+      <div class="search-wrapper">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search locations by name or state..."
+          class="search-input"
+          @input="onSearchInput"
+          @focus="showResults = true"
+        />
+        <div v-if="searchResults.length > 0 && showResults && searchQuery" class="search-results">
+          <div
+            v-for="loc in searchResults"
+            :key="loc.id"
+            class="search-result-item"
+            @click="selectLocation(loc)"
+          >
+            <div class="result-name">{{ loc.name }}</div>
+            <div class="result-state">{{ loc.state }}, {{ loc.country }}</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div v-if="loading" class="loading">Loading forecasts...</div>
@@ -56,10 +73,14 @@ import weatherService, { type Location, type WeatherForecast } from '../services
 import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import ForecastChart from '../components/ForecastChart.vue'
+import AlertsBanner from '../components/AlertsBanner.vue'
 
 const locations = ref<Location[]>([])
 const forecasts = ref<WeatherForecast[]>([])
 const selectedLocationId = ref<string>('')
+const searchQuery = ref('')
+const searchResults = ref<Location[]>([])
+const showResults = ref(false)
 const loading = ref(false)
 const error = ref<string | null>(null)
 
@@ -69,6 +90,31 @@ async function loadLocations() {
   } catch (err: any) {
     error.value = err.message || 'Failed to load locations'
   }
+}
+
+function onSearchInput() {
+  if (!searchQuery.value || searchQuery.value.length < 2) {
+    searchResults.value = []
+    return
+  }
+
+  const query = searchQuery.value.toLowerCase()
+  searchResults.value = locations.value
+    .filter(
+      (loc) =>
+        loc.name?.toLowerCase().includes(query) ||
+        loc.state?.toLowerCase().includes(query)
+    )
+    .slice(0, 10)
+  showResults.value = true
+}
+
+function selectLocation(loc: Location) {
+  selectedLocationId.value = String(loc.id)
+  searchQuery.value = `${loc.name}, ${loc.state || loc.country || ''}`
+  searchResults.value = []
+  showResults.value = false
+  loadForecasts()
 }
 
 async function loadForecasts() {
@@ -93,6 +139,70 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.search-card {
+  position: relative;
+}
+
+.search-wrapper {
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  border-color: #ee0000;
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.search-result-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background-color: #f5f5f5;
+}
+
+.result-name {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.result-state {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
 .forecast-item {
   border: 1px solid #eee;
   border-radius: 8px;

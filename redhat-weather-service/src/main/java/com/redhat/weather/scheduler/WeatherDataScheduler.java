@@ -4,6 +4,7 @@ import com.redhat.weather.domain.entity.LocationEntity;
 import com.redhat.weather.domain.repository.LocationRepository;
 import com.redhat.weather.service.AirportWeatherService;
 import com.redhat.weather.service.HurricaneService;
+import com.redhat.weather.service.WeatherAlertService;
 import com.redhat.weather.service.WeatherForecastService;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,6 +30,9 @@ public class WeatherDataScheduler {
     HurricaneService hurricaneService;
 
     @Inject
+    WeatherAlertService weatherAlertService;
+
+    @Inject
     LocationRepository locationRepository;
 
     @ConfigProperty(name = "weather.scheduler.noaa.enabled", defaultValue = "true")
@@ -39,6 +43,9 @@ public class WeatherDataScheduler {
 
     @ConfigProperty(name = "weather.scheduler.hurricane.enabled", defaultValue = "true")
     boolean hurricaneEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.alerts.enabled", defaultValue = "true")
+    boolean alertsEnabled;
 
     @ConfigProperty(name = "weather.scheduler.openweather.enabled", defaultValue = "false")
     boolean openWeatherEnabled;
@@ -180,6 +187,28 @@ public class WeatherDataScheduler {
     }
 
     /**
+     * Fetch weather alerts every 15 minutes
+     */
+    @Scheduled(cron = "0 */15 * * * ?", identity = "weather-alerts-fetch")
+    public void fetchWeatherAlerts() {
+        if (!alertsEnabled) {
+            LOG.debug("Weather alerts scheduler is disabled");
+            return;
+        }
+
+        LOG.info("Starting weather alerts fetch");
+
+        try {
+            weatherAlertService.deactivateExpired();
+            weatherAlertService.fetchAndStoreAlerts();
+            LOG.info("Weather alerts fetch completed");
+
+        } catch (Exception e) {
+            LOG.error("Error in weather alerts scheduler", e);
+        }
+    }
+
+    /**
      * Clean up old forecast data daily at 2 AM
      */
     @Scheduled(cron = "0 0 2 * * ?", identity = "cleanup-old-data")
@@ -192,6 +221,7 @@ public class WeatherDataScheduler {
             weatherForecastService.deactivateOldForecasts(sevenDaysAgo);
             airportWeatherService.deactivateOldReports(sevenDaysAgo);
             hurricaneService.deactivateOldAdvisories(sevenDaysAgo);
+            weatherAlertService.deactivateExpired();
 
             LOG.info("Old data cleanup completed");
 

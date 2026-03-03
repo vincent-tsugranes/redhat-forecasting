@@ -34,4 +34,13 @@ public interface NoaaWeatherClient {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     String getForecast(@jakarta.ws.rs.QueryParam("url") String forecastUrl);
+
+    /**
+     * Get all active weather alerts
+     * @return GeoJSON FeatureCollection of active alerts
+     */
+    @GET
+    @Path("/alerts/active")
+    @Produces(MediaType.APPLICATION_JSON)
+    String getActiveAlerts();
 }
