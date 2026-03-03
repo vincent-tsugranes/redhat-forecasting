@@ -12,6 +12,7 @@ commonLabels:
 patchesStrategicMerge:
   - backend-patch.yaml
   - frontend-patch.yaml
+  - configmap-patch.yaml
 
 images:
   - name: quay.io/vtsugran/weather-backend
