@@ -11,6 +11,14 @@
             <router-link to="/hurricanes">{{ $t('nav.hurricanes') }}</router-link>
           </nav>
           <button
+            class="header-icon-btn"
+            :title="notificationsEnabled ? $t('notifications.disable') : $t('notifications.enable')"
+            :aria-label="notificationsEnabled ? $t('notifications.disable') : $t('notifications.enable')"
+            @click="toggleNotifications"
+          >
+            <span aria-hidden="true">{{ notificationsEnabled ? '🔔' : '🔕' }}</span>
+          </button>
+          <button
             class="theme-toggle"
             :title="theme === 'dark' ? $t('app.themeLight') : $t('app.themeDark')"
             :aria-label="theme === 'dark' ? $t('app.themeLight') : $t('app.themeDark')"
@@ -38,6 +46,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useAlertNotifications } from './composables/useAlertNotifications'
+
+const { notificationsEnabled, toggleNotifications } = useAlertNotifications()
 
 const theme = ref(
   localStorage.getItem('theme') ||
@@ -95,6 +106,26 @@ nav a {
 nav a:hover,
 nav a.router-link-active {
   background-color: rgba(255, 255, 255, 0.2);
+}
+
+.header-icon-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.header-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .theme-toggle {

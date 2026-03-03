@@ -43,16 +43,25 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import { formatDate } from '../utils/dateUtils'
+import { useAlertNotifications } from '../composables/useAlertNotifications'
 
 const store = useWeatherStore()
 const { alerts, alertsError: alertError } = storeToRefs(store)
 
+const { checkAndNotify } = useAlertNotifications()
+
 const expanded = ref(false)
 let refreshInterval: ReturnType<typeof setInterval> | null = null
+
+watch(alerts, (newAlerts) => {
+  if (newAlerts.length > 0) {
+    checkAndNotify(newAlerts)
+  }
+})
 
 const severityRank: Record<string, number> = {
   Extreme: 4,

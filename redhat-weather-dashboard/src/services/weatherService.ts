@@ -112,6 +112,13 @@ export const weatherService = {
     return response.data
   },
 
+  async getHistoricalForecasts(locationId: number, days: number = 7): Promise<WeatherForecast[]> {
+    const response = await weatherApi.get(`/forecasts/location/${locationId}/history`, {
+      params: { days },
+    })
+    return response.data
+  },
+
   async getCurrentForecast(lat: number, lon: number): Promise<WeatherForecast[]> {
     const response = await weatherApi.get('/forecasts/current', {
       params: { lat, lon },

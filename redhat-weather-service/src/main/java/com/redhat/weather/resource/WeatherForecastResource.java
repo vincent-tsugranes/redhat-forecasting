@@ -69,6 +69,17 @@ public class WeatherForecastResource {
     }
 
     @GET
+    @Path("/location/{locationId}/history")
+    @Operation(summary = "Get historical forecasts", description = "Retrieve archived/historical forecast data for a location")
+    @APIResponse(responseCode = "200", description = "List of historical forecasts")
+    public Response getHistoricalForecasts(
+            @PathParam("locationId") @Parameter(description = "Location ID") Long locationId,
+            @QueryParam("days") @DefaultValue("7") @Min(1) @Max(90) @Parameter(description = "Number of days of history") int days) {
+        List<WeatherForecastEntity> forecasts = weatherForecastService.getHistoricalForecasts(locationId, days);
+        return Response.ok(forecasts).build();
+    }
+
+    @GET
     @Path("/current")
     @Operation(summary = "Get current forecast", description = "Retrieve current forecast for specific coordinates")
     @APIResponse(responseCode = "200", description = "Current forecast")

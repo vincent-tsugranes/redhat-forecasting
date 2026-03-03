@@ -46,8 +46,18 @@
       </div>
     </div>
 
+    <div v-if="selectedLocation" class="selected-location-header">
+      <h2>{{ selectedLocation.name }}, {{ selectedLocation.state || selectedLocation.country }}</h2>
+      <FavoriteButton
+        :active="isFavorite(selectedLocation.id)"
+        @toggle="toggleFavorite(selectedLocation)"
+      />
+    </div>
+
     <ForecastSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
+
+    <DailyForecastCards v-if="forecasts.length > 0" :forecasts="forecasts" />
 
     <div v-if="forecasts.length > 0" class="card">
       <h2>{{ $t('forecast.forecastTrends') }}</h2>
@@ -90,10 +100,15 @@
       </div>
     </div>
 
-    <div v-else-if="!loading && selectedLocationId" class="card">
+    <div v-if="!loading && selectedLocationId && forecasts.length === 0" class="card">
       <p>{{ $t('forecast.noData') }}</p>
       <p>{{ $t('forecast.schedulerNote') }}</p>
     </div>
+
+    <HistoricalChart
+      v-if="selectedLocationId"
+      :location-id="Number(selectedLocationId)"
+    />
   </div>
 </template>
 
@@ -107,6 +122,10 @@ import FreshnessBadge from '../components/FreshnessBadge.vue'
 import ForecastChart from '../components/ForecastChart.vue'
 import AlertsBanner from '../components/AlertsBanner.vue'
 import ForecastSkeleton from '../components/skeletons/ForecastSkeleton.vue'
+import FavoriteButton from '../components/FavoriteButton.vue'
+import DailyForecastCards from '../components/DailyForecastCards.vue'
+import HistoricalChart from '../components/HistoricalChart.vue'
+import { useFavorites } from '../composables/useFavorites'
 
 const store = useWeatherStore()
 const {
@@ -116,7 +135,10 @@ const {
   forecastsError: error,
 } = storeToRefs(store)
 
+const { isFavorite, addFavorite, removeFavorite } = useFavorites()
+
 const selectedLocationId = ref<string>('')
+const selectedLocation = ref<Location | null>(null)
 const searchQuery = ref('')
 const searchResults = ref<Location[]>([])
 const showResults = ref(false)
@@ -173,10 +195,19 @@ function onSearchKeydown(event: KeyboardEvent) {
 
 function selectLocation(loc: Location) {
   selectedLocationId.value = String(loc.id)
+  selectedLocation.value = loc
   searchQuery.value = `${loc.name}, ${loc.state || loc.country || ''}`
   searchResults.value = []
   showResults.value = false
   store.fetchForecasts(Number(selectedLocationId.value))
+}
+
+function toggleFavorite(loc: Location) {
+  if (isFavorite(loc.id)) {
+    removeFavorite(loc.id)
+  } else {
+    addFavorite({ id: loc.id, name: loc.name, state: loc.state })
+  }
 }
 
 onMounted(() => {
@@ -281,5 +312,16 @@ onMounted(() => {
   margin-top: 10px;
   color: var(--text-primary, #333);
   font-style: italic;
+}
+
+.selected-location-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.selected-location-header h2 {
+  margin-bottom: 0;
 }
 </style>

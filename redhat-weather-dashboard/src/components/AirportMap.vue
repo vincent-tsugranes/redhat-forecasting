@@ -55,6 +55,14 @@ const map = ref<L.Map | null>(null)
 const markerClusterGroup = ref<L.MarkerClusterGroup | null>(null)
 const loadError = ref(false)
 
+const FLIGHT_CATEGORY_COLORS: Record<string, string> = {
+  VFR: '#4caf50',
+  MVFR: '#2196f3',
+  IFR: '#ff9800',
+  LIFR: '#f44336',
+}
+const DEFAULT_MARKER_COLOR = '#9e9e9e'
+
 async function loadAirports() {
   try {
     airports.value = await weatherService.getAirports()
@@ -87,6 +95,22 @@ function initializeMap() {
     zoomToBoundsOnClick: true,
   })
   ;(map.value as L.Map).addLayer(markerClusterGroup.value as unknown as L.Layer)
+
+  // Add flight category legend
+  const legend = new L.Control({ position: 'bottomright' })
+  legend.onAdd = () => {
+    const div = L.DomUtil.create('div', 'flight-category-legend')
+    div.innerHTML = `
+      <div class="legend-title">Flight Category</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#4caf50"></span> VFR</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#2196f3"></span> MVFR</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#ff9800"></span> IFR</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#f44336"></span> LIFR</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#9e9e9e"></span> Unknown</div>
+    `
+    return div
+  }
+  legend.addTo(map.value as L.Map)
 }
 
 async function fetchWeatherForAirport(airportCode: string) {
@@ -304,30 +328,36 @@ function initializeMarkers() {
 
   markerClusterGroup.value.clearLayers()
 
-  const markers: L.Marker[] = []
+  const markers: L.CircleMarker[] = []
 
   airports.value.forEach((airport) => {
     const lat = Number(airport.latitude)
     const lon = Number(airport.longitude)
 
     if (!isNaN(lat) && !isNaN(lon)) {
-      const marker = L.marker([lat, lon], {
-        icon: L.divIcon({
-          className: 'airport-marker',
-          html: '<div class="marker-icon" aria-hidden="true">✈️</div>',
-          iconSize: [20, 20],
-        }),
+      const marker = L.circleMarker([lat, lon], {
+        radius: 6,
+        fillColor: DEFAULT_MARKER_COLOR,
+        color: '#fff',
+        weight: 1,
+        opacity: 1,
+        fillOpacity: 0.8,
       })
 
       const popupContent = createPopupContent(airport, lat, lon)
       const popup = L.popup().setContent(popupContent)
       marker.bindPopup(popup)
 
-      // Fetch weather when popup opens
+      // Fetch weather when popup opens and color marker by flight category
       marker.on('popupopen', async () => {
         if (airport.airportCode) {
           const weather = await fetchWeatherForAirport(airport.airportCode)
           updatePopupWithWeather(popup, weather, airport)
+          if (weather?.flightCategory) {
+            const color =
+              FLIGHT_CATEGORY_COLORS[weather.flightCategory] || DEFAULT_MARKER_COLOR
+            marker.setStyle({ fillColor: color })
+          }
         }
       })
 
@@ -335,7 +365,7 @@ function initializeMarkers() {
     }
   })
 
-  markerClusterGroup.value.addLayers(markers)
+  markerClusterGroup.value.addLayers(markers as unknown as L.Layer[])
 }
 
 function onSearchInput() {
@@ -370,7 +400,7 @@ function selectAirport(airport: Location) {
     // Find and open the popup for this airport
     if (markerClusterGroup.value) {
       markerClusterGroup.value.eachLayer((layer) => {
-        if (layer instanceof L.Marker) {
+        if (layer instanceof L.CircleMarker) {
           const markerLatLng = layer.getLatLng()
           if (
             Math.abs(markerLatLng.lat - lat) < 0.0001 &&
@@ -480,15 +510,37 @@ onMounted(async () => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-:deep(.airport-marker) {
-  background: none;
-  border: none;
+:deep(.flight-category-legend) {
+  background: var(--bg-card, white);
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
-:deep(.marker-icon) {
-  font-size: 16px;
-  text-align: center;
-  line-height: 20px;
+:deep(.legend-title) {
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--text-secondary, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+:deep(.legend-item) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary, #333);
+}
+
+:deep(.legend-dot) {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 :deep(.airport-popup) {

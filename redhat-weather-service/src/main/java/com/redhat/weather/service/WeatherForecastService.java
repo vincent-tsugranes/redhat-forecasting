@@ -209,6 +209,11 @@ public class WeatherForecastService {
         }
     }
 
+    public List<WeatherForecastEntity> getHistoricalForecasts(Long locationId, int days) {
+        LocalDateTime since = LocalDateTime.now().minusDays(days);
+        return weatherForecastRepository.findHistoricalByLocation(locationId, since);
+    }
+
     @Transactional
     public void deactivateOldForecasts(LocalDateTime olderThan) {
         long count = weatherForecastRepository.deactivateOldForecasts(olderThan);

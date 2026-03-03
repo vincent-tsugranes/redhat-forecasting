@@ -39,7 +39,12 @@
     "source": "Source:",
     "dataFetched": "Data fetched:",
     "noData": "No forecast data available for this location yet.",
-    "schedulerNote": "The scheduler will fetch data automatically within 30 minutes."
+    "schedulerNote": "The scheduler will fetch data automatically within 30 minutes.",
+    "history": {
+      "title": "Historical Trends",
+      "noData": "No historical data available for this location yet.",
+      "chartAriaLabel": "Historical weather chart showing temperature high/low bands and precipitation trends"
+    }
   },
   "airport": {
     "title": "Airport Weather",
@@ -51,7 +56,15 @@
     "metar": "METAR (Current Observation)",
     "taf": "TAF (Terminal Aerodrome Forecast)",
     "noData": "No weather data available for this airport yet.",
-    "noDataHint": "Click \"Refresh Weather\" to fetch the latest data."
+    "noDataHint": "Click \"Refresh Weather\" to fetch the latest data.",
+    "flightCategory": "Flight Category",
+    "flightCategories": {
+      "VFR": "Visual Flight Rules",
+      "MVFR": "Marginal VFR",
+      "IFR": "Instrument Flight Rules",
+      "LIFR": "Low IFR",
+      "unknown": "Unknown"
+    }
   },
   "hurricane": {
     "title": "Hurricane Tracking",
@@ -95,6 +108,16 @@
     "forecastsFreshness": "Forecasts:",
     "airportFreshness": "Airport Weather:",
     "hurricaneFreshness": "Hurricane Data:"
+  },
+  "notifications": {
+    "enable": "Enable weather alert notifications",
+    "disable": "Disable weather alert notifications"
+  },
+  "favorites": {
+    "title": "Favorite Locations",
+    "add": "Add to favorites",
+    "remove": "Remove from favorites",
+    "removeNamed": "Remove {name} from favorites"
   },
   "common": {
     "wind": "Wind:",

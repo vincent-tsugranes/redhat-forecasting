@@ -120,6 +120,27 @@ export const useWeatherStore = defineStore('weather', () => {
     }
   }
 
+  // --- Historical Forecasts ---
+  const historicalForecasts = ref<WeatherForecast[]>([])
+  const historicalLoading = ref(false)
+  const historicalError = ref<string | null>(null)
+
+  async function fetchHistoricalForecasts(locationId: number, days: number = 7) {
+    historicalLoading.value = true
+    historicalError.value = null
+    try {
+      historicalForecasts.value = await deduplicatedFetch(
+        `history-${locationId}-${days}`,
+        () => weatherService.getHistoricalForecasts(locationId, days),
+      )
+    } catch (err: unknown) {
+      historicalError.value =
+        err instanceof Error ? err.message : 'Failed to load historical data'
+    } finally {
+      historicalLoading.value = false
+    }
+  }
+
   // --- Alerts ---
   const alerts = ref<WeatherAlert[]>([])
   const alertsError = ref(false)
@@ -175,6 +196,11 @@ export const useWeatherStore = defineStore('weather', () => {
     hurricanesError,
     fetchHurricanes,
     refreshHurricanes,
+    // Historical
+    historicalForecasts,
+    historicalLoading,
+    historicalError,
+    fetchHistoricalForecasts,
     // Alerts
     alerts,
     alertsError,

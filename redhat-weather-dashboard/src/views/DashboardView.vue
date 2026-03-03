@@ -4,6 +4,8 @@
 
     <DataStatusCard />
 
+    <FavoritesList />
+
     <DashboardSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
@@ -60,6 +62,7 @@ import { useWeatherStore } from '../stores/weatherStore'
 import AirportMap from '../components/AirportMap.vue'
 import DataStatusCard from '../components/DataStatusCard.vue'
 import DashboardSkeleton from '../components/skeletons/DashboardSkeleton.vue'
+import FavoritesList from '../components/FavoritesList.vue'
 
 const store = useWeatherStore()
 const { locations, locationsLoading: loading, locationsError: error } = storeToRefs(store)

@@ -62,6 +62,13 @@ public class WeatherForecastRepository implements PanacheRepositoryBase<WeatherF
         );
     }
 
+    public List<WeatherForecastEntity> findHistoricalByLocation(Long locationId, LocalDateTime since) {
+        return list(
+            "location.id = ?1 AND isActive = false AND forecastTime >= ?2 ORDER BY forecastTime DESC",
+            locationId, since
+        );
+    }
+
     @Transactional
     public long deactivateOldForecasts(LocalDateTime olderThan) {
         return update("isActive = false WHERE fetchedAt < ?1 AND isActive = true", olderThan);
