@@ -73,6 +73,16 @@ export interface Hurricane {
   fetchedAt?: string
 }
 
+export interface SolarData {
+  locationId: number
+  locationName: string
+  sunrise: string
+  sunset: string
+  dayLengthSeconds: number
+  dayLengthFormatted: string
+  fetchedAt: string
+}
+
 export interface WeatherAlert {
   id: number
   alertId: string
@@ -193,6 +203,12 @@ export const weatherService = {
 
   async refreshAlerts(): Promise<void> {
     await weatherApi.post('/alerts/refresh')
+  },
+
+  // Solar Data
+  async getSolarData(locationId: number): Promise<SolarData> {
+    const response = await weatherApi.get(`/solar/${locationId}`)
+    return response.data
   },
 }
 

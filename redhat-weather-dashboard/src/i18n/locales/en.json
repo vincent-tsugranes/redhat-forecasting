@@ -40,6 +40,9 @@
     "dataFetched": "Data fetched:",
     "noData": "No forecast data available for this location yet.",
     "schedulerNote": "The scheduler will fetch data automatically within 30 minutes.",
+    "hourlyTimeline": "Hourly Forecast (Next 48h)",
+    "exportCSV": "Export CSV",
+    "exportAriaLabel": "Export forecast data as CSV file",
     "history": {
       "title": "Historical Trends",
       "noData": "No historical data available for this location yet.",
@@ -117,7 +120,18 @@
     "title": "Favorite Locations",
     "add": "Add to favorites",
     "remove": "Remove from favorites",
-    "removeNamed": "Remove {name} from favorites"
+    "removeNamed": "Remove {name} from favorites",
+    "weatherAtGlance": "Weather at a Glance",
+    "viewForecast": "View forecast for {name}",
+    "noData": "No data"
+  },
+  "solar": {
+    "title": "Sunrise & Sunset",
+    "sunrise": "Sunrise",
+    "sunset": "Sunset",
+    "dayLength": "Day Length",
+    "daylight": "Daylight",
+    "darkness": "Darkness"
   },
   "common": {
     "wind": "Wind:",

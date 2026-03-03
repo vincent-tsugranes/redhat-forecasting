@@ -54,10 +54,13 @@
       />
     </div>
 
+    <SolarPanel v-if="selectedLocationId" :location-id="Number(selectedLocationId)" />
+
     <ForecastSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
     <DailyForecastCards v-if="forecasts.length > 0" :forecasts="forecasts" />
+    <HourlyTimeline v-if="forecasts.length > 0" :forecasts="forecasts" />
 
     <div v-if="forecasts.length > 0" class="card">
       <h2>{{ $t('forecast.forecastTrends') }}</h2>
@@ -65,7 +68,16 @@
     </div>
 
     <div v-if="forecasts.length > 0" class="card">
-      <h2>{{ $t('forecast.forecastData') }}</h2>
+      <div class="forecast-data-header">
+        <h2>{{ $t('forecast.forecastData') }}</h2>
+        <button
+          class="export-btn"
+          :aria-label="$t('forecast.exportAriaLabel')"
+          @click="handleExport"
+        >
+          <span aria-hidden="true">📥</span> {{ $t('forecast.exportCSV') }}
+        </button>
+      </div>
       <p>
         <strong>{{ forecasts.length }}</strong> {{ $t('forecast.periodsAvailable', { count: forecasts.length }) }}
       </p>
@@ -114,6 +126,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import { type Location } from '../services/weatherService'
@@ -124,9 +137,13 @@ import AlertsBanner from '../components/AlertsBanner.vue'
 import ForecastSkeleton from '../components/skeletons/ForecastSkeleton.vue'
 import FavoriteButton from '../components/FavoriteButton.vue'
 import DailyForecastCards from '../components/DailyForecastCards.vue'
+import HourlyTimeline from '../components/HourlyTimeline.vue'
 import HistoricalChart from '../components/HistoricalChart.vue'
+import SolarPanel from '../components/SolarPanel.vue'
 import { useFavorites } from '../composables/useFavorites'
+import { exportForecastsToCSV } from '../utils/exportUtils'
 
+const route = useRoute()
 const store = useWeatherStore()
 const {
   locations,
@@ -202,6 +219,12 @@ function selectLocation(loc: Location) {
   store.fetchForecasts(Number(selectedLocationId.value))
 }
 
+function handleExport() {
+  if (selectedLocation.value && forecasts.value.length > 0) {
+    exportForecastsToCSV(forecasts.value, selectedLocation.value.name)
+  }
+}
+
 function toggleFavorite(loc: Location) {
   if (isFavorite(loc.id)) {
     removeFavorite(loc.id)
@@ -210,8 +233,15 @@ function toggleFavorite(loc: Location) {
   }
 }
 
-onMounted(() => {
-  store.fetchLocations()
+onMounted(async () => {
+  await store.fetchLocations()
+  const qid = route.query.locationId
+  if (qid) {
+    const loc = locations.value.find((l) => l.id === Number(qid))
+    if (loc) {
+      selectLocation(loc)
+    }
+  }
 })
 </script>
 
@@ -312,6 +342,23 @@ onMounted(() => {
   margin-top: 10px;
   color: var(--text-primary, #333);
   font-style: italic;
+}
+
+.forecast-data-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.forecast-data-header h2 {
+  margin-bottom: 0;
+}
+
+.export-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 6px;
 }
 
 .selected-location-header {

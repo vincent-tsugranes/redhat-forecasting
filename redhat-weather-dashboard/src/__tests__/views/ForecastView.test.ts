@@ -16,7 +16,7 @@ vi.mock('../../services/weatherService', () => ({
 // Mock the router
 vi.mock('vue-router', () => ({
   useRouter: vi.fn(() => ({ push: vi.fn() })),
-  useRoute: vi.fn(() => ({ params: {} })),
+  useRoute: vi.fn(() => ({ params: {}, query: {} })),
 }))
 
 describe('ForecastView', () => {

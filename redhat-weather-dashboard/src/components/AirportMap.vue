@@ -28,6 +28,24 @@
     <div v-if="loadError" class="map-error">
       Failed to load airport data. Please try refreshing the page.
     </div>
+    <div class="radar-controls">
+      <button class="radar-toggle-btn" @click="toggleRadar">
+        <span aria-hidden="true">📡</span>
+        {{ radarVisible ? 'Hide Radar' : 'Show Radar' }}
+      </button>
+      <div v-if="radarVisible" class="radar-opacity">
+        <label for="radar-opacity">Opacity</label>
+        <input
+          id="radar-opacity"
+          v-model.number="radarOpacity"
+          type="range"
+          min="10"
+          max="100"
+          step="10"
+          aria-label="Adjust radar overlay opacity"
+        />
+      </div>
+    </div>
     <div
       ref="mapContainer"
       class="map-container"
@@ -38,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
@@ -54,6 +72,25 @@ const airports = ref<Location[]>([])
 const map = ref<L.Map | null>(null)
 const markerClusterGroup = ref<L.MarkerClusterGroup | null>(null)
 const loadError = ref(false)
+const radarVisible = ref(false)
+const radarOpacity = ref(60)
+const radarLayerRef = ref<L.TileLayer | null>(null)
+
+watch(radarOpacity, (val) => {
+  if (radarLayerRef.value) {
+    radarLayerRef.value.setOpacity(val / 100)
+  }
+})
+
+function toggleRadar() {
+  if (!radarLayerRef.value || !map.value) return
+  radarVisible.value = !radarVisible.value
+  if (radarVisible.value) {
+    radarLayerRef.value.addTo(map.value as L.Map)
+  } else {
+    map.value.removeLayer(radarLayerRef.value as unknown as L.Layer)
+  }
+}
 
 const FLIGHT_CATEGORY_COLORS: Record<string, string> = {
   VFR: '#4caf50',
@@ -111,6 +148,16 @@ function initializeMap() {
     return div
   }
   legend.addTo(map.value as L.Map)
+
+  // Create NOAA NEXRAD radar tile layer (hidden by default)
+  radarLayerRef.value = L.tileLayer(
+    'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png',
+    {
+      attribution: 'NEXRAD radar data © Iowa State Mesonet',
+      opacity: radarOpacity.value / 100,
+      maxZoom: 18,
+    },
+  )
 }
 
 async function fetchWeatherForAirport(airportCode: string) {
@@ -701,6 +748,53 @@ onMounted(async () => {
   background-color: rgba(238, 0, 0, 0.8);
   color: white;
   font-weight: bold;
+}
+
+.radar-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.radar-toggle-btn {
+  padding: 8px 14px;
+  font-size: 13px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+  transition: border-color 0.3s;
+}
+
+.radar-toggle-btn:hover {
+  border-color: #ee0000;
+}
+
+.radar-opacity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  font-size: 12px;
+}
+
+.radar-opacity label {
+  color: #666;
+  white-space: nowrap;
+}
+
+.radar-opacity input[type='range'] {
+  width: 80px;
+  cursor: pointer;
 }
 
 .map-error {
