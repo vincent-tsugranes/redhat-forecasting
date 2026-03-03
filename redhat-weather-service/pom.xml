@@ -67,6 +67,12 @@
             <artifactId>quarkus-rest-client-jackson</artifactId>
         </dependency>
 
+        <!-- Fault Tolerance (Circuit Breaker, Retry, Timeout) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
+        </dependency>
+
         <!-- Scheduler -->
         <dependency>
             <groupId>io.quarkus</groupId>

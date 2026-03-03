@@ -3,6 +3,7 @@ package com.redhat.weather.scheduler;
 import com.redhat.weather.domain.entity.LocationEntity;
 import com.redhat.weather.domain.repository.LocationRepository;
 import com.redhat.weather.service.AirportWeatherService;
+import com.redhat.weather.service.DataFreshnessService;
 import com.redhat.weather.service.HurricaneService;
 import com.redhat.weather.service.WeatherAlertService;
 import com.redhat.weather.service.WeatherForecastService;
@@ -12,6 +13,7 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -34,6 +36,9 @@ public class WeatherDataScheduler {
 
     @Inject
     LocationRepository locationRepository;
+
+    @Inject
+    DataFreshnessService dataFreshnessService;
 
     @ConfigProperty(name = "weather.scheduler.noaa.enabled", defaultValue = "true")
     boolean noaaEnabled;
@@ -80,6 +85,13 @@ public class WeatherDataScheduler {
 
             LOG.info("NOAA forecast fetch completed. Success: " + successCount + ", Failures: " + failureCount);
 
+            if (successCount > 0) {
+                dataFreshnessService.recordSuccess("noaa-forecast");
+            }
+            if (failureCount > 0 && successCount == 0) {
+                LOG.warn("NOAA forecast fetch completely failed for all " + failureCount + " locations");
+            }
+
         } catch (Exception e) {
             LOG.error("Error in NOAA forecast scheduler", e);
         }
@@ -114,6 +126,13 @@ public class WeatherDataScheduler {
             }
 
             LOG.info("OpenWeatherMap forecast fetch completed. Success: " + successCount + ", Failures: " + failureCount);
+
+            if (successCount > 0) {
+                dataFreshnessService.recordSuccess("openweather-forecast");
+            }
+            if (failureCount > 0 && successCount == 0) {
+                LOG.warn("OpenWeatherMap forecast fetch completely failed for all " + failureCount + " locations");
+            }
 
         } catch (Exception e) {
             LOG.error("Error in OpenWeatherMap forecast scheduler", e);
@@ -151,6 +170,13 @@ public class WeatherDataScheduler {
 
             LOG.info("Airport weather fetch completed. Success: " + successCount + ", Failures: " + failureCount);
 
+            if (successCount > 0) {
+                dataFreshnessService.recordSuccess("aviation-metar");
+            }
+            if (failureCount > 0 && successCount == 0) {
+                LOG.warn("Airport weather fetch completely failed for all " + failureCount + " airports");
+            }
+
         } catch (Exception e) {
             LOG.error("Error in airport weather scheduler", e);
         }
@@ -179,6 +205,7 @@ public class WeatherDataScheduler {
 
         try {
             hurricaneService.fetchAndStoreActiveStorms();
+            dataFreshnessService.recordSuccess("nhc-hurricane");
             LOG.info("Hurricane data fetch completed");
 
         } catch (Exception e) {
@@ -201,6 +228,7 @@ public class WeatherDataScheduler {
         try {
             weatherAlertService.deactivateExpired();
             weatherAlertService.fetchAndStoreAlerts();
+            dataFreshnessService.recordSuccess("noaa-alerts");
             LOG.info("Weather alerts fetch completed");
 
         } catch (Exception e) {
@@ -209,7 +237,8 @@ public class WeatherDataScheduler {
     }
 
     /**
-     * Clean up old forecast data daily at 2 AM
+     * Clean up old forecast data daily at 2 AM.
+     * Guards against data starvation: only cleans up if fresh data exists.
      */
     @Scheduled(cron = "0 0 2 * * ?", identity = "cleanup-old-data")
     public void cleanupOldData() {
@@ -218,8 +247,26 @@ public class WeatherDataScheduler {
         try {
             LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
 
-            weatherForecastService.deactivateOldForecasts(sevenDaysAgo);
-            airportWeatherService.deactivateOldReports(sevenDaysAgo);
+            // Safety check: only clean up if we have fresh data to replace it
+            boolean hasFreshForecasts = dataFreshnessService.hasRecentForecasts(Duration.ofHours(2));
+            boolean hasFreshMetar = dataFreshnessService.hasRecentMetarData(Duration.ofHours(1));
+
+            if (!hasFreshForecasts) {
+                LOG.warn("SKIPPING forecast cleanup: no fresh forecast data available. "
+                    + "Retaining old data to prevent empty dashboard.");
+            } else {
+                weatherForecastService.deactivateOldForecasts(sevenDaysAgo);
+            }
+
+            if (!hasFreshMetar) {
+                LOG.warn("SKIPPING airport weather cleanup: no fresh METAR data available. "
+                    + "Retaining old data to prevent empty dashboard.");
+            } else {
+                airportWeatherService.deactivateOldReports(sevenDaysAgo);
+            }
+
+            // Hurricane and alert cleanup is always safe:
+            // old advisories are genuinely stale; deactivateExpired only removes truly expired alerts
             hurricaneService.deactivateOldAdvisories(sevenDaysAgo);
             weatherAlertService.deactivateExpired();
 

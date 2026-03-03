@@ -4,9 +4,14 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.faulttolerance.Retry;
+import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -15,29 +20,26 @@ import java.util.List;
  */
 @RegisterRestClient(configKey = "aviation-weather-api")
 @Path("/api/data")
+@Timeout(5000)
 public interface AviationWeatherClient {
 
-    /**
-     * Get METAR data for an airport using new API
-     * @param ids ICAO airport code (e.g., KJFK)
-     * @param format Output format (json)
-     * @return List of METAR records in JSON format
-     */
     @GET
     @Path("/metar")
     @Produces(MediaType.APPLICATION_JSON)
+    @Retry(maxRetries = 2, delay = 2000, jitter = 500,
+           retryOn = {WebApplicationException.class, IOException.class})
+    @CircuitBreaker(requestVolumeThreshold = 15, failureRatio = 0.5,
+                    delay = 60000, successThreshold = 3)
     List<MetarResponse> getMETAR(@QueryParam("ids") String ids,
                                   @QueryParam("format") String format);
 
-    /**
-     * Get TAF data for an airport using new API
-     * @param ids ICAO airport code (e.g., KJFK)
-     * @param format Output format (json)
-     * @return List of TAF records in JSON format
-     */
     @GET
     @Path("/taf")
     @Produces(MediaType.APPLICATION_JSON)
+    @Retry(maxRetries = 2, delay = 2000, jitter = 500,
+           retryOn = {WebApplicationException.class, IOException.class})
+    @CircuitBreaker(requestVolumeThreshold = 15, failureRatio = 0.5,
+                    delay = 60000, successThreshold = 3)
     List<TafResponse> getTAF(@QueryParam("ids") String ids,
                               @QueryParam("format") String format);
 

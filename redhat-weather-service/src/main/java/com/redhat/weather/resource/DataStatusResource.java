@@ -1,6 +1,7 @@
 package com.redhat.weather.resource;
 
 import com.redhat.weather.domain.repository.LocationRepository;
+import com.redhat.weather.service.DataFreshnessService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -18,6 +19,9 @@ public class DataStatusResource {
 
     @Inject
     LocationRepository locationRepository;
+
+    @Inject
+    DataFreshnessService dataFreshnessService;
 
     @GET
     @Path("/data")
@@ -43,6 +47,8 @@ public class DataStatusResource {
         } else {
             status.put("percentLoaded", 0.0);
         }
+
+        status.put("dataFreshness", dataFreshnessService.getFreshnessSnapshot());
 
         return status;
     }
