@@ -12,6 +12,16 @@ spec:
             environment: dev
             namespace: weather-dashboard-dev
             repoPath: k8s/overlays/dev
+          - cluster: in-cluster
+            url: https://kubernetes.default.svc
+            environment: staging
+            namespace: weather-dashboard-staging
+            repoPath: k8s/overlays/staging
+          - cluster: in-cluster
+            url: https://kubernetes.default.svc
+            environment: prod
+            namespace: weather-dashboard-prod
+            repoPath: k8s/overlays/prod
   template:
     metadata:
       name: 'weather-dashboard-{{environment}}'
