@@ -131,6 +131,7 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
     const visibility = weather.visibilityMiles
     const ceiling = weather.ceilingFeet
     const skyCondition = weather.skyCondition
+    const weatherConditions = weather.weatherConditions
     const flightCategory = weather.flightCategory
     const observationTime = weather.observationTime ? new Date(weather.observationTime).toLocaleString() : null
     const fetchedAt = weather.fetchedAt || null
@@ -191,6 +192,12 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
           <div class="weather-item">
             <span class="weather-label">Sky:</span>
             <span class="weather-value">${skyCondition}</span>
+          </div>
+        ` : ''}
+        ${weatherConditions ? `
+          <div class="weather-item">
+            <span class="weather-label">Weather:</span>
+            <span class="weather-value">${weatherConditions}</span>
           </div>
         ` : ''}
         ${flightCategory ? `

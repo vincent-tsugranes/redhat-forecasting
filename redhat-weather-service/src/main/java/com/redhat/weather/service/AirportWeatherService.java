@@ -1,5 +1,6 @@
 package com.redhat.weather.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redhat.weather.client.AviationWeatherClient;
 import com.redhat.weather.domain.entity.AirportWeatherEntity;
 import com.redhat.weather.domain.entity.LocationEntity;
@@ -20,6 +21,7 @@ import java.util.Optional;
 public class AirportWeatherService {
 
     private static final Logger LOG = Logger.getLogger(AirportWeatherService.class);
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Inject
     AirportWeatherRepository airportWeatherRepository;
@@ -131,6 +133,14 @@ public class AirportWeatherService {
         weather.flightCategory = metar.flightCategory;
         weather.ceilingFeet = metar.ceil;
         weather.skyCondition = metar.cover;
+        weather.weatherConditions = metar.wxString;
+
+        // Store full METAR response as structured JSON
+        try {
+            weather.metarData = objectMapper.writeValueAsString(metar);
+        } catch (Exception e) {
+            LOG.warn("Failed to serialize METAR data for " + weather.airportCode);
+        }
 
         airportWeatherRepository.persist(weather);
     }
@@ -148,6 +158,13 @@ public class AirportWeatherService {
         // Parse issue time
         if (taf.issueTime != null) {
             weather.observationTime = parseIso8601(taf.issueTime);
+        }
+
+        // Store full TAF response as structured JSON
+        try {
+            weather.tafData = objectMapper.writeValueAsString(taf);
+        } catch (Exception e) {
+            LOG.warn("Failed to serialize TAF data for " + weather.airportCode);
         }
 
         airportWeatherRepository.persist(weather);

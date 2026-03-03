@@ -52,7 +52,8 @@
         <div class="forecast-details">
           <div>🌡️ {{ forecast.temperatureFahrenheit }}°F ({{ forecast.temperatureCelsius }}°C)</div>
           <div>💨 Wind: {{ forecast.windSpeedMph }} mph</div>
-          <div v-if="forecast.precipitationProbability">☔ Precipitation: {{ forecast.precipitationProbability }}%</div>
+          <div v-if="forecast.precipitationProbability != null">☔ Precip: {{ forecast.precipitationProbability }}%</div>
+          <div v-if="forecast.humidity != null">💧 Humidity: {{ forecast.humidity }}%</div>
         </div>
         <div class="forecast-description">
           {{ forecast.weatherDescription || forecast.weatherShortDescription }}

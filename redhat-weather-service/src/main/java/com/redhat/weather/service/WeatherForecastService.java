@@ -109,6 +109,16 @@ public class WeatherForecastService {
                 forecast.weatherShortDescription = period.path("shortForecast").asText();
                 forecast.weatherDescription = period.path("detailedForecast").asText();
 
+                // Extract precipitation probability and humidity
+                JsonNode precipNode = period.path("probabilityOfPrecipitation").path("value");
+                if (!precipNode.isMissingNode() && !precipNode.isNull()) {
+                    forecast.precipitationProbability = precipNode.asInt();
+                }
+                JsonNode humidityNode = period.path("relativeHumidity").path("value");
+                if (!humidityNode.isMissingNode() && !humidityNode.isNull()) {
+                    forecast.humidity = humidityNode.asInt();
+                }
+
                 // Parse time periods
                 String startTime = period.path("startTime").asText();
                 String endTime = period.path("endTime").asText();

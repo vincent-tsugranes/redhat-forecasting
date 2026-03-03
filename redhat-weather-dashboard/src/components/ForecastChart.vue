@@ -34,6 +34,7 @@ const chartData = computed(() => {
 
   const labels = sorted.map((f) => formatDate(f.validFrom))
   const hasPrecip = sorted.some((f) => f.precipitationProbability != null)
+  const hasHumidity = sorted.some((f) => f.humidity != null)
 
   const datasets = [
     {
@@ -62,6 +63,18 @@ const chartData = computed(() => {
       data: sorted.map((f) => f.precipitationProbability ?? null) as number[],
       borderColor: '#009688',
       backgroundColor: 'rgba(0, 150, 136, 0.15)',
+      yAxisID: 'y1',
+      tension: 0.3,
+      pointRadius: 2,
+    })
+  }
+
+  if (hasHumidity) {
+    datasets.push({
+      label: 'Humidity (%)',
+      data: sorted.map((f) => f.humidity ?? null) as number[],
+      borderColor: '#7c4dff',
+      backgroundColor: 'rgba(124, 77, 255, 0.1)',
       yAxisID: 'y1',
       tension: 0.3,
       pointRadius: 2,

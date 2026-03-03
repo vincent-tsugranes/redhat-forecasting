@@ -61,6 +61,7 @@ public interface AviationWeatherClient {
         public String cover;
         public Integer ceil;
         public String rawOb;
+        public String wxString;
     }
 
     /**
