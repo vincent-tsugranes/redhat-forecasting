@@ -12,7 +12,9 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Path("/api/weather/locations")
 @Produces(MediaType.APPLICATION_JSON)
@@ -20,15 +22,22 @@ import java.util.List;
 @Tag(name = "Locations", description = "Location management operations")
 public class LocationResource {
 
+    private static final int MAX_PAGE_SIZE = 200;
+
     @Inject
     LocationService locationService;
 
     @GET
-    @Operation(summary = "Get all locations", description = "Retrieve all weather monitoring locations")
-    @APIResponse(responseCode = "200", description = "List of locations")
-    public Response getAllLocations() {
-        List<LocationEntity> locations = locationService.getAllLocations();
-        return Response.ok(locations).build();
+    @Operation(summary = "Get all locations", description = "Retrieve all weather monitoring locations (paginated)")
+    @APIResponse(responseCode = "200", description = "Paginated list of locations")
+    public Response getAllLocations(
+            @QueryParam("page") @DefaultValue("0") @Parameter(description = "Page number (0-based)") int page,
+            @QueryParam("size") @DefaultValue("50") @Parameter(description = "Page size (max 200)") int size) {
+
+        int clampedSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        List<LocationEntity> locations = locationService.getAllLocations(page, clampedSize);
+        long totalElements = locationService.countAllLocations();
+        return Response.ok(buildPageResponse(locations, page, clampedSize, totalElements)).build();
     }
 
     @GET
@@ -44,20 +53,31 @@ public class LocationResource {
 
     @GET
     @Path("/type/{type}")
-    @Operation(summary = "Get locations by type", description = "Retrieve locations by type (city, airport, region)")
-    @APIResponse(responseCode = "200", description = "List of locations")
-    public Response getLocationsByType(@PathParam("type") @Parameter(description = "Location type") String type) {
-        List<LocationEntity> locations = locationService.getLocationsByType(type);
-        return Response.ok(locations).build();
+    @Operation(summary = "Get locations by type", description = "Retrieve locations by type (city, airport, region) (paginated)")
+    @APIResponse(responseCode = "200", description = "Paginated list of locations")
+    public Response getLocationsByType(
+            @PathParam("type") @Parameter(description = "Location type") String type,
+            @QueryParam("page") @DefaultValue("0") @Parameter(description = "Page number (0-based)") int page,
+            @QueryParam("size") @DefaultValue("50") @Parameter(description = "Page size (max 200)") int size) {
+
+        int clampedSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        List<LocationEntity> locations = locationService.getLocationsByType(type, page, clampedSize);
+        long totalElements = locationService.countLocationsByType(type);
+        return Response.ok(buildPageResponse(locations, page, clampedSize, totalElements)).build();
     }
 
     @GET
     @Path("/airports")
-    @Operation(summary = "Get all airports", description = "Retrieve all airport locations")
-    @APIResponse(responseCode = "200", description = "List of airports")
-    public Response getAirports() {
-        List<LocationEntity> airports = locationService.getAirportLocations();
-        return Response.ok(airports).build();
+    @Operation(summary = "Get all airports", description = "Retrieve all airport locations (paginated)")
+    @APIResponse(responseCode = "200", description = "Paginated list of airports")
+    public Response getAirports(
+            @QueryParam("page") @DefaultValue("0") @Parameter(description = "Page number (0-based)") int page,
+            @QueryParam("size") @DefaultValue("50") @Parameter(description = "Page size (max 200)") int size) {
+
+        int clampedSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        List<LocationEntity> airports = locationService.getAirportLocations(page, clampedSize);
+        long totalElements = locationService.countAirportLocations();
+        return Response.ok(buildPageResponse(airports, page, clampedSize, totalElements)).build();
     }
 
     @GET
@@ -73,16 +93,22 @@ public class LocationResource {
 
     @GET
     @Path("/search")
-    @Operation(summary = "Search locations by name", description = "Search locations by name (partial match)")
-    @APIResponse(responseCode = "200", description = "List of matching locations")
-    public Response searchLocations(@QueryParam("name") @Parameter(description = "Location name") String name) {
+    @Operation(summary = "Search locations by name", description = "Search locations by name (partial match, paginated)")
+    @APIResponse(responseCode = "200", description = "Paginated list of matching locations")
+    public Response searchLocations(
+            @QueryParam("name") @Parameter(description = "Location name") String name,
+            @QueryParam("page") @DefaultValue("0") @Parameter(description = "Page number (0-based)") int page,
+            @QueryParam("size") @DefaultValue("50") @Parameter(description = "Page size (max 200)") int size) {
+
         if (name == null || name.trim().isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST)
                 .entity("Query parameter 'name' is required")
                 .build();
         }
-        List<LocationEntity> locations = locationService.searchLocationsByName(name);
-        return Response.ok(locations).build();
+        int clampedSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        List<LocationEntity> locations = locationService.searchLocationsByName(name, page, clampedSize);
+        long totalElements = locationService.countLocationsByName(name);
+        return Response.ok(buildPageResponse(locations, page, clampedSize, totalElements)).build();
     }
 
     @POST
@@ -118,5 +144,15 @@ public class LocationResource {
             return Response.noContent().build();
         }
         return Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    private Map<String, Object> buildPageResponse(List<LocationEntity> data, int page, int size, long totalElements) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", data);
+        response.put("page", page);
+        response.put("size", size);
+        response.put("totalElements", totalElements);
+        response.put("totalPages", (int) Math.ceil((double) totalElements / size));
+        return response;
     }
 }

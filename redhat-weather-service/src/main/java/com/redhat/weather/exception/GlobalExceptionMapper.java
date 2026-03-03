@@ -5,6 +5,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
+import org.eclipse.microprofile.faulttolerance.exceptions.BulkheadException;
 import org.eclipse.microprofile.faulttolerance.exceptions.CircuitBreakerOpenException;
 import org.eclipse.microprofile.faulttolerance.exceptions.TimeoutException;
 import org.jboss.logging.Logger;
@@ -23,6 +24,11 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
         if (exception instanceof WebApplicationException wae) {
             int status = wae.getResponse().getStatus();
             return buildResponse(status, wae.getMessage());
+        }
+
+        if (exception instanceof BulkheadException) {
+            LOG.warn("Bulkhead rejected request: " + exception.getMessage());
+            return buildResponse(429, "Too many refresh requests. Please wait and try again.");
         }
 
         if (exception instanceof CircuitBreakerOpenException) {

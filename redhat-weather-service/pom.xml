@@ -79,6 +79,12 @@
             <artifactId>quarkus-hibernate-validator</artifactId>
         </dependency>
 
+        <!-- Caching -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-cache</artifactId>
+        </dependency>
+
         <!-- Scheduler -->
         <dependency>
             <groupId>io.quarkus</groupId>

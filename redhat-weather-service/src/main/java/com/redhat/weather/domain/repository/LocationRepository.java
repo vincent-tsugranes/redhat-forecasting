@@ -2,6 +2,7 @@ package com.redhat.weather.domain.repository;
 
 import com.redhat.weather.domain.entity.LocationEntity;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.math.BigDecimal;
@@ -56,5 +57,41 @@ public class LocationRepository implements PanacheRepositoryBase<LocationEntity,
 
     public List<LocationEntity> searchByName(String name) {
         return list("LOWER(name) LIKE LOWER(?1)", "%" + name + "%");
+    }
+
+    // Paginated query methods
+
+    public List<LocationEntity> getAllLocationsPaginated(int page, int size) {
+        return findAll().page(Page.of(page, size)).list();
+    }
+
+    public long countAllLocations() {
+        return count();
+    }
+
+    public List<LocationEntity> findAirportLocationsPaginated(int page, int size) {
+        return find("locationType = ?1 AND airportCode IS NOT NULL", "airport")
+            .page(Page.of(page, size)).list();
+    }
+
+    public long countAirportLocations() {
+        return count("locationType = ?1 AND airportCode IS NOT NULL", "airport");
+    }
+
+    public List<LocationEntity> findByTypePaginated(String locationType, int page, int size) {
+        return find("locationType", locationType).page(Page.of(page, size)).list();
+    }
+
+    public long countByType(String locationType) {
+        return count("locationType", locationType);
+    }
+
+    public List<LocationEntity> searchByNamePaginated(String name, int page, int size) {
+        return find("LOWER(name) LIKE LOWER(?1)", "%" + name + "%")
+            .page(Page.of(page, size)).list();
+    }
+
+    public long countByName(String name) {
+        return count("LOWER(name) LIKE LOWER(?1)", "%" + name + "%");
     }
 }

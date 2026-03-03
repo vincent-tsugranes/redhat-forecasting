@@ -55,6 +55,15 @@ public class WeatherDataScheduler {
     @ConfigProperty(name = "weather.scheduler.openweather.enabled", defaultValue = "false")
     boolean openWeatherEnabled;
 
+    @ConfigProperty(name = "weather.scheduler.airport.batch-size", defaultValue = "500")
+    int airportBatchSize;
+
+    @ConfigProperty(name = "weather.scheduler.forecast.batch-size", defaultValue = "100")
+    int forecastBatchSize;
+
+    private int airportOffset = 0;
+    private int forecastOffset = 0;
+
     /**
      * Fetch NOAA weather forecasts every 30 minutes
      */
@@ -65,15 +74,28 @@ public class WeatherDataScheduler {
             return;
         }
 
-        LOG.info("Starting NOAA forecast fetch");
-
         try {
             List<LocationEntity> locations = locationRepository.getAllLocations();
+            int total = locations.size();
+
+            if (total == 0) {
+                LOG.info("No locations found for NOAA forecast fetch");
+                return;
+            }
+
+            if (forecastOffset >= total) {
+                forecastOffset = 0;
+            }
+
+            int end = Math.min(forecastOffset + forecastBatchSize, total);
+            List<LocationEntity> batch = locations.subList(forecastOffset, end);
+
+            LOG.info("Starting NOAA forecast fetch: processing locations " + forecastOffset + "-" + end + " of " + total);
 
             int successCount = 0;
             int failureCount = 0;
 
-            for (LocationEntity location : locations) {
+            for (LocationEntity location : batch) {
                 try {
                     weatherForecastService.fetchAndStoreNoaaForecast(location.id);
                     successCount++;
@@ -83,13 +105,15 @@ public class WeatherDataScheduler {
                 }
             }
 
+            forecastOffset = (end >= total) ? 0 : end;
+
             LOG.info("NOAA forecast fetch completed. Success: " + successCount + ", Failures: " + failureCount);
 
             if (successCount > 0) {
                 dataFreshnessService.recordSuccess("noaa-forecast");
             }
             if (failureCount > 0 && successCount == 0) {
-                LOG.warn("NOAA forecast fetch completely failed for all " + failureCount + " locations");
+                LOG.warn("NOAA forecast fetch completely failed for all " + failureCount + " locations in batch");
             }
 
         } catch (Exception e) {
@@ -107,15 +131,30 @@ public class WeatherDataScheduler {
             return;
         }
 
-        LOG.info("Starting OpenWeatherMap forecast fetch");
-
         try {
             List<LocationEntity> locations = locationRepository.getAllLocations();
+            int total = locations.size();
+
+            if (total == 0) {
+                LOG.info("No locations found for OpenWeatherMap forecast fetch");
+                return;
+            }
+
+            // Reuse forecastOffset (shared with NOAA since they cover the same locations)
+            int offset = forecastOffset;
+            if (offset >= total) {
+                offset = 0;
+            }
+
+            int end = Math.min(offset + forecastBatchSize, total);
+            List<LocationEntity> batch = locations.subList(offset, end);
+
+            LOG.info("Starting OpenWeatherMap forecast fetch: processing locations " + offset + "-" + end + " of " + total);
 
             int successCount = 0;
             int failureCount = 0;
 
-            for (LocationEntity location : locations) {
+            for (LocationEntity location : batch) {
                 try {
                     weatherForecastService.fetchAndStoreOpenWeatherForecast(location.id);
                     successCount++;
@@ -131,7 +170,7 @@ public class WeatherDataScheduler {
                 dataFreshnessService.recordSuccess("openweather-forecast");
             }
             if (failureCount > 0 && successCount == 0) {
-                LOG.warn("OpenWeatherMap forecast fetch completely failed for all " + failureCount + " locations");
+                LOG.warn("OpenWeatherMap forecast fetch completely failed for all " + failureCount + " locations in batch");
             }
 
         } catch (Exception e) {
@@ -149,15 +188,28 @@ public class WeatherDataScheduler {
             return;
         }
 
-        LOG.info("Starting airport weather fetch");
-
         try {
             List<LocationEntity> airports = locationRepository.findAirportLocations();
+            int total = airports.size();
+
+            if (total == 0) {
+                LOG.info("No airports found for weather fetch");
+                return;
+            }
+
+            if (airportOffset >= total) {
+                airportOffset = 0;
+            }
+
+            int end = Math.min(airportOffset + airportBatchSize, total);
+            List<LocationEntity> batch = airports.subList(airportOffset, end);
+
+            LOG.info("Starting airport weather fetch: processing airports " + airportOffset + "-" + end + " of " + total);
 
             int successCount = 0;
             int failureCount = 0;
 
-            for (LocationEntity airport : airports) {
+            for (LocationEntity airport : batch) {
                 try {
                     airportWeatherService.fetchAndStoreMETAR(airport.airportCode);
                     airportWeatherService.fetchAndStoreTAF(airport.airportCode);
@@ -168,13 +220,15 @@ public class WeatherDataScheduler {
                 }
             }
 
+            airportOffset = (end >= total) ? 0 : end;
+
             LOG.info("Airport weather fetch completed. Success: " + successCount + ", Failures: " + failureCount);
 
             if (successCount > 0) {
                 dataFreshnessService.recordSuccess("aviation-metar");
             }
             if (failureCount > 0 && successCount == 0) {
-                LOG.warn("Airport weather fetch completely failed for all " + failureCount + " airports");
+                LOG.warn("Airport weather fetch completely failed for all " + failureCount + " airports in batch");
             }
 
         } catch (Exception e) {

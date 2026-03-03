@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redhat.weather.client.NoaaWeatherClient;
 import com.redhat.weather.domain.entity.WeatherAlertEntity;
 import com.redhat.weather.domain.repository.WeatherAlertRepository;
+import io.quarkus.cache.CacheInvalidateAll;
+import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -29,15 +31,19 @@ public class WeatherAlertService {
     @RestClient
     NoaaWeatherClient noaaClient;
 
+    @CacheResult(cacheName = "alerts-active")
     public List<WeatherAlertEntity> getActiveAlerts() {
         return alertRepository.findActiveAlerts();
     }
 
+    @CacheResult(cacheName = "alerts-by-severity")
     public List<WeatherAlertEntity> getAlertsBySeverity(String severity) {
         return alertRepository.findBySeverity(severity);
     }
 
     @Transactional
+    @CacheInvalidateAll(cacheName = "alerts-active")
+    @CacheInvalidateAll(cacheName = "alerts-by-severity")
     public void fetchAndStoreAlerts() {
         try {
             LOG.info("Fetching active weather alerts from NOAA");
@@ -111,6 +117,8 @@ public class WeatherAlertService {
     }
 
     @Transactional
+    @CacheInvalidateAll(cacheName = "alerts-active")
+    @CacheInvalidateAll(cacheName = "alerts-by-severity")
     public void deactivateExpired() {
         long count = alertRepository.deactivateExpired();
         if (count > 0) {
