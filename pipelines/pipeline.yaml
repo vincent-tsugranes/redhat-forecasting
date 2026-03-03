@@ -33,6 +33,10 @@ spec:
       type: string
       description: Image tag
       default: latest
+    - name: backend-url
+      type: string
+      description: Backend service URL for smoke testing
+      default: http://backend.weather-dashboard-dev.svc.cluster.local:8080
 
   workspaces:
     - name: shared-workspace
@@ -123,48 +127,97 @@ spec:
         - name: TLSVERIFY
           value: "true"
 
-    # Task 4: Update Kubernetes manifests (optional - for GitOps)
-    # Disabled: Not needed when using 'latest' tag with ArgoCD auto-sync
-    # The git-cli task cleanup conflicts with using the shared workspace
-    # - name: update-manifests
-    #   runAfter:
-    #     - build-backend
-    #     - build-frontend
-    #   taskRef:
-    #     resolver: cluster
-    #     params:
-    #       - name: kind
-    #         value: task
-    #       - name: name
-    #         value: git-cli
-    #       - name: namespace
-    #         value: openshift-pipelines
-    #   workspaces:
-    #     - name: source
-    #       workspace: shared-workspace
-    #   params:
-    #     - name: GIT_USER_NAME
-    #       value: "Tekton Pipeline"
-    #     - name: GIT_USER_EMAIL
-    #       value: "tekton@pipeline.local"
-    #     - name: GIT_SCRIPT
-    #       value: |
-    #         #!/bin/sh
-    #         set -e
-    #
-    #         cd $(workspaces.source.path)
-    #
-    #         # Update image tags in kustomization
-    #         sed -i "s|newTag:.*|newTag: \"$(params.image-tag)\"|g" k8s/overlays/dev/kustomization.yaml
-    #
-    #         # Check if there are changes
-    #         if git diff --quiet; then
-    #           echo "No changes to commit"
-    #           exit 0
-    #         fi
-    #
-    #         # Commit and push changes
-    #         git add k8s/overlays/dev/kustomization.yaml
-    #         git commit -m "Update image tags to $(params.image-tag) [skip ci]"
-    #
-    #         echo "Manifest updates complete. Push manually or configure git credentials."
+    # Task 4: Update Kubernetes manifests for GitOps
+    - name: update-manifests
+      runAfter:
+        - build-backend
+        - build-frontend
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-cli
+          - name: namespace
+            value: openshift-pipelines
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: GIT_USER_NAME
+          value: "Tekton Pipeline"
+        - name: GIT_USER_EMAIL
+          value: "tekton@pipeline.local"
+        - name: GIT_SCRIPT
+          value: |
+            #!/bin/sh
+            set -e
+
+            cd $(workspaces.source.path)
+
+            # Update image tags in all overlay kustomization files
+            sed -i "s|newTag:.*|newTag: \"$(params.image-tag)\"|g" k8s/overlays/dev/kustomization.yaml
+            sed -i "s|newTag:.*|newTag: \"$(params.image-tag)\"|g" k8s/overlays/staging/kustomization.yaml
+            sed -i "s|newTag:.*|newTag: \"$(params.image-tag)\"|g" k8s/overlays/prod/kustomization.yaml
+
+            # Check if there are changes
+            if git diff --quiet; then
+              echo "No changes to commit"
+              exit 0
+            fi
+
+            # Commit and push changes
+            git add k8s/overlays/*/kustomization.yaml
+            git commit -m "Update image tags to $(params.image-tag) [skip ci]"
+
+            echo "Manifest updates complete. Push manually or configure git credentials."
+
+    # Task 5: Smoke test the deployed backend
+    - name: smoke-test
+      runAfter:
+        - update-manifests
+      taskSpec:
+        params:
+          - name: backend-url
+            type: string
+        steps:
+          - name: health-check
+            image: curlimages/curl:latest
+            script: |
+              #!/bin/sh
+              set -e
+
+              echo "Running health check against $(params.backend-url)/q/health"
+              attempt=1
+              max_attempts=10
+              delay=15
+
+              while [ $attempt -le $max_attempts ]; do
+                echo "Attempt $attempt of $max_attempts..."
+                if curl -sf "$(params.backend-url)/q/health"; then
+                  echo ""
+                  echo "Health check passed!"
+                  break
+                fi
+                if [ $attempt -eq $max_attempts ]; then
+                  echo "Health check failed after $max_attempts attempts"
+                  exit 1
+                fi
+                echo "Health check failed, retrying in ${delay}s..."
+                sleep $delay
+                attempt=$((attempt + 1))
+              done
+          - name: api-check
+            image: curlimages/curl:latest
+            script: |
+              #!/bin/sh
+              set -e
+
+              echo "Running API check against $(params.backend-url)/api/status/data"
+              curl -sf "$(params.backend-url)/api/status/data"
+              echo ""
+              echo "API check passed!"
+      params:
+        - name: backend-url
+          value: $(params.backend-url)
