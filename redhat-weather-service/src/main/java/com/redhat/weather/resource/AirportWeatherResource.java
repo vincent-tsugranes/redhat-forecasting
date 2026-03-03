@@ -2,6 +2,7 @@ package com.redhat.weather.resource;
 
 import com.redhat.weather.domain.entity.AirportWeatherEntity;
 import com.redhat.weather.service.AirportWeatherService;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -22,6 +23,9 @@ public class AirportWeatherResource {
 
     @Inject
     AirportWeatherService airportWeatherService;
+
+    @Inject
+    MeterRegistry meterRegistry;
 
     @GET
     @Path("/{code}")
@@ -81,6 +85,7 @@ public class AirportWeatherResource {
             @PathParam("code") @Parameter(description = "ICAO airport code") String code) {
 
         try {
+            meterRegistry.counter("weather_api_refresh_total", "type", "airport").increment();
             String upperCode = code.toUpperCase();
             airportWeatherService.fetchAndStoreMETAR(upperCode);
             airportWeatherService.fetchAndStoreTAF(upperCode);

@@ -7,6 +7,7 @@ import com.redhat.weather.service.DataFreshnessService;
 import com.redhat.weather.service.HurricaneService;
 import com.redhat.weather.service.WeatherAlertService;
 import com.redhat.weather.service.WeatherForecastService;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -39,6 +40,9 @@ public class WeatherDataScheduler {
 
     @Inject
     DataFreshnessService dataFreshnessService;
+
+    @Inject
+    MeterRegistry meterRegistry;
 
     @ConfigProperty(name = "weather.scheduler.noaa.enabled", defaultValue = "true")
     boolean noaaEnabled;
@@ -108,6 +112,8 @@ public class WeatherDataScheduler {
             forecastOffset = (end >= total) ? 0 : end;
 
             LOG.info("NOAA forecast fetch completed. Success: " + successCount + ", Failures: " + failureCount);
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "noaa-forecast", "result", "success").increment(successCount);
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "noaa-forecast", "result", "failure").increment(failureCount);
 
             if (successCount > 0) {
                 dataFreshnessService.recordSuccess("noaa-forecast");
@@ -165,6 +171,8 @@ public class WeatherDataScheduler {
             }
 
             LOG.info("OpenWeatherMap forecast fetch completed. Success: " + successCount + ", Failures: " + failureCount);
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "openweather-forecast", "result", "success").increment(successCount);
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "openweather-forecast", "result", "failure").increment(failureCount);
 
             if (successCount > 0) {
                 dataFreshnessService.recordSuccess("openweather-forecast");
@@ -223,6 +231,8 @@ public class WeatherDataScheduler {
             airportOffset = (end >= total) ? 0 : end;
 
             LOG.info("Airport weather fetch completed. Success: " + successCount + ", Failures: " + failureCount);
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "aviation-metar", "result", "success").increment(successCount);
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "aviation-metar", "result", "failure").increment(failureCount);
 
             if (successCount > 0) {
                 dataFreshnessService.recordSuccess("aviation-metar");
@@ -260,9 +270,11 @@ public class WeatherDataScheduler {
         try {
             hurricaneService.fetchAndStoreActiveStorms();
             dataFreshnessService.recordSuccess("nhc-hurricane");
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "nhc-hurricane", "result", "success").increment();
             LOG.info("Hurricane data fetch completed");
 
         } catch (Exception e) {
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "nhc-hurricane", "result", "failure").increment();
             LOG.error("Error in hurricane scheduler", e);
         }
     }
@@ -283,9 +295,11 @@ public class WeatherDataScheduler {
             weatherAlertService.deactivateExpired();
             weatherAlertService.fetchAndStoreAlerts();
             dataFreshnessService.recordSuccess("noaa-alerts");
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "noaa-alerts", "result", "success").increment();
             LOG.info("Weather alerts fetch completed");
 
         } catch (Exception e) {
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "noaa-alerts", "result", "failure").increment();
             LOG.error("Error in weather alerts scheduler", e);
         }
     }

@@ -2,6 +2,7 @@ package com.redhat.weather.resource;
 
 import com.redhat.weather.domain.entity.WeatherAlertEntity;
 import com.redhat.weather.service.WeatherAlertService;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -22,6 +23,9 @@ public class WeatherAlertResource {
 
     @Inject
     WeatherAlertService weatherAlertService;
+
+    @Inject
+    MeterRegistry meterRegistry;
 
     @GET
     @Path("/active")
@@ -50,6 +54,7 @@ public class WeatherAlertResource {
     @APIResponse(responseCode = "202", description = "Refresh triggered")
     public Response refreshAlerts() {
         try {
+            meterRegistry.counter("weather_api_refresh_total", "type", "alerts").increment();
             weatherAlertService.fetchAndStoreAlerts();
 
             return Response.status(Response.Status.ACCEPTED)

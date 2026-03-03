@@ -2,6 +2,7 @@ package com.redhat.weather.resource;
 
 import com.redhat.weather.domain.entity.HurricaneEntity;
 import com.redhat.weather.service.HurricaneService;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -24,6 +25,9 @@ public class HurricaneResource {
 
     @Inject
     HurricaneService hurricaneService;
+
+    @Inject
+    MeterRegistry meterRegistry;
 
     @GET
     @Path("/active")
@@ -97,6 +101,7 @@ public class HurricaneResource {
     @APIResponse(responseCode = "202", description = "Refresh triggered")
     public Response refreshHurricaneData() {
         try {
+            meterRegistry.counter("weather_api_refresh_total", "type", "hurricane").increment();
             hurricaneService.fetchAndStoreActiveStorms();
 
             return Response.status(Response.Status.ACCEPTED)
