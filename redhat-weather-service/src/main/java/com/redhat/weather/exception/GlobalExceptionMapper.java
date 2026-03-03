@@ -79,6 +79,11 @@ public class GlobalExceptionMapper implements ExceptionMapper<Exception> {
         body.put("message", message != null ? message : "Unknown error");
         body.put("timestamp", LocalDateTime.now().toString());
 
+        Object correlationId = org.jboss.logging.MDC.get("correlationId");
+        if (correlationId != null) {
+            body.put("requestId", correlationId.toString());
+        }
+
         return Response.status(status)
             .type(MediaType.APPLICATION_JSON)
             .entity(body)
