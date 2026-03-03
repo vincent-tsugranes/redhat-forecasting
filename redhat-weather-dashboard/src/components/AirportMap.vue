@@ -35,6 +35,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import 'leaflet.markercluster'
 import weatherService, { type Location } from '../services/weatherService'
+import { formatRelativeTime, getFreshnessLevel } from '../utils/dateUtils'
 
 const mapContainer = ref<HTMLElement | null>(null)
 const searchQuery = ref('')
@@ -119,6 +120,9 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
     const visibility = weather.visibilityMiles
     const flightCategory = weather.flightCategory
     const observationTime = weather.observationTime ? new Date(weather.observationTime).toLocaleString() : null
+    const fetchedAt = weather.fetchedAt || null
+    const relativeTime = fetchedAt ? formatRelativeTime(fetchedAt) : null
+    const freshnessLevel = fetchedAt ? getFreshnessLevel(fetchedAt, 'airport') : 'fresh'
 
     // Flight category colors
     const categoryColors: Record<string, string> = {
@@ -159,7 +163,10 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
           </div>
         ` : ''}
         ${observationTime ? `
-          <div class="weather-time">Updated: ${observationTime}</div>
+          <div class="weather-time">
+            Observed: ${observationTime}
+            ${relativeTime ? `<span class="freshness-indicator freshness-${freshnessLevel}">${relativeTime}</span>` : ''}
+          </div>
         ` : ''}
       </div>
     `
@@ -479,6 +486,30 @@ onMounted(async () => {
 
 :deep(.info-icon) {
   font-size: 16px;
+}
+
+:deep(.freshness-indicator) {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+:deep(.freshness-fresh) {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+:deep(.freshness-aging) {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+:deep(.freshness-stale) {
+  background: #ffebee;
+  color: #c62828;
 }
 
 :deep(.weather-hint) {

@@ -27,6 +27,7 @@ export interface WeatherForecast {
   humidity?: number
   weatherDescription: string
   weatherShortDescription?: string
+  fetchedAt?: string
 }
 
 export interface AirportWeather {
@@ -44,6 +45,7 @@ export interface AirportWeather {
   temperatureCelsius?: number
   dewpointCelsius?: number
   flightCategory?: string
+  fetchedAt?: string
 }
 
 export interface Hurricane {
@@ -60,6 +62,11 @@ export interface Hurricane {
   minCentralPressureMb?: number
   status?: string
   classification?: string
+  movementDirection?: number
+  movementSpeedMph?: number
+  maxSustainedWindsKnots?: number
+  intensity?: string
+  fetchedAt?: string
 }
 
 export const weatherService = {

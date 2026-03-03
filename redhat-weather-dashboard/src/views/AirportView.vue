@@ -25,6 +25,9 @@
           <strong>{{ selectedAirportCode }}</strong>
           <span>{{ formatDate(metar.observationTime) }}</span>
         </div>
+        <div v-if="metar.fetchedAt" style="margin-bottom: 10px;">
+          <FreshnessBadge :fetched-at="metar.fetchedAt" data-type="airport" />
+        </div>
         <div class="report-raw">{{ metar.rawText }}</div>
         <div class="report-details">
           <div v-if="metar.flightCategory" class="flight-category" :class="'category-' + metar.flightCategory">
@@ -45,6 +48,9 @@
           <strong>{{ selectedAirportCode }}</strong>
           <span>{{ formatDate(taf.observationTime) }}</span>
         </div>
+        <div v-if="taf.fetchedAt" style="margin-bottom: 10px;">
+          <FreshnessBadge :fetched-at="taf.fetchedAt" data-type="airport" />
+        </div>
         <div class="report-raw">{{ taf.rawText }}</div>
       </div>
     </div>
@@ -59,6 +65,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import weatherService, { type Location, type AirportWeather } from '../services/weatherService'
+import { formatDate } from '../utils/dateUtils'
+import FreshnessBadge from '../components/FreshnessBadge.vue'
 
 const airports = ref<Location[]>([])
 const selectedAirportCode = ref<string>('')
@@ -126,16 +134,6 @@ async function refreshWeather() {
     error.value = err.message || 'Failed to refresh airport weather'
     refreshing.value = false
   }
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
-  })
 }
 
 onMounted(() => {

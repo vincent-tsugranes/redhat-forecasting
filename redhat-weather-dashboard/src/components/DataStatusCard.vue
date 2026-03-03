@@ -25,6 +25,21 @@
       <div class="status-badge" :class="status.loadingComplete ? 'success' : 'warning'">
         {{ status.loadingComplete ? '✓ Data Ready' : '⚠ Loading...' }}
       </div>
+      <div v-if="freshness.forecast || freshness.airport || freshness.hurricane" class="freshness-section">
+        <h4>Data Freshness</h4>
+        <div v-if="freshness.forecast" class="freshness-row">
+          <span class="label">Forecasts:</span>
+          <FreshnessBadge :fetched-at="freshness.forecast" data-type="forecast" />
+        </div>
+        <div v-if="freshness.airport" class="freshness-row">
+          <span class="label">Airport Weather:</span>
+          <FreshnessBadge :fetched-at="freshness.airport" data-type="airport" />
+        </div>
+        <div v-if="freshness.hurricane" class="freshness-row">
+          <span class="label">Hurricane Data:</span>
+          <FreshnessBadge :fetched-at="freshness.hurricane" data-type="hurricane" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -32,6 +47,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import api from '../services/api'
+import { weatherApi } from '../services/api'
+import FreshnessBadge from './FreshnessBadge.vue'
 
 interface DataStatus {
   totalLocations: number
@@ -52,6 +69,11 @@ const status = ref<DataStatus>({
   loadingComplete: false,
   percentLoaded: 0
 })
+const freshness = ref<{ forecast: string | null; airport: string | null; hurricane: string | null }>({
+  forecast: null,
+  airport: null,
+  hurricane: null,
+})
 const loading = ref(true)
 const error = ref<string | null>(null)
 
@@ -69,8 +91,30 @@ const fetchStatus = async () => {
   }
 }
 
+const fetchFreshness = async () => {
+  const [forecastRes, hurricaneRes] = await Promise.allSettled([
+    weatherApi.get('/forecasts/current', { params: { lat: 38.9, lon: -77.0 } }),
+    weatherApi.get('/hurricanes/active'),
+  ])
+
+  if (forecastRes.status === 'fulfilled' && forecastRes.value.data?.length > 0) {
+    freshness.value.forecast = forecastRes.value.data[0].fetchedAt
+  }
+  if (hurricaneRes.status === 'fulfilled' && hurricaneRes.value.data?.length > 0) {
+    freshness.value.hurricane = hurricaneRes.value.data[0].fetchedAt
+  }
+
+  try {
+    const metarRes = await weatherApi.get('/airports/KJFK/metar')
+    if (metarRes.data?.fetchedAt) {
+      freshness.value.airport = metarRes.data.fetchedAt
+    }
+  } catch { /* airport data may not be available yet */ }
+}
+
 onMounted(() => {
   fetchStatus()
+  fetchFreshness()
   // Refresh every 30 seconds if not complete
   const interval = setInterval(() => {
     if (!status.value.loadingComplete) {
@@ -176,5 +220,24 @@ h3 {
 .status-badge.warning {
   background: #fff3e0;
   color: #e65100;
+}
+
+.freshness-section {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.freshness-section h4 {
+  margin: 0 0 10px 0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.freshness-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
 }
 </style>

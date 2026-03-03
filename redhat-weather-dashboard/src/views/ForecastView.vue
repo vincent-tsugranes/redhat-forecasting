@@ -19,6 +19,9 @@
       <h2>Forecast Data</h2>
       <p><strong>{{ forecasts.length }}</strong> forecast periods available</p>
       <p v-if="forecasts[0]">Source: <strong>{{ forecasts[0].source.toUpperCase() }}</strong></p>
+      <p v-if="forecasts[0]?.fetchedAt">
+        Data fetched: <FreshnessBadge :fetched-at="forecasts[0].fetchedAt" data-type="forecast" />
+      </p>
 
       <div v-for="forecast in forecasts.slice(0, 10)" :key="forecast.id" class="forecast-item">
         <div class="forecast-header">
@@ -45,6 +48,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import weatherService, { type Location, type WeatherForecast } from '../services/weatherService'
+import { formatDate } from '../utils/dateUtils'
+import FreshnessBadge from '../components/FreshnessBadge.vue'
 
 const locations = ref<Location[]>([])
 const forecasts = ref<WeatherForecast[]>([])
@@ -74,17 +79,6 @@ async function loadForecasts() {
   } finally {
     loading.value = false
   }
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
-  })
 }
 
 onMounted(() => {

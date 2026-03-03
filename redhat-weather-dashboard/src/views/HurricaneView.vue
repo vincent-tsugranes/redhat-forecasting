@@ -11,11 +11,17 @@
       </div>
     </div>
 
+    <HurricaneMap
+      v-if="hurricanes.length > 0"
+      :storms="hurricanes"
+      @storm-selected="onStormSelected"
+    />
+
     <div v-if="loading" class="loading">Loading hurricane data...</div>
     <div v-if="error" class="error">{{ error }}</div>
 
     <div v-if="hurricanes.length > 0">
-      <div v-for="storm in hurricanes" :key="storm.id" class="card">
+      <div v-for="storm in hurricanes" :key="storm.id" class="card" :class="{ 'card-selected': selectedStormId === storm.stormId }">
         <div class="storm-header">
           <h2>{{ storm.stormName || 'Unnamed Storm' }}</h2>
           <div class="storm-id">{{ storm.stormId }}</div>
@@ -40,6 +46,10 @@
             <strong>Status:</strong>
             {{ storm.status }}
           </div>
+          <div v-if="storm.movementSpeedMph != null" class="info-item">
+            <strong>Movement:</strong>
+            {{ storm.movementSpeedMph }} mph{{ storm.movementDirection != null ? ` at ${storm.movementDirection}°` : '' }}
+          </div>
         </div>
 
         <div class="storm-location">
@@ -50,6 +60,7 @@
 
         <div class="storm-time">
           <strong>Advisory Time:</strong> {{ formatDate(storm.advisoryTime) }}
+          <FreshnessBadge v-if="storm.fetchedAt" :fetched-at="storm.fetchedAt" data-type="hurricane" />
         </div>
       </div>
     </div>
@@ -65,11 +76,19 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import weatherService, { type Hurricane } from '../services/weatherService'
+import { formatDate } from '../utils/dateUtils'
+import FreshnessBadge from '../components/FreshnessBadge.vue'
+import HurricaneMap from '../components/HurricaneMap.vue'
 
 const hurricanes = ref<Hurricane[]>([])
 const loading = ref(false)
 const refreshing = ref(false)
 const error = ref<string | null>(null)
+const selectedStormId = ref<string | null>(null)
+
+function onStormSelected(stormId: string) {
+  selectedStormId.value = stormId
+}
 
 async function loadHurricanes() {
   loading.value = true
@@ -106,17 +125,6 @@ function getCategoryLabel(category: number | undefined): string {
   if (category === undefined || category === null) return 'N/A'
   if (category === 0) return 'Tropical Storm'
   return `Category ${category}`
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
-  })
 }
 
 onMounted(() => {
@@ -197,5 +205,10 @@ onMounted(() => {
 .storm-time {
   margin: 10px 0;
   color: #666;
+}
+
+.card-selected {
+  border: 2px solid #ee0000;
+  box-shadow: 0 0 12px rgba(238, 0, 0, 0.2);
 }
 </style>
