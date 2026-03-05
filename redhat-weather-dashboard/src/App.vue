@@ -62,7 +62,9 @@
     <main>
       <router-view v-slot="{ Component }">
         <Transition name="fade" mode="out-in">
-          <component :is="Component" />
+          <ErrorBoundary>
+            <component :is="Component" />
+          </ErrorBoundary>
         </Transition>
       </router-view>
     </main>
@@ -86,6 +88,7 @@ import { useAlertNotifications } from './composables/useAlertNotifications'
 import ToastContainer from './components/ToastContainer.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
 import GlobalSearch from './components/GlobalSearch.vue'
+import ErrorBoundary from './components/ErrorBoundary.vue'
 
 const { notificationsEnabled, toggleNotifications } = useAlertNotifications()
 

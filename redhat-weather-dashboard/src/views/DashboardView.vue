@@ -51,7 +51,9 @@
       <p style="margin-bottom: 15px; color: #666">
         {{ $t('dashboard.mapDescription', { count: locations.length }) }}
       </p>
-      <AirportMap />
+      <ErrorBoundary>
+        <AirportMap />
+      </ErrorBoundary>
     </div>
   </div>
 </template>
@@ -63,6 +65,7 @@ import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
 import { useAnimatedNumber } from '../composables/useAnimatedNumber'
 import AirportMap from '../components/AirportMap.vue'
+import ErrorBoundary from '../components/ErrorBoundary.vue'
 import DataStatusCard from '../components/DataStatusCard.vue'
 import DashboardSkeleton from '../components/skeletons/DashboardSkeleton.vue'
 import FavoritesList from '../components/FavoritesList.vue'

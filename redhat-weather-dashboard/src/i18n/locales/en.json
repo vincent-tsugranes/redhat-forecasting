@@ -206,6 +206,10 @@
     "refreshSuccess": "Data refreshed successfully",
     "refreshError": "Failed to refresh data"
   },
+  "error": {
+    "sectionFailed": "Something went wrong loading this section.",
+    "retry": "Try Again"
+  },
   "common": {
     "wind": "Wind:",
     "precip": "Precip:",

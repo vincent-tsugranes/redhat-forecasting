@@ -4,13 +4,16 @@
       <h1>{{ $t('map.title') }}</h1>
     </div>
     <div class="map-fullpage">
-      <UnifiedMap />
+      <ErrorBoundary>
+        <UnifiedMap />
+      </ErrorBoundary>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import UnifiedMap from '../components/UnifiedMap.vue'
+import ErrorBoundary from '../components/ErrorBoundary.vue'
 </script>
 
 <style scoped>

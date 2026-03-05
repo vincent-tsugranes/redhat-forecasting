@@ -69,10 +69,14 @@
 
     <div v-if="forecasts.length > 0" class="card">
       <h2>{{ $t('forecast.forecastTrends') }}</h2>
-      <ForecastChart :forecasts="forecasts" />
+      <ErrorBoundary>
+        <ForecastChart :forecasts="forecasts" />
+      </ErrorBoundary>
     </div>
 
-    <WindRoseChart v-if="forecasts.length > 0" :forecasts="forecasts" />
+    <ErrorBoundary>
+      <WindRoseChart v-if="forecasts.length > 0" :forecasts="forecasts" />
+    </ErrorBoundary>
 
     <div v-if="forecasts.length > 0" class="card">
       <div class="forecast-data-header">
@@ -149,6 +153,7 @@ import HistoricalChart from '../components/HistoricalChart.vue'
 import SolarPanel from '../components/SolarPanel.vue'
 import ClimateNormalsCard from '../components/ClimateNormalsCard.vue'
 import WindRoseChart from '../components/WindRoseChart.vue'
+import ErrorBoundary from '../components/ErrorBoundary.vue'
 import { useFavorites } from '../composables/useFavorites'
 import { exportForecastsToCSV } from '../utils/exportUtils'
 

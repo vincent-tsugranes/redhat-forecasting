@@ -31,7 +31,7 @@ RUN mkdir -p /var/cache/nginx/client_temp \
     /var/cache/nginx/scgi_temp \
     /var/run \
     /var/log/nginx && \
-    chmod -R 777 /var/cache/nginx \
+    chmod -R 775 /var/cache/nginx \
     /var/run \
     /var/log/nginx && \
     chmod -R 755 /usr/share/nginx/html && \
@@ -50,6 +50,14 @@ RUN echo 'server { \
     server_name _; \
     root /usr/share/nginx/html; \
     index index.html; \
+    \
+    # Security headers \
+    add_header X-Frame-Options "SAMEORIGIN" always; \
+    add_header X-Content-Type-Options "nosniff" always; \
+    add_header X-XSS-Protection "1; mode=block" always; \
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always; \
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always; \
+    add_header Content-Security-Policy "default-src '"'"'self'"'"'; script-src '"'"'self'"'"'; style-src '"'"'self'"'"' '"'"'unsafe-inline'"'"'; img-src '"'"'self'"'"' data: https://*.tile.openstreetmap.org https://mesonet.agron.iastate.edu; connect-src '"'"'self'"'"' http://backend:8090; font-src '"'"'self'"'"'" always; \
     \
     # Temp directories for OpenShift \
     client_body_temp_path /var/cache/nginx/client_temp; \

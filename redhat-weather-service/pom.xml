@@ -109,6 +109,12 @@
             <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
         </dependency>
 
+        <!-- Distributed Tracing (OpenTelemetry) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-opentelemetry</artifactId>
+        </dependency>
+
         <!-- Structured JSON Logging -->
         <dependency>
             <groupId>io.quarkus</groupId>

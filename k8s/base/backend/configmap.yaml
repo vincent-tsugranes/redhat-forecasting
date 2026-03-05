@@ -16,3 +16,5 @@ data:
   AIRPORT_CSV_PATH: "/app/data/airports.csv"
   AIRPORT_CSV_LOAD_ON_STARTUP: "true"
   AIRPORT_CSV_SKIP_IF_EXISTS: "true"
+  QUARKUS_OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger-collector:4317"
+  QUARKUS_OTEL_SERVICE_NAME: "weather-service"
