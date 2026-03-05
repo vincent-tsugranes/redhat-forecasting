@@ -9,6 +9,8 @@
             <router-link to="/forecasts">{{ $t('nav.forecasts') }}</router-link>
             <router-link to="/airports">{{ $t('nav.airports') }}</router-link>
             <router-link to="/hurricanes">{{ $t('nav.hurricanes') }}</router-link>
+            <router-link to="/earthquakes">{{ $t('nav.earthquakes') }}</router-link>
+            <router-link to="/space-weather">{{ $t('nav.spaceWeather') }}</router-link>
           </nav>
           <button
             class="header-icon-btn"

@@ -23,6 +23,16 @@ const router = createRouter({
       name: 'hurricanes',
       component: () => import('../views/HurricaneView.vue'),
     },
+    {
+      path: '/earthquakes',
+      name: 'earthquakes',
+      component: () => import('../views/EarthquakeView.vue'),
+    },
+    {
+      path: '/space-weather',
+      name: 'space-weather',
+      component: () => import('../views/SpaceWeatherView.vue'),
+    },
   ],
 })
 

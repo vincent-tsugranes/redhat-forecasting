@@ -4,6 +4,7 @@ import com.redhat.weather.domain.entity.LocationEntity;
 import com.redhat.weather.domain.repository.LocationRepository;
 import com.redhat.weather.service.AirportWeatherService;
 import com.redhat.weather.service.DataFreshnessService;
+import com.redhat.weather.service.EarthquakeService;
 import com.redhat.weather.service.HurricaneService;
 import com.redhat.weather.service.WeatherAlertService;
 import com.redhat.weather.service.WeatherForecastService;
@@ -33,6 +34,9 @@ public class WeatherDataScheduler {
     HurricaneService hurricaneService;
 
     @Inject
+    EarthquakeService earthquakeService;
+
+    @Inject
     WeatherAlertService weatherAlertService;
 
     @Inject
@@ -55,6 +59,9 @@ public class WeatherDataScheduler {
 
     @ConfigProperty(name = "weather.scheduler.alerts.enabled", defaultValue = "true")
     boolean alertsEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.earthquake.enabled", defaultValue = "true")
+    boolean earthquakeEnabled;
 
     @ConfigProperty(name = "weather.scheduler.openweather.enabled", defaultValue = "false")
     boolean openWeatherEnabled;
@@ -305,6 +312,30 @@ public class WeatherDataScheduler {
     }
 
     /**
+     * Fetch earthquake data every 10 minutes
+     */
+    @Scheduled(cron = "0 */10 * * * ?", identity = "earthquake-fetch")
+    public void fetchEarthquakes() {
+        if (!earthquakeEnabled) {
+            LOG.debug("Earthquake scheduler is disabled");
+            return;
+        }
+
+        LOG.info("Starting earthquake data fetch");
+
+        try {
+            earthquakeService.fetchAndStoreEarthquakes();
+            dataFreshnessService.recordSuccess("usgs-earthquake");
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "usgs-earthquake", "result", "success").increment();
+            LOG.info("Earthquake data fetch completed");
+
+        } catch (Exception e) {
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "usgs-earthquake", "result", "failure").increment();
+            LOG.error("Error in earthquake scheduler", e);
+        }
+    }
+
+    /**
      * Clean up old forecast data daily at 2 AM.
      * Guards against data starvation: only cleans up if fresh data exists.
      */
@@ -333,9 +364,10 @@ public class WeatherDataScheduler {
                 airportWeatherService.deactivateOldReports(sevenDaysAgo);
             }
 
-            // Hurricane and alert cleanup is always safe:
+            // Hurricane, earthquake, and alert cleanup is always safe:
             // old advisories are genuinely stale; deactivateExpired only removes truly expired alerts
             hurricaneService.deactivateOldAdvisories(sevenDaysAgo);
+            earthquakeService.deactivateOldEvents(sevenDaysAgo);
             weatherAlertService.deactivateExpired();
 
             LOG.info("Old data cleanup completed");

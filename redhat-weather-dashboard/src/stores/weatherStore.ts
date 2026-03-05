@@ -4,6 +4,7 @@ import weatherService, {
   type Location,
   type WeatherForecast,
   type Hurricane,
+  type Earthquake,
   type WeatherAlert,
 } from '../services/weatherService'
 
@@ -141,6 +142,25 @@ export const useWeatherStore = defineStore('weather', () => {
     }
   }
 
+  // --- Earthquakes ---
+  const earthquakes = ref<Earthquake[]>([])
+  const earthquakesLoading = ref(false)
+  const earthquakesError = ref<string | null>(null)
+
+  async function fetchEarthquakes() {
+    earthquakesLoading.value = true
+    earthquakesError.value = null
+    try {
+      earthquakes.value = await deduplicatedFetch('earthquakes', () =>
+        weatherService.getRecentEarthquakes(),
+      )
+    } catch (err: unknown) {
+      earthquakesError.value = err instanceof Error ? err.message : 'Failed to load earthquake data'
+    } finally {
+      earthquakesLoading.value = false
+    }
+  }
+
   // --- Alerts ---
   const alerts = ref<WeatherAlert[]>([])
   const alertsError = ref(false)
@@ -155,6 +175,13 @@ export const useWeatherStore = defineStore('weather', () => {
   }
 
   // --- Refresh helpers (bust cache then re-fetch) ---
+  async function refreshEarthquakes() {
+    clearCache('earthquakes')
+    await weatherService.refreshEarthquakes()
+    await new Promise((r) => setTimeout(r, 2000))
+    await fetchEarthquakes()
+  }
+
   async function refreshLocations() {
     clearCache('locations')
     await fetchLocations()
@@ -201,6 +228,12 @@ export const useWeatherStore = defineStore('weather', () => {
     historicalLoading,
     historicalError,
     fetchHistoricalForecasts,
+    // Earthquakes
+    earthquakes,
+    earthquakesLoading,
+    earthquakesError,
+    fetchEarthquakes,
+    refreshEarthquakes,
     // Alerts
     alerts,
     alertsError,

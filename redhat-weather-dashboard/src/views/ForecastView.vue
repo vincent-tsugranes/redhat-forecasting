@@ -55,6 +55,11 @@
     </div>
 
     <SolarPanel v-if="selectedLocationId" :location-id="Number(selectedLocationId)" />
+    <ClimateNormalsCard
+      v-if="selectedLocationId"
+      :location-id="Number(selectedLocationId)"
+      :current-temp="forecasts.length > 0 ? forecasts[0].temperatureFahrenheit : null"
+    />
 
     <ForecastSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
@@ -140,6 +145,7 @@ import DailyForecastCards from '../components/DailyForecastCards.vue'
 import HourlyTimeline from '../components/HourlyTimeline.vue'
 import HistoricalChart from '../components/HistoricalChart.vue'
 import SolarPanel from '../components/SolarPanel.vue'
+import ClimateNormalsCard from '../components/ClimateNormalsCard.vue'
 import { useFavorites } from '../composables/useFavorites'
 import { exportForecastsToCSV } from '../utils/exportUtils'
 

@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "Red Hat Weather Dashboard",
-    "footer": "\u00a9 2024 Red Hat Weather Service. Data from NOAA, Aviation Weather Center, NHC, and OpenWeatherMap.",
+    "footer": "\u00a9 2024 Red Hat Weather Service. Data from NOAA, Aviation Weather Center, NHC, OpenWeatherMap, USGS, and NOAA SWPC.",
     "themeLight": "Switch to light mode",
     "themeDark": "Switch to dark mode"
   },
@@ -9,7 +9,9 @@
     "dashboard": "Dashboard",
     "forecasts": "Forecasts",
     "airports": "Airports",
-    "hurricanes": "Hurricanes"
+    "hurricanes": "Hurricanes",
+    "earthquakes": "Earthquakes",
+    "spaceWeather": "Space"
   },
   "dashboard": {
     "title": "Weather Dashboard",
@@ -124,6 +126,43 @@
     "weatherAtGlance": "Weather at a Glance",
     "viewForecast": "View forecast for {name}",
     "noData": "No data"
+  },
+  "earthquake": {
+    "title": "Earthquake Monitor",
+    "recentActivity": "Recent Seismic Activity",
+    "refreshData": "Refresh Data",
+    "depth": "Depth:",
+    "time": "Time:",
+    "felt": "Felt:",
+    "reports": "reports",
+    "alert": "Alert:",
+    "position": "Position:",
+    "tsunamiWarning": "Tsunami Warning",
+    "noRecent": "No significant earthquakes in the last 24 hours.",
+    "autoFetch": "Data is automatically fetched from USGS every 10 minutes."
+  },
+  "space": {
+    "title": "Space Weather",
+    "currentConditions": "Current Space Weather",
+    "refreshData": "Refresh Data",
+    "kpIndex": "Kp Index",
+    "geomagneticStorm": "Geomagnetic Storm",
+    "auroraForecast": "Aurora Forecast",
+    "auroraChance": "Visibility chance",
+    "solarWind": "Solar Wind",
+    "magneticField": "magnetic field",
+    "activeAlerts": "Active Space Weather Alerts",
+    "noData": "Space weather data is temporarily unavailable."
+  },
+  "climate": {
+    "title": "Climate Normals",
+    "normalHigh": "Avg High",
+    "normalLow": "Avg Low",
+    "avgPrecip": "Avg Precip",
+    "avgWind": "Avg Wind",
+    "aboveNormal": "above normal",
+    "belowNormal": "below normal",
+    "basedOn": "Based on {count} historical observations"
   },
   "solar": {
     "title": "Sunrise & Sunset",

@@ -83,6 +83,55 @@ export interface SolarData {
   fetchedAt: string
 }
 
+export interface Earthquake {
+  id: number
+  usgsId: string
+  magnitude: number
+  place: string
+  eventTime: string
+  latitude: number
+  longitude: number
+  depthKm: number
+  magnitudeType?: string
+  status?: string
+  tsunami?: boolean
+  felt?: number
+  cdi?: number
+  alert?: string
+  significance?: number
+  fetchedAt?: string
+}
+
+export interface SpaceWeather {
+  kpIndex: number
+  kpLevel: string
+  solarWindSpeed?: number
+  geomagneticStormLevel?: string
+  auroraChance?: string
+  alerts: SpaceWeatherAlert[]
+  fetchedAt: string
+}
+
+export interface SpaceWeatherAlert {
+  issueTime: string
+  message: string
+}
+
+export interface ClimateNormals {
+  locationId: number
+  locationName: string
+  month: number
+  avgHighF: number
+  avgLowF: number
+  avgHighC: number
+  avgLowC: number
+  avgPrecipProbability: number
+  avgHumidity: number
+  avgWindSpeedMph: number
+  sampleCount: number
+  fetchedAt: string
+}
+
 export interface WeatherAlert {
   id: number
   alertId: string
@@ -203,6 +252,33 @@ export const weatherService = {
 
   async refreshAlerts(): Promise<void> {
     await weatherApi.post('/alerts/refresh')
+  },
+
+  // Earthquakes
+  async getRecentEarthquakes(): Promise<Earthquake[]> {
+    const response = await weatherApi.get('/earthquakes/recent')
+    return response.data
+  },
+
+  async getSignificantEarthquakes(): Promise<Earthquake[]> {
+    const response = await weatherApi.get('/earthquakes/significant')
+    return response.data
+  },
+
+  async refreshEarthquakes(): Promise<void> {
+    await weatherApi.post('/earthquakes/refresh')
+  },
+
+  // Space Weather
+  async getSpaceWeather(): Promise<SpaceWeather> {
+    const response = await weatherApi.get('/space-weather')
+    return response.data
+  },
+
+  // Climate Normals
+  async getClimateNormals(locationId: number): Promise<ClimateNormals> {
+    const response = await weatherApi.get(`/climate/${locationId}`)
+    return response.data
   },
 
   // Solar Data
