@@ -33,6 +33,11 @@ const router = createRouter({
       name: 'space-weather',
       component: () => import('../views/SpaceWeatherView.vue'),
     },
+    {
+      path: '/map',
+      name: 'map',
+      component: () => import('../views/MapView.vue'),
+    },
   ],
 })
 

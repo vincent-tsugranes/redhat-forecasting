@@ -11,7 +11,8 @@
     "airports": "Airports",
     "hurricanes": "Hurricanes",
     "earthquakes": "Earthquakes",
-    "spaceWeather": "Space"
+    "spaceWeather": "Space",
+    "map": "Map"
   },
   "dashboard": {
     "title": "Weather Dashboard",
@@ -36,6 +37,7 @@
     "searchPlaceholder": "Search locations by name or state...",
     "searchAriaLabel": "Search locations by name or state",
     "forecastTrends": "Forecast Trends",
+    "windRose": "Wind Rose",
     "forecastData": "Forecast Data",
     "periodsAvailable": "{count} forecast periods available",
     "source": "Source:",
@@ -45,6 +47,7 @@
     "hourlyTimeline": "Hourly Forecast (Next 48h)",
     "exportCSV": "Export CSV",
     "exportAriaLabel": "Export forecast data as CSV file",
+    "exportSuccess": "Forecast data exported successfully",
     "history": {
       "title": "Historical Trends",
       "noData": "No historical data available for this location yet.",
@@ -171,6 +174,37 @@
     "dayLength": "Day Length",
     "daylight": "Daylight",
     "darkness": "Darkness"
+  },
+  "settings": {
+    "title": "Settings",
+    "temperature": "Temperature",
+    "fahrenheit": "Fahrenheit (\u00b0F)",
+    "celsius": "Celsius (\u00b0C)",
+    "windSpeed": "Wind Speed",
+    "mph": "Miles per hour (mph)",
+    "kmh": "Kilometers per hour (km/h)",
+    "timeFormat": "Time Format",
+    "time12h": "12-hour (AM/PM)",
+    "time24h": "24-hour"
+  },
+  "search": {
+    "placeholder": "Search locations, airports, earthquakes...",
+    "ariaLabel": "Global search",
+    "noResults": "No results found",
+    "locations": "Locations",
+    "airports": "Airports",
+    "earthquakes": "Earthquakes"
+  },
+  "map": {
+    "title": "Unified Map",
+    "layerAirports": "Airports",
+    "layerEarthquakes": "Earthquakes",
+    "layerHurricanes": "Hurricanes",
+    "layerRadar": "Radar"
+  },
+  "toast": {
+    "refreshSuccess": "Data refreshed successfully",
+    "refreshError": "Failed to refresh data"
   },
   "common": {
     "wind": "Wind:",

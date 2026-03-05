@@ -14,7 +14,7 @@
       <div class="card">
         <h2><span aria-hidden="true">📍</span> {{ $t('dashboard.locations') }}</h2>
         <p>
-          <strong>{{ locations.length }}</strong> {{ $t('dashboard.locationsMonitored', { count: locations.length }) }}
+          <strong>{{ animatedLocationCount }}</strong> {{ $t('dashboard.locationsMonitored', { count: locations.length }) }}
         </p>
         <ul v-if="locations.length > 0" style="list-style: none; padding: 0">
           <li v-for="loc in locations.slice(0, 5)" :key="loc.id">
@@ -26,7 +26,7 @@
       <div class="card">
         <h2><span aria-hidden="true">🌤️</span> {{ $t('dashboard.weatherForecasts') }}</h2>
         <p>{{ $t('dashboard.forecastUpdates') }}</p>
-        <button :aria-label="$t('dashboard.refreshAriaLabel')" @click="loadData">{{ $t('dashboard.refreshData') }}</button>
+        <button :aria-label="$t('dashboard.refreshAriaLabel')" @click="handleRefresh">{{ $t('dashboard.refreshData') }}</button>
       </div>
 
       <div class="card">
@@ -57,9 +57,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
+import { useToast } from '../composables/useToast'
+import { useAnimatedNumber } from '../composables/useAnimatedNumber'
 import AirportMap from '../components/AirportMap.vue'
 import DataStatusCard from '../components/DataStatusCard.vue'
 import DashboardSkeleton from '../components/skeletons/DashboardSkeleton.vue'
@@ -68,9 +70,18 @@ import FavoriteWeatherCards from '../components/FavoriteWeatherCards.vue'
 
 const store = useWeatherStore()
 const { locations, locationsLoading: loading, locationsError: error } = storeToRefs(store)
+const toast = useToast()
 
-function loadData() {
-  store.refreshLocations()
+const locationCount = computed(() => locations.value.length)
+const animatedLocationCount = useAnimatedNumber(locationCount)
+
+async function handleRefresh() {
+  try {
+    await store.refreshLocations()
+    toast.success('Data refreshed successfully')
+  } catch {
+    toast.error('Failed to refresh data')
+  }
 }
 
 onMounted(() => {

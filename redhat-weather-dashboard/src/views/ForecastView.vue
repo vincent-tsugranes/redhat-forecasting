@@ -72,6 +72,8 @@
       <ForecastChart :forecasts="forecasts" />
     </div>
 
+    <WindRoseChart v-if="forecasts.length > 0" :forecasts="forecasts" />
+
     <div v-if="forecasts.length > 0" class="card">
       <div class="forecast-data-header">
         <h2>{{ $t('forecast.forecastData') }}</h2>
@@ -99,16 +101,14 @@
         </div>
         <div class="forecast-details">
           <div>
-            <span aria-hidden="true">🌡️</span> {{ forecast.temperatureFahrenheit }}°F ({{
-              forecast.temperatureCelsius
-            }}°C)
+            <span aria-hidden="true">🌡️</span> {{ formatTemp(forecast.temperatureFahrenheit) }}
           </div>
-          <div><span aria-hidden="true">💨</span> Wind: {{ forecast.windSpeedMph }} mph</div>
+          <div><span aria-hidden="true">💨</span> {{ $t('common.wind') }} {{ formatSpeed(forecast.windSpeedMph) }}</div>
           <div v-if="forecast.precipitationProbability != null">
-            <span aria-hidden="true">☔</span> Precip: {{ forecast.precipitationProbability }}%
+            <span aria-hidden="true">☔</span> {{ $t('common.precip') }} {{ forecast.precipitationProbability }}%
           </div>
           <div v-if="forecast.humidity != null">
-            <span aria-hidden="true">💧</span> Humidity: {{ forecast.humidity }}%
+            <span aria-hidden="true">💧</span> {{ $t('common.humidity') }} {{ forecast.humidity }}%
           </div>
         </div>
         <div class="forecast-description">
@@ -134,6 +134,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
+import { useToast } from '../composables/useToast'
+import { useUnitPreferences } from '../composables/useUnitPreferences'
 import { type Location } from '../services/weatherService'
 import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
@@ -146,11 +148,14 @@ import HourlyTimeline from '../components/HourlyTimeline.vue'
 import HistoricalChart from '../components/HistoricalChart.vue'
 import SolarPanel from '../components/SolarPanel.vue'
 import ClimateNormalsCard from '../components/ClimateNormalsCard.vue'
+import WindRoseChart from '../components/WindRoseChart.vue'
 import { useFavorites } from '../composables/useFavorites'
 import { exportForecastsToCSV } from '../utils/exportUtils'
 
 const route = useRoute()
 const store = useWeatherStore()
+const toast = useToast()
+const { formatTemp, formatSpeed } = useUnitPreferences()
 const {
   locations,
   forecasts,
@@ -228,6 +233,7 @@ function selectLocation(loc: Location) {
 function handleExport() {
   if (selectedLocation.value && forecasts.value.length > 0) {
     exportForecastsToCSV(forecasts.value, selectedLocation.value.name)
+    toast.success('Forecast data exported successfully')
   }
 }
 

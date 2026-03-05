@@ -7,12 +7,12 @@
         <div class="day-icon" aria-hidden="true">{{ day.icon }}</div>
         <div class="day-condition">{{ day.condition }}</div>
         <div class="day-temps">
-          <span class="temp-high">{{ Math.round(day.highF) }}°</span>
-          <span class="temp-low">{{ Math.round(day.lowF) }}°</span>
+          <span class="temp-high">{{ formatTemp(day.highF) }}</span>
+          <span class="temp-low">{{ formatTemp(day.lowF) }}</span>
         </div>
         <div class="day-details">
           <div v-if="day.windMph != null">
-            <span aria-hidden="true">💨</span> {{ Math.round(day.windMph) }} mph
+            <span aria-hidden="true">💨</span> {{ formatSpeed(day.windMph) }}
           </div>
           <div v-if="day.precipChance != null">
             <span aria-hidden="true">☔</span> {{ day.precipChance }}%
@@ -27,6 +27,9 @@
 import { computed } from 'vue'
 import { type WeatherForecast } from '../services/weatherService'
 import { getWeatherIcon } from '../utils/weatherIcons'
+import { useUnitPreferences } from '../composables/useUnitPreferences'
+
+const { formatTemp, formatSpeed } = useUnitPreferences()
 
 const props = defineProps<{
   forecasts: WeatherForecast[]

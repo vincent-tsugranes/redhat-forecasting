@@ -2,8 +2,21 @@
   <div id="app">
     <header class="app-header">
       <div class="container header-content">
-        <h1>{{ $t('app.title') }}</h1>
-        <div class="header-controls">
+        <div class="header-top">
+          <h1>{{ $t('app.title') }}</h1>
+          <button
+            class="hamburger"
+            :class="{ 'hamburger-open': menuOpen }"
+            aria-label="Toggle navigation menu"
+            :aria-expanded="menuOpen"
+            @click="toggleMenu"
+          >
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+          </button>
+        </div>
+        <div class="header-controls" :class="{ 'nav-open': menuOpen }">
           <nav>
             <router-link to="/">{{ $t('nav.dashboard') }}</router-link>
             <router-link to="/forecasts">{{ $t('nav.forecasts') }}</router-link>
@@ -11,29 +24,47 @@
             <router-link to="/hurricanes">{{ $t('nav.hurricanes') }}</router-link>
             <router-link to="/earthquakes">{{ $t('nav.earthquakes') }}</router-link>
             <router-link to="/space-weather">{{ $t('nav.spaceWeather') }}</router-link>
+            <router-link to="/map">{{ $t('nav.map') }}</router-link>
           </nav>
-          <button
-            class="header-icon-btn"
-            :title="notificationsEnabled ? $t('notifications.disable') : $t('notifications.enable')"
-            :aria-label="notificationsEnabled ? $t('notifications.disable') : $t('notifications.enable')"
-            @click="toggleNotifications"
-          >
-            <span aria-hidden="true">{{ notificationsEnabled ? '🔔' : '🔕' }}</span>
-          </button>
-          <button
-            class="theme-toggle"
-            :title="theme === 'dark' ? $t('app.themeLight') : $t('app.themeDark')"
-            :aria-label="theme === 'dark' ? $t('app.themeLight') : $t('app.themeDark')"
-            @click="toggleTheme"
-          >
-            <span aria-hidden="true">{{ theme === 'dark' ? '☀️' : '🌙' }}</span>
-          </button>
+          <div class="header-actions">
+            <GlobalSearch />
+            <button
+              class="header-icon-btn"
+              :title="notificationsEnabled ? $t('notifications.disable') : $t('notifications.enable')"
+              :aria-label="notificationsEnabled ? $t('notifications.disable') : $t('notifications.enable')"
+              @click="toggleNotifications"
+            >
+              <span aria-hidden="true">{{ notificationsEnabled ? '🔔' : '🔕' }}</span>
+            </button>
+            <button
+              class="header-icon-btn"
+              title="Settings"
+              aria-label="Settings"
+              @click="showSettings = !showSettings"
+            >
+              <span aria-hidden="true">⚙</span>
+            </button>
+            <button
+              class="theme-toggle"
+              :title="theme === 'dark' ? $t('app.themeLight') : $t('app.themeDark')"
+              :aria-label="theme === 'dark' ? $t('app.themeLight') : $t('app.themeDark')"
+              @click="toggleTheme"
+            >
+              <span aria-hidden="true">{{ theme === 'dark' ? '☀️' : '🌙' }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </header>
 
+    <SettingsPanel v-if="showSettings" @close="showSettings = false" />
+
     <main>
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <Transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </router-view>
     </main>
 
     <footer class="app-footer">
@@ -43,14 +74,33 @@
         </p>
       </div>
     </footer>
+
+    <ToastContainer />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAlertNotifications } from './composables/useAlertNotifications'
+import ToastContainer from './components/ToastContainer.vue'
+import SettingsPanel from './components/SettingsPanel.vue'
+import GlobalSearch from './components/GlobalSearch.vue'
 
 const { notificationsEnabled, toggleNotifications } = useAlertNotifications()
+
+const route = useRoute()
+const menuOpen = ref(false)
+const showSettings = ref(false)
+
+function toggleMenu() {
+  menuOpen.value = !menuOpen.value
+}
+
+// Close menu on route change
+watch(() => route.path, () => {
+  menuOpen.value = false
+})
 
 const theme = ref(
   localStorage.getItem('theme') ||
@@ -85,10 +135,56 @@ onMounted(() => {
   margin: 0 0 10px 0;
 }
 
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+}
+
+.hamburger-line {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: white;
+  border-radius: 1px;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.hamburger-open .hamburger-line:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger-open .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-open .hamburger-line:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
 .header-controls {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 nav {
@@ -168,6 +264,17 @@ main {
   color: var(--footer-text, #ccc);
 }
 
+/* Page transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
 @media (max-width: 768px) {
   .app-header {
     padding: 12px 0;
@@ -175,20 +282,44 @@ main {
 
   .app-header h1 {
     font-size: 1.2rem;
-    margin: 0 0 8px 0;
+    margin: 0;
+  }
+
+  .hamburger {
+    display: flex;
   }
 
   .header-controls {
-    flex-wrap: wrap;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-top: 12px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .header-controls.nav-open {
+    display: flex;
+    max-height: 500px;
   }
 
   nav {
-    gap: 8px;
+    flex-direction: column;
+    gap: 4px;
   }
 
   nav a {
-    padding: 6px 10px;
-    font-size: 13px;
+    padding: 10px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+  }
+
+  .header-actions {
+    justify-content: center;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
   }
 
   .app-footer {

@@ -6,13 +6,13 @@
         <div class="slot-time">{{ slot.timeLabel }}</div>
         <div class="slot-day">{{ slot.dayLabel }}</div>
         <div class="slot-icon" aria-hidden="true">{{ slot.icon }}</div>
-        <div class="slot-temp">{{ Math.round(slot.tempF) }}°</div>
+        <div class="slot-temp">{{ formatTemp(slot.tempF) }}</div>
         <div class="slot-details">
           <div v-if="slot.precipChance != null">
             <span aria-hidden="true">☔</span> {{ slot.precipChance }}%
           </div>
           <div v-if="slot.windMph != null">
-            <span aria-hidden="true">💨</span> {{ Math.round(slot.windMph) }}
+            <span aria-hidden="true">💨</span> {{ formatSpeed(slot.windMph) }}
           </div>
         </div>
       </div>
@@ -24,6 +24,9 @@
 import { computed } from 'vue'
 import { type WeatherForecast } from '../services/weatherService'
 import { getWeatherIcon } from '../utils/weatherIcons'
+import { useUnitPreferences } from '../composables/useUnitPreferences'
+
+const { formatTemp, formatSpeed, formatTime } = useUnitPreferences()
 
 const props = defineProps<{
   forecasts: WeatherForecast[]
@@ -53,7 +56,7 @@ const hourlySlots = computed<HourlySlot[]>(() => {
       const dt = new Date(f.validFrom)
       return {
         time: f.validFrom,
-        timeLabel: dt.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true }),
+        timeLabel: formatTime(dt),
         dayLabel: dt.toLocaleDateString('en-US', { weekday: 'short' }),
         icon: getWeatherIcon(f.weatherShortDescription || f.weatherDescription || ''),
         tempF: f.temperatureFahrenheit,

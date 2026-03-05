@@ -82,12 +82,14 @@
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
+import { useToast } from '../composables/useToast'
 import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import EarthquakeMap from '../components/EarthquakeMap.vue'
 import EarthquakeSkeleton from '../components/skeletons/EarthquakeSkeleton.vue'
 
 const store = useWeatherStore()
+const toast = useToast()
 const { earthquakes, earthquakesLoading: loading, earthquakesError: error } = storeToRefs(store)
 
 const refreshing = ref(false)
@@ -101,8 +103,9 @@ async function refreshData() {
   refreshing.value = true
   try {
     await store.refreshEarthquakes()
+    toast.success('Earthquake data refreshed')
   } catch {
-    // error is set in the store
+    toast.error('Failed to refresh earthquake data')
   } finally {
     refreshing.value = false
   }

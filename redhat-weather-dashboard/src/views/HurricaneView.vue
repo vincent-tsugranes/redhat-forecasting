@@ -93,12 +93,14 @@ import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
+import { useToast } from '../composables/useToast'
 import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import HurricaneMap from '../components/HurricaneMap.vue'
 import HurricaneSkeleton from '../components/skeletons/HurricaneSkeleton.vue'
 
 const { t } = useI18n()
+const toast = useToast()
 
 const store = useWeatherStore()
 const { hurricanes, hurricanesLoading: loading, hurricanesError: error } = storeToRefs(store)
@@ -114,8 +116,9 @@ async function refreshHurricanes() {
   refreshing.value = true
   try {
     await store.refreshHurricanes()
+    toast.success('Hurricane data refreshed')
   } catch {
-    // error is set in the store
+    toast.error('Failed to refresh hurricane data')
   } finally {
     refreshing.value = false
   }

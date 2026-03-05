@@ -18,10 +18,10 @@
         </div>
         <template v-else-if="card.forecast">
           <div class="fwc-icon" aria-hidden="true">{{ card.icon }}</div>
-          <div class="fwc-temp">{{ Math.round(card.forecast.temperatureFahrenheit) }}°F</div>
+          <div class="fwc-temp">{{ formatTemp(card.forecast.temperatureFahrenheit) }}</div>
           <div class="fwc-details">
             <span v-if="card.forecast.windSpeedMph != null">
-              <span aria-hidden="true">💨</span> {{ Math.round(card.forecast.windSpeedMph) }}
+              <span aria-hidden="true">💨</span> {{ formatSpeed(card.forecast.windSpeedMph) }}
             </span>
             <span v-if="card.forecast.precipitationProbability != null">
               <span aria-hidden="true">☔</span> {{ card.forecast.precipitationProbability }}%
@@ -41,9 +41,12 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFavorites } from '../composables/useFavorites'
+import { useUnitPreferences } from '../composables/useUnitPreferences'
 import weatherService, { type WeatherForecast } from '../services/weatherService'
 import { getWeatherIcon } from '../utils/weatherIcons'
 import SkeletonLoader from './SkeletonLoader.vue'
+
+const { formatTemp, formatSpeed } = useUnitPreferences()
 
 const { favorites } = useFavorites()
 const router = useRouter()

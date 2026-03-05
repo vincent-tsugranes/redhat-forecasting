@@ -8,14 +8,14 @@
     <div v-else-if="normals" class="climate-grid">
       <div class="climate-item">
         <div class="climate-label">{{ $t('climate.normalHigh') }}</div>
-        <div class="climate-value">{{ normals.avgHighF?.toFixed(0) }}°F</div>
+        <div class="climate-value">{{ normals.avgHighF != null ? formatTemp(normals.avgHighF) : '' }}</div>
         <div v-if="currentTemp != null" class="departure" :class="getDepartureClass(tempDeparture)">
           {{ formatDeparture(tempDeparture) }}
         </div>
       </div>
       <div class="climate-item">
         <div class="climate-label">{{ $t('climate.normalLow') }}</div>
-        <div class="climate-value">{{ normals.avgLowF?.toFixed(0) }}°F</div>
+        <div class="climate-value">{{ normals.avgLowF != null ? formatTemp(normals.avgLowF) : '' }}</div>
       </div>
       <div v-if="normals.avgPrecipProbability != null" class="climate-item">
         <div class="climate-label">{{ $t('climate.avgPrecip') }}</div>
@@ -23,7 +23,7 @@
       </div>
       <div v-if="normals.avgWindSpeedMph != null" class="climate-item">
         <div class="climate-label">{{ $t('climate.avgWind') }}</div>
-        <div class="climate-value">{{ normals.avgWindSpeedMph?.toFixed(0) }} mph</div>
+        <div class="climate-value">{{ normals.avgWindSpeedMph != null ? formatSpeed(normals.avgWindSpeedMph) : '' }}</div>
       </div>
     </div>
     <div v-if="normals" class="sample-info">
@@ -35,6 +35,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import weatherService, { type ClimateNormals } from '../services/weatherService'
+import { useUnitPreferences } from '../composables/useUnitPreferences'
+
+const { formatTemp, formatSpeed } = useUnitPreferences()
 
 const props = defineProps<{
   locationId: number

@@ -65,10 +65,12 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import weatherService, { type SpaceWeather } from '../services/weatherService'
+import { useToast } from '../composables/useToast'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import KpIndexGauge from '../components/KpIndexGauge.vue'
 import SpaceWeatherSkeleton from '../components/skeletons/SpaceWeatherSkeleton.vue'
 
+const toast = useToast()
 const spaceWeather = ref<SpaceWeather | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -91,8 +93,9 @@ async function refreshData() {
   refreshing.value = true
   try {
     spaceWeather.value = await weatherService.getSpaceWeather()
+    toast.success('Space weather data refreshed')
   } catch {
-    // keep existing data
+    toast.error('Failed to refresh space weather data')
   } finally {
     refreshing.value = false
   }
