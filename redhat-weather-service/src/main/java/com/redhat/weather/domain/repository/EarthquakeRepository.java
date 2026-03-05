@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @ApplicationScoped
 public class EarthquakeRepository implements PanacheRepositoryBase<EarthquakeEntity, Long> {
@@ -41,6 +42,12 @@ public class EarthquakeRepository implements PanacheRepositoryBase<EarthquakeEnt
 
     public boolean existsByUsgsId(String usgsId) {
         return count("usgsId = ?1", usgsId) > 0;
+    }
+
+    public Optional<LocalDateTime> findLatestEventTime() {
+        return find("isActive = true ORDER BY eventTime DESC")
+            .firstResultOptional()
+            .map(eq -> eq.eventTime);
     }
 
     @Transactional

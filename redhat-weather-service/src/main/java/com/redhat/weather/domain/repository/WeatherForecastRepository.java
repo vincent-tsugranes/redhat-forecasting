@@ -2,6 +2,7 @@ package com.redhat.weather.domain.repository;
 
 import com.redhat.weather.domain.entity.WeatherForecastEntity;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
@@ -60,6 +61,20 @@ public class WeatherForecastRepository implements PanacheRepositoryBase<WeatherF
             "latitude = ?1 AND longitude = ?2 AND validFrom <= ?3 AND validTo >= ?3 AND isActive = true ORDER BY validFrom",
             lat, lon, now
         );
+    }
+
+    public List<WeatherForecastEntity> findByLocationPaginated(Long locationId, int page, int size) {
+        return find("location.id = ?1 AND isActive = true ORDER BY validFrom", locationId)
+            .page(Page.of(page, size))
+            .list();
+    }
+
+    public List<WeatherForecastEntity> findByCoordinatesAndTimeRangePaginated(
+            BigDecimal lat, BigDecimal lon, LocalDateTime from, LocalDateTime to, int page, int size) {
+        return find(
+            "latitude = ?1 AND longitude = ?2 AND validFrom <= ?3 AND validTo >= ?4 AND isActive = true ORDER BY validFrom",
+            lat, lon, to, from
+        ).page(Page.of(page, size)).list();
     }
 
     public List<WeatherForecastEntity> findHistoricalByLocation(Long locationId, LocalDateTime since) {

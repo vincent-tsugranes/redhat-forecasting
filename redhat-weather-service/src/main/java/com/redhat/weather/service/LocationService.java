@@ -4,9 +4,12 @@ import com.redhat.weather.domain.entity.LocationEntity;
 import com.redhat.weather.domain.repository.LocationRepository;
 import io.quarkus.cache.CacheInvalidateAll;
 import io.quarkus.cache.CacheResult;
+import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.jboss.logging.Logger;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,8 +17,21 @@ import java.util.Optional;
 @ApplicationScoped
 public class LocationService {
 
+    private static final Logger LOG = Logger.getLogger(LocationService.class);
+
     @Inject
     LocationRepository locationRepository;
+
+    void onStartup(@Observes StartupEvent ev) {
+        LOG.info("Warming location caches...");
+        try {
+            List<LocationEntity> all = getAllLocations();
+            List<LocationEntity> airports = getAirportLocations();
+            LOG.info("Location caches warmed: " + all.size() + " locations, " + airports.size() + " airports");
+        } catch (Exception e) {
+            LOG.warn("Failed to warm location caches: " + e.getMessage());
+        }
+    }
 
     @CacheResult(cacheName = "locations-all")
     public List<LocationEntity> getAllLocations() {

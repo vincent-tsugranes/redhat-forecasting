@@ -12,6 +12,8 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
+import jakarta.ws.rs.core.CacheControl;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -26,14 +28,22 @@ public class WeatherForecastResource {
     @Inject
     WeatherForecastService weatherForecastService;
 
+    private static CacheControl cacheControl(int maxAgeSecs) {
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(maxAgeSecs);
+        return cc;
+    }
+
     @GET
     @Path("/location/{locationId}")
-    @Operation(summary = "Get forecasts for a location", description = "Retrieve all active forecasts for a specific location")
+    @Operation(summary = "Get forecasts for a location", description = "Retrieve active forecasts for a specific location (paginated)")
     @APIResponse(responseCode = "200", description = "List of forecasts")
     public Response getForecastsByLocation(
-            @PathParam("locationId") @Parameter(description = "Location ID") Long locationId) {
-        List<WeatherForecastEntity> forecasts = weatherForecastService.getForecastsByLocation(locationId);
-        return Response.ok(forecasts).build();
+            @PathParam("locationId") @Parameter(description = "Location ID") Long locationId,
+            @QueryParam("page") @DefaultValue("0") @Min(0) @Parameter(description = "Page number (0-based)") int page,
+            @QueryParam("size") @DefaultValue("50") @Min(1) @Max(200) @Parameter(description = "Page size (max 200)") int size) {
+        List<WeatherForecastEntity> forecasts = weatherForecastService.getForecastsByLocation(locationId, page, size);
+        return Response.ok(forecasts).cacheControl(cacheControl(300)).build();
     }
 
     @GET
@@ -45,7 +55,9 @@ public class WeatherForecastResource {
             @QueryParam("lat") @NotNull @DecimalMin("-90") @DecimalMax("90") @Parameter(description = "Latitude", required = true) BigDecimal latitude,
             @QueryParam("lon") @NotNull @DecimalMin("-180") @DecimalMax("180") @Parameter(description = "Longitude", required = true) BigDecimal longitude,
             @QueryParam("from") @Parameter(description = "Start time (ISO-8601)") String from,
-            @QueryParam("to") @Parameter(description = "End time (ISO-8601)") String to) {
+            @QueryParam("to") @Parameter(description = "End time (ISO-8601)") String to,
+            @QueryParam("page") @DefaultValue("0") @Min(0) @Parameter(description = "Page number (0-based)") int page,
+            @QueryParam("size") @DefaultValue("50") @Min(1) @Max(200) @Parameter(description = "Page size (max 200)") int size) {
 
         try {
             LocalDateTime fromTime = from != null ?
@@ -57,9 +69,9 @@ public class WeatherForecastResource {
                 fromTime.plusDays(7);
 
             List<WeatherForecastEntity> forecasts =
-                weatherForecastService.getForecastsByCoordinates(latitude, longitude, fromTime, toTime);
+                weatherForecastService.getForecastsByCoordinates(latitude, longitude, fromTime, toTime, page, size);
 
-            return Response.ok(forecasts).build();
+            return Response.ok(forecasts).cacheControl(cacheControl(300)).build();
 
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -76,7 +88,7 @@ public class WeatherForecastResource {
             @PathParam("locationId") @Parameter(description = "Location ID") Long locationId,
             @QueryParam("days") @DefaultValue("7") @Min(1) @Max(90) @Parameter(description = "Number of days of history") int days) {
         List<WeatherForecastEntity> forecasts = weatherForecastService.getHistoricalForecasts(locationId, days);
-        return Response.ok(forecasts).build();
+        return Response.ok(forecasts).cacheControl(cacheControl(300)).build();
     }
 
     @GET
@@ -97,6 +109,6 @@ public class WeatherForecastResource {
                 .build();
         }
 
-        return Response.ok(forecasts).build();
+        return Response.ok(forecasts).cacheControl(cacheControl(300)).build();
     }
 }

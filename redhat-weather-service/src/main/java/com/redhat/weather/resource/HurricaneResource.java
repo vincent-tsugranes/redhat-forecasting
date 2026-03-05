@@ -13,6 +13,8 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
+import jakarta.ws.rs.core.CacheControl;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -29,13 +31,19 @@ public class HurricaneResource {
     @Inject
     MeterRegistry meterRegistry;
 
+    private static CacheControl cacheControl(int maxAgeSecs) {
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(maxAgeSecs);
+        return cc;
+    }
+
     @GET
     @Path("/active")
     @Operation(summary = "Get active storms", description = "Retrieve all currently active tropical systems")
     @APIResponse(responseCode = "200", description = "List of active storms")
     public Response getActiveStorms() {
         List<HurricaneEntity> storms = hurricaneService.getActiveStorms();
-        return Response.ok(storms).build();
+        return Response.ok(storms).cacheControl(cacheControl(300)).build();
     }
 
     @GET
@@ -54,7 +62,7 @@ public class HurricaneResource {
                 .build();
         }
 
-        return Response.ok(storm).build();
+        return Response.ok(storm).cacheControl(cacheControl(300)).build();
     }
 
     @GET
@@ -85,7 +93,7 @@ public class HurricaneResource {
                     .build();
             }
 
-            return Response.ok(track).build();
+            return Response.ok(track).cacheControl(cacheControl(300)).build();
 
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST)

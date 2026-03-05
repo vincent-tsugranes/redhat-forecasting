@@ -17,7 +17,10 @@ import org.jboss.logging.Logger;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Semaphore;
 
 @ApplicationScoped
 public class WeatherDataScheduler {
@@ -72,6 +75,9 @@ public class WeatherDataScheduler {
     @ConfigProperty(name = "weather.scheduler.forecast.batch-size", defaultValue = "100")
     int forecastBatchSize;
 
+    @ConfigProperty(name = "weather.scheduler.parallelism", defaultValue = "5")
+    int parallelism;
+
     private int airportOffset = 0;
     private int forecastOffset = 0;
 
@@ -101,20 +107,13 @@ public class WeatherDataScheduler {
             int end = Math.min(forecastOffset + forecastBatchSize, total);
             List<LocationEntity> batch = locations.subList(forecastOffset, end);
 
-            LOG.info("Starting NOAA forecast fetch: processing locations " + forecastOffset + "-" + end + " of " + total);
+            LOG.info("Starting NOAA forecast fetch: processing locations " + forecastOffset + "-" + end + " of " + total + " (parallelism=" + parallelism + ")");
 
-            int successCount = 0;
-            int failureCount = 0;
-
-            for (LocationEntity location : batch) {
-                try {
-                    weatherForecastService.fetchAndStoreNoaaForecast(location.id);
-                    successCount++;
-                } catch (Exception e) {
-                    LOG.error("Failed to fetch NOAA forecast for location: " + location.name, e);
-                    failureCount++;
-                }
-            }
+            int[] counts = parallelProcess(batch, location -> {
+                weatherForecastService.fetchAndStoreNoaaForecast(location.id);
+            }, "NOAA forecast");
+            int successCount = counts[0];
+            int failureCount = counts[1];
 
             forecastOffset = (end >= total) ? 0 : end;
 
@@ -162,20 +161,13 @@ public class WeatherDataScheduler {
             int end = Math.min(offset + forecastBatchSize, total);
             List<LocationEntity> batch = locations.subList(offset, end);
 
-            LOG.info("Starting OpenWeatherMap forecast fetch: processing locations " + offset + "-" + end + " of " + total);
+            LOG.info("Starting OpenWeatherMap forecast fetch: processing locations " + offset + "-" + end + " of " + total + " (parallelism=" + parallelism + ")");
 
-            int successCount = 0;
-            int failureCount = 0;
-
-            for (LocationEntity location : batch) {
-                try {
-                    weatherForecastService.fetchAndStoreOpenWeatherForecast(location.id);
-                    successCount++;
-                } catch (Exception e) {
-                    LOG.error("Failed to fetch OpenWeather forecast for location: " + location.name, e);
-                    failureCount++;
-                }
-            }
+            int[] counts = parallelProcess(batch, location -> {
+                weatherForecastService.fetchAndStoreOpenWeatherForecast(location.id);
+            }, "OpenWeather forecast");
+            int successCount = counts[0];
+            int failureCount = counts[1];
 
             LOG.info("OpenWeatherMap forecast fetch completed. Success: " + successCount + ", Failures: " + failureCount);
             meterRegistry.counter("weather_scheduler_execution_total", "job", "openweather-forecast", "result", "success").increment(successCount);
@@ -224,14 +216,22 @@ public class WeatherDataScheduler {
             int successCount = 0;
             int failureCount = 0;
 
-            for (LocationEntity airport : batch) {
+            // Process in sub-batches of 30 for bulk API calls
+            int subBatchSize = 30;
+            for (int i = 0; i < batch.size(); i += subBatchSize) {
+                List<LocationEntity> subBatch = batch.subList(i, Math.min(i + subBatchSize, batch.size()));
                 try {
-                    airportWeatherService.fetchAndStoreMETAR(airport.airportCode);
-                    airportWeatherService.fetchAndStoreTAF(airport.airportCode);
-                    successCount++;
+                    List<String> codes = new ArrayList<>();
+                    for (LocationEntity airport : subBatch) {
+                        if (airport.airportCode != null) {
+                            codes.add(airport.airportCode);
+                        }
+                    }
+                    airportWeatherService.fetchAndStoreAllBatch(codes);
+                    successCount += codes.size();
                 } catch (Exception e) {
-                    LOG.error("Failed to fetch airport weather for: " + airport.airportCode, e);
-                    failureCount++;
+                    LOG.error("Failed to fetch airport weather for batch starting at offset " + i, e);
+                    failureCount += subBatch.size();
                 }
             }
 
@@ -381,5 +381,37 @@ public class WeatherDataScheduler {
         int month = LocalDateTime.now().getMonthValue();
         // Atlantic hurricane season: June 1 - November 30
         return month >= 6 && month <= 11;
+    }
+
+    private int[] parallelProcess(List<LocationEntity> items,
+                                   java.util.function.Consumer<LocationEntity> action,
+                                   String jobName) {
+        Semaphore semaphore = new Semaphore(parallelism);
+        int[] successCount = {0};
+        int[] failureCount = {0};
+
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        for (LocationEntity item : items) {
+            futures.add(CompletableFuture.runAsync(() -> {
+                try {
+                    semaphore.acquire();
+                    try {
+                        action.accept(item);
+                        synchronized (successCount) { successCount[0]++; }
+                    } finally {
+                        semaphore.release();
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    synchronized (failureCount) { failureCount[0]++; }
+                } catch (Exception e) {
+                    LOG.error("Failed " + jobName + " for: " + item.name, e);
+                    synchronized (failureCount) { failureCount[0]++; }
+                }
+            }));
+        }
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        return new int[]{successCount[0], failureCount[0]};
     }
 }

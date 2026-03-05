@@ -8,7 +8,6 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Retry;
-import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import java.io.IOException;
@@ -18,7 +17,6 @@ import java.io.IOException;
  * API Documentation: https://www.weather.gov/documentation/services-web-api
  */
 @RegisterRestClient(configKey = "noaa-api")
-@Timeout(5000)
 public interface NoaaWeatherClient {
 
     @GET

@@ -15,7 +15,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class AirportWeatherService {
@@ -46,7 +48,7 @@ public class AirportWeatherService {
     }
 
     @Transactional
-    public void fetchAndStoreMETAR(String airportCode) {
+    public void fetchAndStoreAll(String airportCode) {
         try {
             Optional<LocationEntity> locationOpt = locationRepository.findByAirportCode(airportCode);
             if (locationOpt.isEmpty()) {
@@ -55,22 +57,23 @@ public class AirportWeatherService {
             }
 
             LocationEntity location = locationOpt.get();
-            LOG.info("Fetching METAR for airport: " + airportCode);
+            fetchMetarForLocation(airportCode, location);
+            fetchTafForLocation(airportCode, location);
 
-            List<AviationWeatherClient.MetarResponse> metarResponses = aviationClient.getMETAR(
-                airportCode,
-                "json"
-            );
+        } catch (Exception e) {
+            LOG.error("Error fetching weather for airport " + airportCode, e);
+        }
+    }
 
-            if (metarResponses != null && !metarResponses.isEmpty()) {
-                for (AviationWeatherClient.MetarResponse metar : metarResponses) {
-                    storeMetarData(metar, location);
-                }
-                LOG.info("Stored " + metarResponses.size() + " METAR reports for " + airportCode);
-            } else {
-                LOG.warn("No METAR data available for airport: " + airportCode);
+    @Transactional
+    public void fetchAndStoreMETAR(String airportCode) {
+        try {
+            Optional<LocationEntity> locationOpt = locationRepository.findByAirportCode(airportCode);
+            if (locationOpt.isEmpty()) {
+                LOG.warn("Location not found for airport: " + airportCode);
+                return;
             }
-
+            fetchMetarForLocation(airportCode, locationOpt.get());
         } catch (Exception e) {
             LOG.error("Error fetching METAR for airport " + airportCode, e);
         }
@@ -84,26 +87,91 @@ public class AirportWeatherService {
                 LOG.warn("Location not found for airport: " + airportCode);
                 return;
             }
-
-            LocationEntity location = locationOpt.get();
-            LOG.info("Fetching TAF for airport: " + airportCode);
-
-            List<AviationWeatherClient.TafResponse> tafResponses = aviationClient.getTAF(
-                airportCode,
-                "json"
-            );
-
-            if (tafResponses != null && !tafResponses.isEmpty()) {
-                for (AviationWeatherClient.TafResponse taf : tafResponses) {
-                    storeTafData(taf, location);
-                }
-                LOG.info("Stored " + tafResponses.size() + " TAF reports for " + airportCode);
-            } else {
-                LOG.warn("No TAF data available for airport: " + airportCode);
-            }
-
+            fetchTafForLocation(airportCode, locationOpt.get());
         } catch (Exception e) {
             LOG.error("Error fetching TAF for airport " + airportCode, e);
+        }
+    }
+
+    private void fetchMetarForLocation(String airportCode, LocationEntity location) {
+        LOG.info("Fetching METAR for airport: " + airportCode);
+
+        List<AviationWeatherClient.MetarResponse> metarResponses = aviationClient.getMETAR(
+            airportCode, "json"
+        );
+
+        if (metarResponses != null && !metarResponses.isEmpty()) {
+            for (AviationWeatherClient.MetarResponse metar : metarResponses) {
+                storeMetarData(metar, location);
+            }
+            LOG.info("Stored " + metarResponses.size() + " METAR reports for " + airportCode);
+        } else {
+            LOG.warn("No METAR data available for airport: " + airportCode);
+        }
+    }
+
+    private void fetchTafForLocation(String airportCode, LocationEntity location) {
+        LOG.info("Fetching TAF for airport: " + airportCode);
+
+        List<AviationWeatherClient.TafResponse> tafResponses = aviationClient.getTAF(
+            airportCode, "json"
+        );
+
+        if (tafResponses != null && !tafResponses.isEmpty()) {
+            for (AviationWeatherClient.TafResponse taf : tafResponses) {
+                storeTafData(taf, location);
+            }
+            LOG.info("Stored " + tafResponses.size() + " TAF reports for " + airportCode);
+        } else {
+            LOG.warn("No TAF data available for airport: " + airportCode);
+        }
+    }
+
+    @Transactional
+    public void fetchAndStoreAllBatch(List<String> airportCodes) {
+        if (airportCodes == null || airportCodes.isEmpty()) return;
+
+        // Build a lookup map: airportCode -> LocationEntity
+        Map<String, LocationEntity> locationMap = airportCodes.stream()
+            .map(code -> locationRepository.findByAirportCode(code))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toMap(loc -> loc.airportCode, loc -> loc, (a, b) -> a));
+
+        if (locationMap.isEmpty()) return;
+
+        String ids = String.join(",", locationMap.keySet());
+
+        // Batch METAR fetch
+        try {
+            List<AviationWeatherClient.MetarResponse> metarResponses = aviationClient.getMETAR(ids, "json");
+            if (metarResponses != null) {
+                for (AviationWeatherClient.MetarResponse metar : metarResponses) {
+                    LocationEntity loc = metar.icaoId != null ? locationMap.get(metar.icaoId) : null;
+                    if (loc != null) {
+                        storeMetarData(metar, loc);
+                    }
+                }
+                LOG.info("Stored " + metarResponses.size() + " METAR reports for batch of " + locationMap.size() + " airports");
+            }
+        } catch (Exception e) {
+            LOG.error("Error fetching batch METAR for " + ids, e);
+        }
+
+        // Batch TAF fetch
+        try {
+            List<AviationWeatherClient.TafResponse> tafResponses = aviationClient.getTAF(ids, "json");
+            if (tafResponses != null) {
+                for (AviationWeatherClient.TafResponse taf : tafResponses) {
+                    LocationEntity loc = taf.icaoId != null ? locationMap.get(taf.icaoId) : null;
+                    if (loc != null) {
+                        storeTafData(taf, loc);
+                    }
+                }
+                LOG.info("Stored " + tafResponses.size() + " TAF reports for batch of " + locationMap.size() + " airports");
+            }
+        } catch (Exception e) {
+            LOG.error("Error fetching batch TAF for " + ids, e);
         }
     }
 

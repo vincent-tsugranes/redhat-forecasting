@@ -45,13 +45,25 @@ public class WeatherForecastService {
     @ConfigProperty(name = "openweather.api.key")
     Optional<String> openWeatherApiKey;
 
+    private static final int MAX_PAGE_SIZE = 200;
+
     public List<WeatherForecastEntity> getForecastsByLocation(Long locationId) {
         return weatherForecastRepository.findByLocation(locationId);
+    }
+
+    public List<WeatherForecastEntity> getForecastsByLocation(Long locationId, int page, int size) {
+        return weatherForecastRepository.findByLocationPaginated(locationId, page, Math.min(size, MAX_PAGE_SIZE));
     }
 
     public List<WeatherForecastEntity> getForecastsByCoordinates(
             BigDecimal lat, BigDecimal lon, LocalDateTime from, LocalDateTime to) {
         return weatherForecastRepository.findByCoordinatesAndTimeRange(lat, lon, from, to);
+    }
+
+    public List<WeatherForecastEntity> getForecastsByCoordinates(
+            BigDecimal lat, BigDecimal lon, LocalDateTime from, LocalDateTime to, int page, int size) {
+        return weatherForecastRepository.findByCoordinatesAndTimeRangePaginated(
+            lat, lon, from, to, page, Math.min(size, MAX_PAGE_SIZE));
     }
 
     public List<WeatherForecastEntity> getCurrentForecast(BigDecimal lat, BigDecimal lon) {

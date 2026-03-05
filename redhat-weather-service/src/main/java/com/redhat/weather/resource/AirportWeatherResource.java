@@ -13,6 +13,8 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
+import jakarta.ws.rs.core.CacheControl;
+
 import java.util.List;
 
 @Path("/api/weather/airports")
@@ -26,6 +28,12 @@ public class AirportWeatherResource {
 
     @Inject
     MeterRegistry meterRegistry;
+
+    private static CacheControl cacheControl(int maxAgeSecs) {
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(maxAgeSecs);
+        return cc;
+    }
 
     @GET
     @Path("/{code}")
@@ -43,7 +51,7 @@ public class AirportWeatherResource {
                 .build();
         }
 
-        return Response.ok(weather).build();
+        return Response.ok(weather).cacheControl(cacheControl(300)).build();
     }
 
     @GET
@@ -55,7 +63,7 @@ public class AirportWeatherResource {
             @PathParam("code") @Parameter(description = "ICAO airport code") String code) {
 
         return airportWeatherService.getLatestMetar(code.toUpperCase())
-            .map(metar -> Response.ok(metar).build())
+            .map(metar -> Response.ok(metar).cacheControl(cacheControl(300)).build())
             .orElse(Response.status(Response.Status.NOT_FOUND)
                 .entity("No METAR found for airport: " + code)
                 .build());
@@ -70,7 +78,7 @@ public class AirportWeatherResource {
             @PathParam("code") @Parameter(description = "ICAO airport code") String code) {
 
         return airportWeatherService.getLatestTaf(code.toUpperCase())
-            .map(taf -> Response.ok(taf).build())
+            .map(taf -> Response.ok(taf).cacheControl(cacheControl(300)).build())
             .orElse(Response.status(Response.Status.NOT_FOUND)
                 .entity("No TAF found for airport: " + code)
                 .build());

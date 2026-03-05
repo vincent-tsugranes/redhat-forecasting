@@ -12,6 +12,8 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
+import jakarta.ws.rs.core.CacheControl;
+
 import java.util.List;
 
 @Path("/api/weather/earthquakes")
@@ -26,13 +28,19 @@ public class EarthquakeResource {
     @Inject
     MeterRegistry meterRegistry;
 
+    private static CacheControl cacheControl(int maxAgeSecs) {
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(maxAgeSecs);
+        return cc;
+    }
+
     @GET
     @Path("/recent")
     @Operation(summary = "Get recent earthquakes", description = "Retrieve earthquakes from the last 24 hours (M2.5+)")
     @APIResponse(responseCode = "200", description = "List of recent earthquakes")
     public Response getRecentEarthquakes() {
         List<EarthquakeEntity> earthquakes = earthquakeService.getRecentEarthquakes();
-        return Response.ok(earthquakes).build();
+        return Response.ok(earthquakes).cacheControl(cacheControl(120)).build();
     }
 
     @GET
@@ -41,7 +49,7 @@ public class EarthquakeResource {
     @APIResponse(responseCode = "200", description = "List of significant earthquakes")
     public Response getSignificantEarthquakes() {
         List<EarthquakeEntity> earthquakes = earthquakeService.getSignificantEarthquakes();
-        return Response.ok(earthquakes).build();
+        return Response.ok(earthquakes).cacheControl(cacheControl(120)).build();
     }
 
     @POST

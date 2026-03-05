@@ -18,6 +18,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @ApplicationScoped
 public class EarthquakeService {
@@ -43,11 +44,19 @@ public class EarthquakeService {
     @Transactional
     public void fetchAndStoreEarthquakes() {
         try {
-            LOG.info("Fetching recent earthquakes from USGS");
-
-            String startTime = LocalDateTime.now(ZoneOffset.UTC)
-                .minusHours(24)
-                .format(DateTimeFormatter.ISO_DATE_TIME);
+            // Use incremental fetching: start from the latest known event time
+            Optional<LocalDateTime> latestEventTime = earthquakeRepository.findLatestEventTime();
+            String startTime;
+            if (latestEventTime.isPresent()) {
+                startTime = latestEventTime.get().atOffset(ZoneOffset.UTC)
+                    .format(DateTimeFormatter.ISO_DATE_TIME);
+                LOG.info("Incremental earthquake fetch from " + startTime);
+            } else {
+                startTime = LocalDateTime.now(ZoneOffset.UTC)
+                    .minusHours(24)
+                    .format(DateTimeFormatter.ISO_DATE_TIME);
+                LOG.info("Full earthquake fetch (no existing data) from " + startTime);
+            }
 
             String response = usgsClient.getRecentEarthquakes(
                 "geojson", startTime, 2.5, "time"
