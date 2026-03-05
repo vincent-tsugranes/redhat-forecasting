@@ -151,8 +151,9 @@ export interface WeatherAlert {
 export const weatherService = {
   // Locations
   async getLocations(): Promise<Location[]> {
-    const response = await weatherApi.get('/locations')
-    return response.data
+    const response = await weatherApi.get('/locations', { params: { size: 500 } })
+    const body = response.data
+    return Array.isArray(body) ? body : body.data ?? []
   },
 
   async getLocationById(id: number): Promise<Location> {
@@ -161,14 +162,16 @@ export const weatherService = {
   },
 
   async getAirports(): Promise<Location[]> {
-    const response = await weatherApi.get('/locations/airports')
-    return response.data
+    const response = await weatherApi.get('/locations/airports', { params: { size: 10000 } })
+    const body = response.data
+    return Array.isArray(body) ? body : body.data ?? []
   },
 
   // Weather Forecasts
   async getForecastsByLocation(locationId: number): Promise<WeatherForecast[]> {
-    const response = await weatherApi.get(`/forecasts/location/${locationId}`)
-    return response.data
+    const response = await weatherApi.get(`/forecasts/location/${locationId}`, { params: { size: 500 } })
+    const body = response.data
+    return Array.isArray(body) ? body : body.data ?? []
   },
 
   async getHistoricalForecasts(locationId: number, days: number = 7): Promise<WeatherForecast[]> {
@@ -192,9 +195,10 @@ export const weatherService = {
     to?: string,
   ): Promise<WeatherForecast[]> {
     const response = await weatherApi.get('/forecasts/coordinates', {
-      params: { lat, lon, from, to },
+      params: { lat, lon, from, to, size: 500 },
     })
-    return response.data
+    const body = response.data
+    return Array.isArray(body) ? body : body.data ?? []
   },
 
   // Airport Weather
