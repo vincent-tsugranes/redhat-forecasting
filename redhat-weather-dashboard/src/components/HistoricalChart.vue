@@ -7,6 +7,7 @@
           v-for="period in periods"
           :key="period.days"
           :class="{ active: selectedDays === period.days }"
+          :aria-pressed="selectedDays === period.days"
           @click="changePeriod(period.days)"
         >
           {{ period.label }}

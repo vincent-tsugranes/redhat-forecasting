@@ -1,7 +1,7 @@
 <template>
   <div v-if="hasWindData" class="card">
     <h2>{{ $t('forecast.windRose') }}</h2>
-    <div class="wind-rose-container">
+    <div class="wind-rose-container" role="img" :aria-label="$t('forecast.windRose') + ': wind direction and speed distribution chart'">
       <PolarArea :data="chartData" :options="chartOptions" />
     </div>
   </div>

@@ -64,6 +64,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import 'leaflet.markercluster'
 import weatherService, { type Location } from '../services/weatherService'
 import { formatRelativeTime, getFreshnessLevel } from '../utils/dateUtils'
+import { logger } from '../utils/logger'
 
 const mapContainer = ref<HTMLElement | null>(null)
 const searchQuery = ref('')
@@ -108,7 +109,7 @@ async function loadAirports() {
       initializeMarkers()
     }
   } catch (err) {
-    console.error('Error loading airports:', err)
+    logger.error('Error loading airports:', err)
     loadError.value = true
   }
 }
@@ -166,7 +167,7 @@ async function fetchWeatherForAirport(airportCode: string) {
     const metar = await weatherService.getLatestMetar(airportCode)
     return metar
   } catch (error) {
-    console.error('Error fetching airport weather:', error)
+    logger.error('Error fetching airport weather:', error)
     return null
   }
 }

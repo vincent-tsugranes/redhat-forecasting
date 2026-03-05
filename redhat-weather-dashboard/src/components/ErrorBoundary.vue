@@ -11,12 +11,13 @@
 
 <script setup lang="ts">
 import { ref, onErrorCaptured } from 'vue'
+import { logger } from '../utils/logger'
 
 const error = ref<Error | null>(null)
 
 onErrorCaptured((err: Error) => {
   error.value = err
-  console.error('ErrorBoundary caught:', err)
+  logger.error('ErrorBoundary caught:', err)
   return false
 })
 

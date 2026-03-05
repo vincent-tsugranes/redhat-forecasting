@@ -65,6 +65,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import api from '../services/api'
 import { weatherApi } from '../services/api'
 import FreshnessBadge from './FreshnessBadge.vue'
+import { logger } from '../utils/logger'
 
 interface DataStatus {
   totalLocations: number
@@ -105,7 +106,7 @@ const fetchStatus = async () => {
     status.value = response.data
   } catch (err) {
     error.value = 'Failed to load data status'
-    console.error('Error fetching data status:', err)
+    logger.error('Error fetching data status:', err)
   } finally {
     loading.value = false
   }

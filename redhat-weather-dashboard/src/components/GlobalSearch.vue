@@ -1,13 +1,13 @@
 <template>
   <div class="global-search-wrapper">
-    <button class="search-trigger" aria-label="Open search" @click="openSearch">
+    <button ref="triggerRef" class="search-trigger" aria-label="Open search" @click="openSearch">
       <span aria-hidden="true">🔍</span>
     </button>
 
     <Teleport to="body">
       <Transition name="search-overlay">
         <div v-if="isOpen" class="search-overlay" @click.self="closeSearch">
-          <div class="search-modal" role="dialog" aria-label="Search">
+          <div ref="modalRef" class="search-modal" role="dialog" aria-modal="true" aria-label="Search">
             <div class="search-input-wrapper">
               <span class="search-icon" aria-hidden="true">🔍</span>
               <input
@@ -76,6 +76,8 @@ const isOpen = ref(false)
 const query = ref('')
 const highlightedIndex = ref(-1)
 const searchInputRef = ref<HTMLInputElement | null>(null)
+const modalRef = ref<HTMLElement | null>(null)
+const triggerRef = ref<HTMLElement | null>(null)
 
 const results = computed<SearchResult[]>(() => {
   if (query.value.length < 2) return []
@@ -161,6 +163,7 @@ function openSearch() {
 function closeSearch() {
   isOpen.value = false
   query.value = ''
+  nextTick(() => triggerRef.value?.focus())
 }
 
 function onInput() {
@@ -203,8 +206,26 @@ function onGlobalKeydown(e: KeyboardEvent) {
   }
 }
 
+function trapFocus(e: KeyboardEvent) {
+  if (e.key !== 'Tab' || !modalRef.value) return
+  const focusable = modalRef.value.querySelectorAll<HTMLElement>(
+    'input, button, [tabindex]:not([tabindex="-1"])',
+  )
+  if (focusable.length === 0) return
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault()
+    last.focus()
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault()
+    first.focus()
+  }
+}
+
 onMounted(() => {
   document.addEventListener('keydown', onGlobalKeydown)
+  document.addEventListener('keydown', trapFocus)
   // Pre-load data for search
   store.fetchLocations()
   store.fetchAirports()
@@ -212,6 +233,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('keydown', onGlobalKeydown)
+  document.removeEventListener('keydown', trapFocus)
 })
 </script>
 

@@ -221,6 +221,14 @@ public class WeatherForecastService {
         }
     }
 
+    public long countForecastsByLocation(Long locationId) {
+        return weatherForecastRepository.countByLocation(locationId);
+    }
+
+    public long countForecastsByCoordinatesAndTimeRange(BigDecimal lat, BigDecimal lon, LocalDateTime from, LocalDateTime to) {
+        return weatherForecastRepository.countByCoordinatesAndTimeRange(lat, lon, from, to);
+    }
+
     public List<WeatherForecastEntity> getHistoricalForecasts(Long locationId, int days) {
         LocalDateTime since = LocalDateTime.now().minusDays(days);
         return weatherForecastRepository.findHistoricalByLocation(locationId, since);

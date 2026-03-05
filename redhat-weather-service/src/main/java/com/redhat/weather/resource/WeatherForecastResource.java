@@ -17,7 +17,9 @@ import jakarta.ws.rs.core.CacheControl;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Path("/api/weather/forecasts")
 @Produces(MediaType.APPLICATION_JSON)
@@ -42,8 +44,11 @@ public class WeatherForecastResource {
             @PathParam("locationId") @Parameter(description = "Location ID") Long locationId,
             @QueryParam("page") @DefaultValue("0") @Min(0) @Parameter(description = "Page number (0-based)") int page,
             @QueryParam("size") @DefaultValue("50") @Min(1) @Max(200) @Parameter(description = "Page size (max 200)") int size) {
-        List<WeatherForecastEntity> forecasts = weatherForecastService.getForecastsByLocation(locationId, page, size);
-        return Response.ok(forecasts).cacheControl(cacheControl(300)).build();
+        int clampedSize = Math.min(Math.max(size, 1), 200);
+        List<WeatherForecastEntity> forecasts = weatherForecastService.getForecastsByLocation(locationId, page, clampedSize);
+        long totalElements = weatherForecastService.countForecastsByLocation(locationId);
+        return Response.ok(buildPageResponse(forecasts, page, clampedSize, totalElements))
+                .cacheControl(cacheControl(300)).build();
     }
 
     @GET
@@ -68,10 +73,13 @@ public class WeatherForecastResource {
                 LocalDateTime.parse(to, DateTimeFormatter.ISO_DATE_TIME) :
                 fromTime.plusDays(7);
 
+            int clampedSize = Math.min(Math.max(size, 1), 200);
             List<WeatherForecastEntity> forecasts =
-                weatherForecastService.getForecastsByCoordinates(latitude, longitude, fromTime, toTime, page, size);
+                weatherForecastService.getForecastsByCoordinates(latitude, longitude, fromTime, toTime, page, clampedSize);
+            long totalElements = weatherForecastService.countForecastsByCoordinatesAndTimeRange(latitude, longitude, fromTime, toTime);
 
-            return Response.ok(forecasts).cacheControl(cacheControl(300)).build();
+            return Response.ok(buildPageResponse(forecasts, page, clampedSize, totalElements))
+                    .cacheControl(cacheControl(300)).build();
 
         } catch (Exception e) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -110,5 +118,15 @@ public class WeatherForecastResource {
         }
 
         return Response.ok(forecasts).cacheControl(cacheControl(300)).build();
+    }
+
+    private Map<String, Object> buildPageResponse(List<WeatherForecastEntity> data, int page, int size, long totalElements) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", data);
+        response.put("page", page);
+        response.put("size", size);
+        response.put("totalElements", totalElements);
+        response.put("totalPages", (int) Math.ceil((double) totalElements / size));
+        return response;
     }
 }

@@ -1,6 +1,13 @@
 <template>
   <div class="settings-overlay" @click.self="$emit('close')">
-    <div class="settings-panel" role="dialog" aria-label="Settings">
+    <div
+      ref="panelRef"
+      class="settings-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Settings"
+      @keydown.esc="$emit('close')"
+    >
       <div class="settings-header">
         <h3>{{ $t('settings.title') }}</h3>
         <button class="close-btn" aria-label="Close settings" @click="$emit('close')">&times;</button>
@@ -33,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useUnitPreferences } from '../composables/useUnitPreferences'
 
 defineEmits<{
@@ -40,6 +48,34 @@ defineEmits<{
 }>()
 
 const { tempUnit, speedUnit, timeFormat } = useUnitPreferences()
+
+const panelRef = ref<HTMLElement | null>(null)
+
+function trapFocus(e: KeyboardEvent) {
+  if (e.key !== 'Tab' || !panelRef.value) return
+  const focusable = panelRef.value.querySelectorAll<HTMLElement>(
+    'button, select, input, [tabindex]:not([tabindex="-1"])',
+  )
+  if (focusable.length === 0) return
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault()
+    last.focus()
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault()
+    first.focus()
+  }
+}
+
+onMounted(() => {
+  panelRef.value?.querySelector<HTMLElement>('button, select, input')?.focus()
+  document.addEventListener('keydown', trapFocus)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', trapFocus)
+})
 </script>
 
 <style scoped>

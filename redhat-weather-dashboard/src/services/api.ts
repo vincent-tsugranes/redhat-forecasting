@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
+import { logger } from '../utils/logger'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8090'
 
@@ -27,13 +28,13 @@ function addRetryInterceptor(instance: AxiosInstance) {
       config.__retryCount = config.__retryCount || 0
 
       if (config.__retryCount >= MAX_RETRIES || !shouldRetry(error)) {
-        console.error('API Error:', error.response?.status, config.url, error.message)
+        logger.error('API Error:', error.response?.status, config.url, error.message)
         return Promise.reject(error)
       }
 
       config.__retryCount++
       const delay = RETRY_BASE_DELAY * Math.pow(2, config.__retryCount - 1)
-      console.warn(
+      logger.warn(
         `API retry ${config.__retryCount}/${MAX_RETRIES} for ${config.url} in ${delay}ms`,
       )
 

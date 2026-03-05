@@ -15,6 +15,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import weatherService, { type Hurricane } from '../services/weatherService'
 import { formatDate, formatRelativeTime, getFreshnessLevel } from '../utils/dateUtils'
+import { logger } from '../utils/logger'
 
 const props = defineProps<{
   storms: Hurricane[]
@@ -167,7 +168,7 @@ async function loadTrack(stormId: string) {
     )
     map.value.fitBounds(trackBounds.pad(0.3), { maxZoom: 8 })
   } catch (error) {
-    console.error('Error loading storm track:', error)
+    logger.error('Error loading storm track:', error)
   }
 }
 

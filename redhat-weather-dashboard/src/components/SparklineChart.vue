@@ -1,5 +1,5 @@
 <template>
-  <div class="sparkline-container">
+  <div class="sparkline-container" role="img" aria-label="Trend sparkline chart">
     <Line :data="chartData" :options="chartOptions" />
   </div>
 </template>

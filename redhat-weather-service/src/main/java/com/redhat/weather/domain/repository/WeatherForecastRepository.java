@@ -77,6 +77,17 @@ public class WeatherForecastRepository implements PanacheRepositoryBase<WeatherF
         ).page(Page.of(page, size)).list();
     }
 
+    public long countByLocation(Long locationId) {
+        return count("location.id = ?1 AND isActive = true", locationId);
+    }
+
+    public long countByCoordinatesAndTimeRange(BigDecimal lat, BigDecimal lon, LocalDateTime from, LocalDateTime to) {
+        return count(
+            "latitude = ?1 AND longitude = ?2 AND validFrom <= ?3 AND validTo >= ?4 AND isActive = true",
+            lat, lon, to, from
+        );
+    }
+
     public List<WeatherForecastEntity> findHistoricalByLocation(Long locationId, LocalDateTime since) {
         return list(
             "location.id = ?1 AND isActive = false AND forecastTime >= ?2 ORDER BY forecastTime DESC",

@@ -58,6 +58,7 @@ RUN echo 'server { \
     add_header Referrer-Policy "strict-origin-when-cross-origin" always; \
     add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always; \
     add_header Content-Security-Policy "default-src '"'"'self'"'"'; script-src '"'"'self'"'"'; style-src '"'"'self'"'"' '"'"'unsafe-inline'"'"'; img-src '"'"'self'"'"' data: https://*.tile.openstreetmap.org https://mesonet.agron.iastate.edu; connect-src '"'"'self'"'"' http://backend:8090; font-src '"'"'self'"'"'" always; \
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always; \
     \
     # Temp directories for OpenShift \
     client_body_temp_path /var/cache/nginx/client_temp; \

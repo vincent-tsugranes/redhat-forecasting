@@ -9,6 +9,16 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          leaflet: ['leaflet', 'leaflet.markercluster'],
+          charts: ['chart.js', 'vue-chartjs'],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {

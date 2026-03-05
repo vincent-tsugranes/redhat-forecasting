@@ -1,5 +1,5 @@
 <template>
-  <div class="kp-gauge" :aria-label="`Kp index: ${value}`">
+  <div class="kp-gauge" role="meter" :aria-valuenow="value" aria-valuemin="0" aria-valuemax="9" :aria-label="`Kp index: ${value}`">
     <div class="gauge-bar">
       <div
         v-for="i in 9"
