@@ -237,7 +237,7 @@ onMounted(() => {
 .layer-controls {
   position: absolute;
   top: 10px;
-  left: 10px;
+  right: 10px;
   z-index: 1000;
   background: var(--bg-card, white);
   border-radius: 8px;

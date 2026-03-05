@@ -4,19 +4,21 @@
     <div v-if="loading" class="loading">{{ $t('status.loadingStatus') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else class="status-content">
-      <div class="status-item">
-        <span class="label">{{ $t('status.airportsLoaded') }}</span>
-        <span class="value" :class="{ complete: status.loadingComplete }">
-          {{ status.airports?.toLocaleString() }} / {{ status.expectedAirports?.toLocaleString() }}
-        </span>
-      </div>
-      <div class="status-item">
-        <span class="label">{{ $t('status.cities') }}</span>
-        <span class="value">{{ status.cities }}</span>
-      </div>
-      <div class="status-item">
-        <span class="label">{{ $t('status.totalLocations') }}</span>
-        <span class="value">{{ status.totalLocations?.toLocaleString() }}</span>
+      <div class="status-grid">
+        <div class="status-item">
+          <span class="label">{{ $t('status.airportsLoaded') }}</span>
+          <span class="value" :class="{ complete: status.loadingComplete }">
+            {{ status.airports?.toLocaleString() }} / {{ status.expectedAirports?.toLocaleString() }}
+          </span>
+        </div>
+        <div class="status-item">
+          <span class="label">{{ $t('status.cities') }}</span>
+          <span class="value">{{ status.cities }}</span>
+        </div>
+        <div class="status-item">
+          <span class="label">{{ $t('status.totalLocations') }}</span>
+          <span class="value">{{ status.totalLocations?.toLocaleString() }}</span>
+        </div>
       </div>
       <div
         v-if="status.percentLoaded !== undefined"
@@ -38,22 +40,48 @@
         <span aria-hidden="true">{{ status.loadingComplete ? '✓' : '⚠' }}</span>
         {{ status.loadingComplete ? $t('status.dataReady') : $t('status.loading') }}
       </div>
-      <div
-        v-if="freshness.forecast || freshness.airport || freshness.hurricane"
-        class="freshness-section"
-      >
+
+      <div class="data-counts-section">
+        <h4>Active Data</h4>
+        <div class="data-counts-grid">
+          <div class="data-count-item">
+            <span class="count-icon" aria-hidden="true">🌤️</span>
+            <div class="count-info">
+              <span class="count-value">{{ status.activeForecasts?.toLocaleString() ?? 0 }}</span>
+              <span class="count-label">{{ $t('status.activeForecasts') }}</span>
+            </div>
+          </div>
+          <div class="data-count-item">
+            <span class="count-icon" aria-hidden="true">🌍</span>
+            <div class="count-info">
+              <span class="count-value">{{ status.activeEarthquakes?.toLocaleString() ?? 0 }}</span>
+              <span class="count-label">{{ $t('status.activeEarthquakes') }}</span>
+            </div>
+          </div>
+          <div class="data-count-item">
+            <span class="count-icon" aria-hidden="true">🌀</span>
+            <div class="count-info">
+              <span class="count-value">{{ status.activeHurricanes?.toLocaleString() ?? 0 }}</span>
+              <span class="count-label">{{ $t('status.activeHurricanes') }}</span>
+            </div>
+          </div>
+          <div class="data-count-item">
+            <span class="count-icon" aria-hidden="true">✈️</span>
+            <div class="count-info">
+              <span class="count-value">{{ status.metarReports?.toLocaleString() ?? 0 }}</span>
+              <span class="count-label">{{ $t('status.metarReports') }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="freshnessSources.length > 0" class="freshness-section">
         <h4>{{ $t('status.dataFreshness') }}</h4>
-        <div v-if="freshness.forecast" class="freshness-row">
-          <span class="label">{{ $t('status.forecastsFreshness') }}</span>
-          <FreshnessBadge :fetched-at="freshness.forecast" data-type="forecast" />
-        </div>
-        <div v-if="freshness.airport" class="freshness-row">
-          <span class="label">{{ $t('status.airportFreshness') }}</span>
-          <FreshnessBadge :fetched-at="freshness.airport" data-type="airport" />
-        </div>
-        <div v-if="freshness.hurricane" class="freshness-row">
-          <span class="label">{{ $t('status.hurricaneFreshness') }}</span>
-          <FreshnessBadge :fetched-at="freshness.hurricane" data-type="hurricane" />
+        <div v-for="source in freshnessSources" :key="source.name" class="freshness-row">
+          <span class="label">{{ source.label }}</span>
+          <span class="freshness-age" :class="source.freshnessClass">
+            {{ source.ageText }}
+          </span>
         </div>
       </div>
     </div>
@@ -61,10 +89,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import api from '../services/api'
-import { weatherApi } from '../services/api'
-import FreshnessBadge from './FreshnessBadge.vue'
 import { logger } from '../utils/logger'
 
 interface DataStatus {
@@ -75,6 +101,11 @@ interface DataStatus {
   expectedAirports: number
   loadingComplete: boolean
   percentLoaded: number
+  activeForecasts: number
+  activeEarthquakes: number
+  activeHurricanes: number
+  metarReports: number
+  dataFreshness: Record<string, string | number>
 }
 
 const status = ref<DataStatus>({
@@ -85,18 +116,65 @@ const status = ref<DataStatus>({
   expectedAirports: 9313,
   loadingComplete: false,
   percentLoaded: 0,
-})
-const freshness = ref<{
-  forecast: string | null
-  airport: string | null
-  hurricane: string | null
-}>({
-  forecast: null,
-  airport: null,
-  hurricane: null,
+  activeForecasts: 0,
+  activeEarthquakes: 0,
+  activeHurricanes: 0,
+  metarReports: 0,
+  dataFreshness: {},
 })
 const loading = ref(true)
 const error = ref<string | null>(null)
+
+const SOURCE_LABELS: Record<string, string> = {
+  forecasts: 'Forecasts',
+  metar: 'Airport METAR',
+  hurricanes: 'Hurricanes',
+  earthquakes: 'Earthquakes',
+  'space-weather': 'Space Weather',
+  alerts: 'Weather Alerts',
+}
+
+const freshnessSources = computed(() => {
+  const df = status.value.dataFreshness
+  if (!df) return []
+
+  const sources: { name: string; label: string; ageMinutes: number; ageText: string; freshnessClass: string }[] = []
+  const seen = new Set<string>()
+
+  for (const key of Object.keys(df)) {
+    const match = key.match(/^(.+)\.ageMinutes$/)
+    if (!match) continue
+    const name = match[1]
+    if (seen.has(name)) continue
+    seen.add(name)
+
+    const ageMinutes = Number(df[`${name}.ageMinutes`] ?? 0)
+    const label = SOURCE_LABELS[name] || name.charAt(0).toUpperCase() + name.slice(1)
+
+    let ageText: string
+    if (ageMinutes < 1) {
+      ageText = 'Just now'
+    } else if (ageMinutes < 60) {
+      ageText = `${ageMinutes} min ago`
+    } else {
+      const hours = Math.floor(ageMinutes / 60)
+      ageText = `${hours}h ${ageMinutes % 60}m ago`
+    }
+
+    let freshnessClass: string
+    if (ageMinutes <= 15) {
+      freshnessClass = 'freshness-fresh'
+    } else if (ageMinutes <= 60) {
+      freshnessClass = 'freshness-aging'
+    } else {
+      freshnessClass = 'freshness-stale'
+    }
+
+    sources.push({ name, label, ageMinutes, ageText, freshnessClass })
+  }
+
+  return sources.sort((a, b) => a.ageMinutes - b.ageMinutes)
+})
 
 const fetchStatus = async () => {
   try {
@@ -112,42 +190,12 @@ const fetchStatus = async () => {
   }
 }
 
-const fetchFreshness = async () => {
-  const [forecastRes, hurricaneRes] = await Promise.allSettled([
-    weatherApi.get('/forecasts/current', { params: { lat: 38.9, lon: -77.0 } }),
-    weatherApi.get('/hurricanes/active'),
-  ])
-
-  if (forecastRes.status === 'fulfilled' && forecastRes.value.data?.length > 0) {
-    freshness.value.forecast = forecastRes.value.data[0].fetchedAt
-  }
-  if (hurricaneRes.status === 'fulfilled' && hurricaneRes.value.data?.length > 0) {
-    freshness.value.hurricane = hurricaneRes.value.data[0].fetchedAt
-  }
-
-  try {
-    const metarRes = await weatherApi.get('/airports/KJFK/metar')
-    if (metarRes.data?.fetchedAt) {
-      freshness.value.airport = metarRes.data.fetchedAt
-    }
-  } catch {
-    /* airport data may not be available yet */
-  }
-}
-
 let refreshInterval: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   fetchStatus()
-  fetchFreshness()
-  // Refresh every 30 seconds if not complete
   refreshInterval = setInterval(() => {
-    if (!status.value.loadingComplete) {
-      fetchStatus()
-    } else {
-      if (refreshInterval) clearInterval(refreshInterval)
-      refreshInterval = null
-    }
+    fetchStatus()
   }, 30000)
 })
 
@@ -189,6 +237,11 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.status-grid {
+  display: flex;
+  flex-direction: column;
 }
 
 .status-item {
@@ -256,6 +309,56 @@ h3 {
   color: #e65100;
 }
 
+.data-counts-section {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border-light, #eee);
+}
+
+.data-counts-section h4 {
+  margin: 0 0 10px 0;
+  font-size: 0.95rem;
+  color: var(--text-primary, #333);
+}
+
+.data-counts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.data-count-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-code, #f9f9f9);
+  border-radius: 6px;
+}
+
+.count-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.count-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.count-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary, #333);
+  line-height: 1.2;
+}
+
+.count-label {
+  font-size: 11px;
+  color: var(--text-secondary, #666);
+  white-space: nowrap;
+}
+
 .freshness-section {
   margin-top: 15px;
   padding-top: 15px;
@@ -273,5 +376,34 @@ h3 {
   justify-content: space-between;
   align-items: center;
   padding: 5px 0;
+}
+
+.freshness-age {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.freshness-fresh {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.freshness-aging {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.freshness-stale {
+  background: #ffebee;
+  color: #c62828;
+}
+
+@media (max-width: 480px) {
+  .data-counts-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

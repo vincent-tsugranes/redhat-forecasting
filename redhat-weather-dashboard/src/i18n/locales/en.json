@@ -115,7 +115,14 @@
     "dataFreshness": "Data Freshness",
     "forecastsFreshness": "Forecasts:",
     "airportFreshness": "Airport Weather:",
-    "hurricaneFreshness": "Hurricane Data:"
+    "hurricaneFreshness": "Hurricane Data:",
+    "activeForecasts": "Active Forecasts:",
+    "activeEarthquakes": "Earthquakes (24h):",
+    "activeHurricanes": "Active Hurricanes:",
+    "metarReports": "METAR Reports:",
+    "minutesAgo": "{n} min ago",
+    "hoursAgo": "{n}h ago",
+    "noFreshnessData": "No freshness data available"
   },
   "notifications": {
     "enable": "Enable weather alert notifications",

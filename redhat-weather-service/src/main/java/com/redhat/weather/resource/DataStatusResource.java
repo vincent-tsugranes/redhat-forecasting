@@ -1,6 +1,10 @@
 package com.redhat.weather.resource;
 
+import com.redhat.weather.domain.repository.AirportWeatherRepository;
+import com.redhat.weather.domain.repository.EarthquakeRepository;
+import com.redhat.weather.domain.repository.HurricaneRepository;
 import com.redhat.weather.domain.repository.LocationRepository;
+import com.redhat.weather.domain.repository.WeatherForecastRepository;
 import com.redhat.weather.service.DataFreshnessService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -10,6 +14,7 @@ import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,6 +24,18 @@ public class DataStatusResource {
 
     @Inject
     LocationRepository locationRepository;
+
+    @Inject
+    WeatherForecastRepository forecastRepository;
+
+    @Inject
+    EarthquakeRepository earthquakeRepository;
+
+    @Inject
+    HurricaneRepository hurricaneRepository;
+
+    @Inject
+    AirportWeatherRepository airportWeatherRepository;
 
     @Inject
     DataFreshnessService dataFreshnessService;
@@ -47,6 +64,12 @@ public class DataStatusResource {
         } else {
             status.put("percentLoaded", 0.0);
         }
+
+        // Active data counts
+        status.put("activeForecasts", forecastRepository.count("isActive = true"));
+        status.put("activeEarthquakes", earthquakeRepository.count("isActive = true AND eventTime >= ?1", LocalDateTime.now().minusHours(24)));
+        status.put("activeHurricanes", hurricaneRepository.count("isActive = true AND status IN ('active', 'Active')"));
+        status.put("metarReports", airportWeatherRepository.count("reportType = 'METAR' AND isActive = true"));
 
         status.put("dataFreshness", dataFreshnessService.getFreshnessSnapshot());
 
