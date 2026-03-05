@@ -43,6 +43,8 @@ vi.mock('leaflet', () => {
       circleMarker: vi.fn(() => ({
         bindPopup: vi.fn().mockReturnThis(),
         addTo: vi.fn().mockReturnThis(),
+        on: vi.fn().mockReturnThis(),
+        setStyle: vi.fn().mockReturnThis(),
       })),
     },
   }

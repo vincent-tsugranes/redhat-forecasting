@@ -26,8 +26,11 @@
     ></div>
     <div class="map-legend">
       <div v-if="showAirports" class="legend-section">
-        <div class="legend-title">Airports</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #2196f3"></span> Airport</div>
+        <div class="legend-title">Flight Category</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #4caf50"></span> VFR</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #2196f3"></span> MVFR</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #ff9800"></span> IFR</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #f44336"></span> LIFR</div>
       </div>
       <div v-if="showEarthquakes" class="legend-section">
         <div class="legend-title">Magnitude</div>
@@ -53,7 +56,8 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
-import { formatDate } from '../utils/dateUtils'
+import weatherService, { type AirportWeather, type Location } from '../services/weatherService'
+import { formatDate, formatRelativeTime, getFreshnessLevel } from '../utils/dateUtils'
 
 const store = useWeatherStore()
 const { airports, earthquakes, hurricanes } = storeToRefs(store)
@@ -74,6 +78,14 @@ const showRadar = ref(false)
 const CATEGORY_COLORS: Record<number, string> = {
   0: '#007bff', 1: '#ffc107', 2: '#ff9800', 3: '#ff5722', 4: '#f44336', 5: '#9c27b0',
 }
+
+const FLIGHT_CATEGORY_COLORS: Record<string, string> = {
+  VFR: '#4caf50',
+  MVFR: '#2196f3',
+  IFR: '#ff9800',
+  LIFR: '#f44336',
+}
+const DEFAULT_MARKER_COLOR = '#2196f3'
 
 function initMap() {
   if (!mapContainer.value) return
@@ -102,6 +114,102 @@ function initMap() {
   placeHurricaneMarkers()
 }
 
+function createAirportPopupContent(airport: Location) {
+  return `
+    <div class="airport-popup">
+      <div class="popup-header"><strong>${airport.airportCode || ''}</strong> - ${airport.name}</div>
+      <div class="popup-location">${airport.state || ''}${airport.state && airport.country ? ', ' : ''}${airport.country || ''}</div>
+      <div class="weather-container">
+        <div class="weather-loading">Loading weather...</div>
+      </div>
+    </div>
+  `
+}
+
+function degreesToCompass(deg: number): string {
+  const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW']
+  return dirs[Math.round(deg / 22.5) % 16]
+}
+
+async function fetchAirportWeather(code: string): Promise<{ metar: AirportWeather | null; taf: AirportWeather | null }> {
+  const [metarResult, tafResult] = await Promise.allSettled([
+    weatherService.getLatestMetar(code),
+    weatherService.getLatestTaf(code),
+  ])
+  return {
+    metar: metarResult.status === 'fulfilled' ? metarResult.value : null,
+    taf: tafResult.status === 'fulfilled' ? tafResult.value : null,
+  }
+}
+
+function updateAirportPopup(popup: L.Popup, metar: AirportWeather | null, taf: AirportWeather | null) {
+  const el = popup.getElement()
+  if (!el) return
+  const container = el.querySelector('.weather-container')
+  if (!container) return
+
+  if (!metar && !taf) {
+    container.innerHTML = `
+      <div class="weather-divider"></div>
+      <div class="weather-no-data">No weather data available. Check back soon.</div>
+    `
+    return
+  }
+
+  let html = '<div class="weather-divider"></div>'
+
+  if (metar) {
+    const tempC = metar.temperatureCelsius
+    const tempF = tempC != null ? Math.round((tempC * 9) / 5 + 32) : null
+    const dewC = metar.dewpointCelsius
+    const dewF = dewC != null ? Math.round((dewC * 9) / 5 + 32) : null
+    const windKnots = metar.windSpeedKnots
+    const windMph = windKnots ? Math.round(windKnots * 1.151) : null
+    const gustKnots = metar.windGustKnots
+    const gustMph = gustKnots ? Math.round(gustKnots * 1.151) : null
+    const windDir = metar.windDirection
+    const windDirStr = windDir != null ? degreesToCompass(windDir) : null
+
+    let windStr = ''
+    if (windMph) {
+      windStr = `${windMph} mph`
+      if (windDirStr) windStr += ` from ${windDirStr}`
+      if (gustMph) windStr += `, gusts ${gustMph}`
+    }
+
+    const observationTime = metar.observationTime ? new Date(metar.observationTime).toLocaleString() : null
+    const fetchedAt = metar.fetchedAt || null
+    const relativeTime = fetchedAt ? formatRelativeTime(fetchedAt) : null
+    const freshnessLevel = fetchedAt ? getFreshnessLevel(fetchedAt, 'airport') : 'fresh'
+    const flightCategory = metar.flightCategory
+    const catColor = flightCategory ? (FLIGHT_CATEGORY_COLORS[flightCategory] || '#666') : '#666'
+
+    html += '<div class="weather-title">METAR Conditions</div><div class="weather-info">'
+    if (tempF != null) html += `<div class="weather-item"><span class="weather-label">Temperature:</span><span class="weather-value">${tempF}°F / ${tempC}°C</span></div>`
+    if (dewF != null) html += `<div class="weather-item"><span class="weather-label">Dew Point:</span><span class="weather-value">${dewF}°F / ${dewC}°C</span></div>`
+    if (windStr) html += `<div class="weather-item"><span class="weather-label">Wind:</span><span class="weather-value">${windStr}</span></div>`
+    if (metar.visibilityMiles != null) html += `<div class="weather-item"><span class="weather-label">Visibility:</span><span class="weather-value">${metar.visibilityMiles} mi</span></div>`
+    if (metar.ceilingFeet != null) html += `<div class="weather-item"><span class="weather-label">Ceiling:</span><span class="weather-value">${metar.ceilingFeet} ft</span></div>`
+    if (metar.skyCondition) html += `<div class="weather-item"><span class="weather-label">Sky:</span><span class="weather-value">${metar.skyCondition}</span></div>`
+    if (metar.weatherConditions) html += `<div class="weather-item"><span class="weather-label">Weather:</span><span class="weather-value">${metar.weatherConditions}</span></div>`
+    if (flightCategory) html += `<div class="weather-item"><span class="weather-label">Flight Cat:</span><span class="weather-value" style="color:${catColor};font-weight:bold">${flightCategory}</span></div>`
+    html += '</div>'
+    if (observationTime) {
+      html += `<div class="weather-time">Observed: ${observationTime}`
+      if (relativeTime) html += ` <span class="freshness-indicator freshness-${freshnessLevel}">${relativeTime}</span>`
+      html += '</div>'
+    }
+  }
+
+  if (taf) {
+    html += '<div class="weather-divider"></div>'
+    html += '<div class="weather-title">TAF Forecast</div>'
+    html += `<div class="taf-raw">${taf.rawText || 'No TAF text available'}</div>`
+  }
+
+  container.innerHTML = html
+}
+
 function placeAirportMarkers() {
   if (!airportLayer.value) return
   airportLayer.value.clearLayers()
@@ -110,15 +218,26 @@ function placeAirportMarkers() {
     if (!apt.latitude || !apt.longitude) continue
     const marker = L.circleMarker([apt.latitude, apt.longitude], {
       radius: 4,
-      fillColor: '#2196f3',
+      fillColor: DEFAULT_MARKER_COLOR,
       color: '#fff',
       weight: 1,
       fillOpacity: 0.8,
     })
-    marker.bindPopup(`
-      <strong>${apt.airportCode || ''}</strong> - ${apt.name}<br/>
-      ${apt.state || ''}, ${apt.country || ''}
-    `)
+
+    const popupContent = createAirportPopupContent(apt)
+    const popup = L.popup({ maxWidth: 320 }).setContent(popupContent)
+    marker.bindPopup(popup)
+
+    marker.on('popupopen', async () => {
+      if (apt.airportCode) {
+        const { metar, taf } = await fetchAirportWeather(apt.airportCode)
+        updateAirportPopup(popup, metar, taf)
+        if (metar?.flightCategory) {
+          marker.setStyle({ fillColor: FLIGHT_CATEGORY_COLORS[metar.flightCategory] || DEFAULT_MARKER_COLOR })
+        }
+      }
+    })
+
     airportLayer.value.addLayer(marker)
   }
 }
@@ -324,5 +443,133 @@ onMounted(() => {
   border: none;
   border-radius: 4px;
   padding: 2px 6px;
+}
+
+:deep(.airport-popup) {
+  padding: 4px;
+}
+
+:deep(.popup-header) {
+  font-size: 14px;
+  color: #ee0000;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+:deep(.popup-location) {
+  font-size: 12px;
+  color: var(--text-secondary, #666);
+  margin-bottom: 4px;
+}
+
+:deep(.weather-container) {
+  margin-top: 4px;
+}
+
+:deep(.weather-divider) {
+  height: 1px;
+  background: var(--border-light, #e0e0e0);
+  margin: 8px 0;
+}
+
+:deep(.weather-loading) {
+  font-size: 12px;
+  color: var(--text-secondary, #666);
+  text-align: center;
+  padding: 8px 0;
+}
+
+:deep(.weather-no-data) {
+  font-size: 12px;
+  color: var(--text-secondary, #999);
+  text-align: center;
+  padding: 8px 0;
+  font-style: italic;
+}
+
+:deep(.weather-title) {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+  margin-bottom: 6px;
+}
+
+:deep(.weather-info) {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+:deep(.weather-item) {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  gap: 8px;
+}
+
+:deep(.weather-label) {
+  color: var(--text-secondary, #666);
+  font-weight: 500;
+}
+
+:deep(.weather-value) {
+  color: var(--text-primary, #333);
+  font-weight: 600;
+  text-align: right;
+}
+
+:deep(.weather-time) {
+  font-size: 11px;
+  color: var(--text-secondary, #999);
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border-light, #eee);
+  text-align: center;
+}
+
+:deep(.freshness-indicator) {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+:deep(.freshness-fresh) {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+:deep(.freshness-aging) {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+:deep(.freshness-stale) {
+  background: #ffebee;
+  color: #c62828;
+}
+
+:deep(.taf-raw) {
+  font-family: monospace;
+  font-size: 11px;
+  background: var(--bg-input, #f5f5f5);
+  border: 1px solid var(--border-light, #e0e0e0);
+  border-radius: 4px;
+  padding: 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--text-primary, #333);
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+:deep(.leaflet-popup-content-wrapper) {
+  border-radius: 8px;
+}
+
+:deep(.leaflet-popup-content) {
+  margin: 10px 12px;
 }
 </style>
