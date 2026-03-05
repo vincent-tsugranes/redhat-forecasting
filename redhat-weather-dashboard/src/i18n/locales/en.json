@@ -115,6 +115,7 @@
     "dataReady": "Data Ready",
     "loading": "Loading...",
     "dataFreshness": "Data Freshness",
+    "schedulerTiming": "Scheduler Timing",
     "forecastsFreshness": "Forecasts:",
     "airportFreshness": "Airport Weather:",
     "hurricaneFreshness": "Hurricane Data:",

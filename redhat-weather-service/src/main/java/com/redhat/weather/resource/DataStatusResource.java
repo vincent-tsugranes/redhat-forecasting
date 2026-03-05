@@ -11,11 +11,16 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Path("/api/status")
@@ -39,6 +44,21 @@ public class DataStatusResource {
 
     @Inject
     DataFreshnessService dataFreshnessService;
+
+    @ConfigProperty(name = "weather.scheduler.noaa.enabled", defaultValue = "true")
+    boolean noaaEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.aviation.enabled", defaultValue = "true")
+    boolean aviationEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.earthquake.enabled", defaultValue = "true")
+    boolean earthquakeEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.hurricane.enabled", defaultValue = "true")
+    boolean hurricaneEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.alerts.enabled", defaultValue = "true")
+    boolean alertsEnabled;
 
     @GET
     @Path("/data")
@@ -73,6 +93,42 @@ public class DataStatusResource {
 
         status.put("dataFreshness", dataFreshnessService.getFreshnessSnapshot());
 
+        // Scheduler timing info
+        status.put("schedulers", buildSchedulerList());
+
         return status;
+    }
+
+    private List<Map<String, Object>> buildSchedulerList() {
+        List<Map<String, Object>> schedulers = new ArrayList<>();
+        schedulers.add(buildSchedulerInfo("NOAA Forecasts", "noaa-forecast", 30, noaaEnabled));
+        schedulers.add(buildSchedulerInfo("Airport Weather", "aviation-metar", 15, aviationEnabled));
+        schedulers.add(buildSchedulerInfo("Earthquakes", "usgs-earthquake", 10, earthquakeEnabled));
+        schedulers.add(buildSchedulerInfo("Hurricanes", "nhc-hurricane", 60, hurricaneEnabled));
+        schedulers.add(buildSchedulerInfo("Weather Alerts", "noaa-alerts", 15, alertsEnabled));
+        return schedulers;
+    }
+
+    private Map<String, Object> buildSchedulerInfo(String name, String source, int intervalMinutes, boolean enabled) {
+        Map<String, Object> info = new LinkedHashMap<>();
+        info.put("name", name);
+        info.put("source", source);
+        info.put("intervalMinutes", intervalMinutes);
+        info.put("enabled", enabled);
+
+        LocalDateTime lastRun = dataFreshnessService.getLastSuccess(source);
+        if (lastRun != null) {
+            long ageMinutes = Duration.between(lastRun, LocalDateTime.now()).toMinutes();
+            long nextRunMinutes = Math.max(0, intervalMinutes - ageMinutes);
+            info.put("lastRun", lastRun.toString());
+            info.put("ageMinutes", ageMinutes);
+            info.put("nextRunMinutes", nextRunMinutes);
+        } else {
+            info.put("lastRun", null);
+            info.put("ageMinutes", null);
+            info.put("nextRunMinutes", null);
+        }
+
+        return info;
     }
 }
