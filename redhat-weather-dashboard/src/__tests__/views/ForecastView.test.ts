@@ -3,13 +3,46 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import i18n from '../../i18n'
 import ForecastView from '../../views/ForecastView.vue'
+import { useWeatherStore } from '../../stores/weatherStore'
 
 // Mock the weather service
 vi.mock('../../services/weatherService', () => ({
   default: {
-    getLocations: vi.fn().mockResolvedValue([]),
+    getLocations: vi.fn().mockResolvedValue([
+      { id: 1, name: 'New York', state: 'NY', country: 'US', latitude: 40.7, longitude: -74.0, locationType: 'city' },
+    ]),
     getActiveAlerts: vi.fn().mockResolvedValue([]),
-    getForecastsByLocation: vi.fn().mockResolvedValue([]),
+    getForecastsByLocation: vi.fn().mockResolvedValue([
+      {
+        id: 100,
+        source: 'noaa',
+        forecastTime: '2024-01-15T10:00:00',
+        validFrom: '2024-01-15T10:00:00',
+        validTo: '2024-01-15T16:00:00',
+        latitude: 40.7,
+        longitude: -74.0,
+        temperatureFahrenheit: 35,
+        temperatureCelsius: 1.7,
+        windSpeedMph: 10,
+        weatherDescription: 'Partly Cloudy',
+      },
+      {
+        id: 101,
+        source: 'noaa',
+        forecastTime: '2024-01-15T16:00:00',
+        validFrom: '2024-01-15T16:00:00',
+        validTo: '2024-01-15T22:00:00',
+        latitude: 40.7,
+        longitude: -74.0,
+        temperatureFahrenheit: 28,
+        temperatureCelsius: -2.2,
+        windSpeedMph: 15,
+        weatherDescription: 'Snow',
+      },
+    ]),
+    getHistoricalForecasts: vi.fn().mockResolvedValue([]),
+    getSolarData: vi.fn().mockResolvedValue(null),
+    getClimateNormals: vi.fn().mockResolvedValue(null),
   },
 }))
 
@@ -79,5 +112,60 @@ describe('ForecastView', () => {
 
     const input = wrapper.find('#location-search')
     expect(input.attributes('aria-expanded')).toBe('false')
+  })
+
+  // --- Forecast data rendering tests ---
+
+  const fullStubs = {
+    AlertsBanner: true,
+    FreshnessBadge: true,
+    ForecastChart: true,
+    ForecastSkeleton: true,
+    FavoriteButton: true,
+    DailyForecastCards: true,
+    HourlyTimeline: true,
+    HistoricalChart: true,
+    SolarPanel: true,
+    ClimateNormalsCard: true,
+    WindRoseChart: true,
+    ErrorBoundary: true,
+  }
+
+  it('renders forecast data when location is selected', async () => {
+    const wrapper = mount(ForecastView, {
+      global: {
+        plugins: [i18n],
+        stubs: fullStubs,
+      },
+    })
+    await flushPromises()
+
+    // Fetch locations then select one
+    const store = useWeatherStore()
+    await store.fetchLocations()
+    await store.fetchForecasts(1)
+    await flushPromises()
+
+    // The component should show the forecast period count
+    expect(wrapper.text()).toContain('2')
+  })
+
+  it('renders forecast period count text', async () => {
+    const wrapper = mount(ForecastView, {
+      global: {
+        plugins: [i18n],
+        stubs: fullStubs,
+      },
+    })
+    await flushPromises()
+
+    const store = useWeatherStore()
+    await store.fetchLocations()
+    await store.fetchForecasts(1)
+    await flushPromises()
+
+    // Verify the periods text is shown (i18n key: forecast.periodsAvailable)
+    const text = wrapper.text()
+    expect(text).toContain('forecast')
   })
 })

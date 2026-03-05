@@ -200,4 +200,51 @@ class LocationResourceTest {
             .statusCode(200)
             .body("data", notNullValue());
     }
+
+    // --- Pagination contract tests ---
+
+    @Test
+    void testPaginatedResponseHasExactKeys() {
+        given()
+            .queryParam("page", 0)
+            .queryParam("size", 5)
+        .when()
+            .get("/api/weather/locations")
+        .then()
+            .statusCode(200)
+            .body("$", hasKey("data"))
+            .body("$", hasKey("page"))
+            .body("$", hasKey("size"))
+            .body("$", hasKey("totalElements"))
+            .body("$", hasKey("totalPages"))
+            .body("data", instanceOf(java.util.List.class));
+    }
+
+    @Test
+    void testDataFieldIsAlwaysArray() {
+        // Even beyond available pages, data should be an array, not null
+        given()
+            .queryParam("page", 999)
+            .queryParam("size", 5)
+        .when()
+            .get("/api/weather/locations")
+        .then()
+            .statusCode(200)
+            .body("data", notNullValue())
+            .body("data", instanceOf(java.util.List.class));
+    }
+
+    @Test
+    void testLargePageSizeClampedAndReturns() {
+        // Frontend sends size=10000 for airports; MAX_PAGE_SIZE clamps to 200
+        given()
+            .queryParam("page", 0)
+            .queryParam("size", 10000)
+        .when()
+            .get("/api/weather/locations/airports")
+        .then()
+            .statusCode(200)
+            .body("size", equalTo(200))
+            .body("data", notNullValue());
+    }
 }

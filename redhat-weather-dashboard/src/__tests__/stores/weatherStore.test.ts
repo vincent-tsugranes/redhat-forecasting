@@ -113,4 +113,65 @@ describe('weatherStore', () => {
     // The second call should reuse the first pending request
     expect(vi.mocked(weatherService.default.getLocations).mock.calls.length).toBeGreaterThanOrEqual(1)
   })
+
+  // --- Data flow tests: ensure data is always iterable ---
+
+  it('airports is an iterable array after fetchAirports()', async () => {
+    const store = useWeatherStore()
+    await store.fetchAirports()
+    expect(Array.isArray(store.airports)).toBe(true)
+    // Verify iterable — this was the exact bug: "airports.value is not iterable"
+    expect(() => [...store.airports]).not.toThrow()
+    expect(store.airports.length).toBe(1)
+  })
+
+  it('airports is [] after fetchAirports() with empty result', async () => {
+    const weatherService = await import('../../services/weatherService')
+    vi.mocked(weatherService.default.getAirports).mockResolvedValueOnce([])
+
+    const store = useWeatherStore()
+    clearCache('airports')
+    await store.fetchAirports()
+    expect(store.airports).toEqual([])
+    expect(store.airports.length).toBe(0)
+  })
+
+  it('locations has expected items after fetchLocations()', async () => {
+    const store = useWeatherStore()
+    await store.fetchLocations()
+    expect(Array.isArray(store.locations)).toBe(true)
+    expect(store.locations).toHaveLength(1)
+    expect(store.locations[0]).toMatchObject({
+      id: 1,
+      name: 'Test City',
+      latitude: 40,
+      longitude: -74,
+    })
+  })
+
+  it('data remains safe default when service throws', async () => {
+    const weatherService = await import('../../services/weatherService')
+    vi.mocked(weatherService.default.getAirports).mockRejectedValueOnce(new Error('API failure'))
+
+    const store = useWeatherStore()
+    clearCache('airports')
+    await store.fetchAirports()
+    expect(store.airportsLoading).toBe(false)
+    expect(store.airportsError).toBe('API failure')
+    // airports should remain the safe default (empty array), not null/undefined
+    expect(Array.isArray(store.airports)).toBe(true)
+  })
+
+  it('data is usable with array methods after fetch', async () => {
+    const store = useWeatherStore()
+    await store.fetchLocations()
+
+    const names = store.locations.map((loc) => loc.name)
+    expect(names).toEqual(['Test City'])
+
+    const filtered = store.locations.filter((loc) => loc.locationType === 'city')
+    expect(filtered).toHaveLength(1)
+
+    expect(store.locations.length).toBe(1)
+  })
 })

@@ -5,6 +5,7 @@ vi.mock('leaflet', () => {
   const mockMap = {
     setView: vi.fn().mockReturnThis(),
     addLayer: vi.fn().mockReturnThis(),
+    removeLayer: vi.fn().mockReturnThis(),
     fitBounds: vi.fn().mockReturnThis(),
     remove: vi.fn(),
   }
@@ -36,6 +37,7 @@ vi.mock('leaflet', () => {
       layerGroup: vi.fn(() => ({
         addTo: vi.fn().mockReturnThis(),
         clearLayers: vi.fn(),
+        addLayer: vi.fn(),
       })),
       polyline: vi.fn(() => ({ addTo: vi.fn().mockReturnThis() })),
       circleMarker: vi.fn(() => ({

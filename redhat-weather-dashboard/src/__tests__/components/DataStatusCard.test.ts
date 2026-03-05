@@ -15,6 +15,18 @@ vi.mock('../../services/api', () => ({
         expectedAirports: 9313,
         loadingComplete: false,
         percentLoaded: 50,
+        activeForecasts: 1250,
+        activeEarthquakes: 3,
+        activeHurricanes: 1,
+        metarReports: 425,
+        dataFreshness: {
+          'forecasts.ageMinutes': 5,
+          'forecasts.lastFetch': '2024-01-15T10:00:00',
+          'metar.ageMinutes': 45,
+          'metar.lastFetch': '2024-01-15T09:20:00',
+          'earthquakes.ageMinutes': 120,
+          'earthquakes.lastFetch': '2024-01-15T08:00:00',
+        },
       },
     }),
   },
@@ -67,5 +79,50 @@ describe('DataStatusCard', () => {
     const badge = wrapper.find('.status-badge')
     const ariaHidden = badge.find('[aria-hidden="true"]')
     expect(ariaHidden.exists()).toBe(true)
+  })
+
+  // --- Data rendering tests ---
+
+  it('renders active data count values', async () => {
+    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    const countValues = wrapper.findAll('.count-value')
+    expect(countValues.length).toBe(4)
+    const texts = countValues.map((el) => el.text())
+    expect(texts).toContain('1,250')
+    expect(texts).toContain('3')
+    expect(texts).toContain('1')
+    expect(texts).toContain('425')
+  })
+
+  it('renders freshness badges with correct classes', async () => {
+    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    // forecasts.ageMinutes=5 -> freshness-fresh
+    // metar.ageMinutes=45 -> freshness-aging
+    // earthquakes.ageMinutes=120 -> freshness-stale
+    expect(wrapper.find('.freshness-fresh').exists()).toBe(true)
+    expect(wrapper.find('.freshness-aging').exists()).toBe(true)
+    expect(wrapper.find('.freshness-stale').exists()).toBe(true)
+  })
+
+  it('renders Active Data section heading', async () => {
+    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    const h4s = wrapper.findAll('h4')
+    const activeDataH4 = h4s.filter((h4) => h4.text() === 'Active Data')
+    expect(activeDataH4.length).toBe(1)
+  })
+
+  it('renders Data Freshness section with freshness rows', async () => {
+    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    expect(wrapper.find('.freshness-section').exists()).toBe(true)
+    const freshnessRows = wrapper.findAll('.freshness-row')
+    expect(freshnessRows.length).toBe(3)
   })
 })
