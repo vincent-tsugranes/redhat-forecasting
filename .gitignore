@@ -40,6 +40,10 @@ Thumbs.db
 *.tmp
 .cache/
 
+# Playwright
+test-results/
+playwright-report/
+
 # Maven
 pom.xml.tag
 pom.xml.releaseBackup
