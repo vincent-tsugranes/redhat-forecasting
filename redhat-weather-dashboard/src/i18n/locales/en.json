@@ -59,6 +59,8 @@
     "selectAirport": "Select Airport",
     "selectAriaLabel": "Select airport",
     "selectPlaceholder": "-- Select an airport --",
+    "searchPlaceholder": "Search airports by code or name...",
+    "searchAriaLabel": "Search airports by code or name",
     "refreshWeather": "Refresh Weather",
     "refreshing": "Refreshing...",
     "metar": "METAR (Current Observation)",

@@ -19,31 +19,34 @@ describe('AirportView', () => {
     setActivePinia(createPinia())
   })
 
-  it('renders select with associated label', async () => {
+  it('renders search input with associated label', async () => {
     const wrapper = mount(AirportView, {
       global: {
         plugins: [i18n],
         stubs: {
           FreshnessBadge: true,
+          AirportSkeleton: true,
         },
       },
     })
     await flushPromises()
 
-    const label = wrapper.find('label[for="airport-select"]')
+    const label = wrapper.find('label[for="airport-search"]')
     expect(label.exists()).toBe(true)
     expect(label.classes()).toContain('sr-only')
 
-    const select = wrapper.find('#airport-select')
-    expect(select.exists()).toBe(true)
+    const input = wrapper.find('#airport-search')
+    expect(input.exists()).toBe(true)
+    expect(input.attributes('role')).toBe('combobox')
   })
 
-  it('shows loading state initially', () => {
+  it('shows no loading state initially', () => {
     const wrapper = mount(AirportView, {
       global: {
         plugins: [i18n],
         stubs: {
           FreshnessBadge: true,
+          AirportSkeleton: true,
         },
       },
     })

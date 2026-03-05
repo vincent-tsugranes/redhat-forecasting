@@ -162,9 +162,28 @@ export const weatherService = {
   },
 
   async getAirports(): Promise<Location[]> {
-    const response = await weatherApi.get('/locations/airports', { params: { size: 10000 } })
-    const body = response.data
-    return Array.isArray(body) ? body : body.data ?? []
+    const pageSize = 200
+    // Fetch first page to get total page count
+    const firstResponse = await weatherApi.get('/locations/airports', { params: { page: 0, size: pageSize } })
+    const firstBody = firstResponse.data
+    const firstData: Location[] = Array.isArray(firstBody) ? firstBody : firstBody.data ?? []
+    const totalPages: number = firstBody.totalPages ?? 1
+
+    if (totalPages <= 1) return firstData
+
+    // Fetch remaining pages in parallel
+    const promises = []
+    for (let page = 1; page < totalPages; page++) {
+      promises.push(weatherApi.get('/locations/airports', { params: { page, size: pageSize } }))
+    }
+    const responses = await Promise.all(promises)
+    const allAirports = [...firstData]
+    for (const resp of responses) {
+      const body = resp.data
+      const data: Location[] = Array.isArray(body) ? body : body.data ?? []
+      allAirports.push(...data)
+    }
+    return allAirports
   },
 
   // Weather Forecasts
