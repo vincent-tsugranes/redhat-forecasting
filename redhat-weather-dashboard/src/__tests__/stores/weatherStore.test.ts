@@ -174,4 +174,49 @@ describe('weatherStore', () => {
 
     expect(store.locations.length).toBe(1)
   })
+
+  it('uses cache on repeated calls within TTL', async () => {
+    const weatherService = await import('../../services/weatherService')
+    const spy = vi.mocked(weatherService.default.getLocations)
+    spy.mockClear()
+
+    const store = useWeatherStore()
+    clearCache('locations')
+
+    await store.fetchLocations()
+    await store.fetchLocations()
+
+    // Second call should use cache, so service only called once
+    expect(spy).toHaveBeenCalledTimes(1)
+  })
+
+  it('refreshEarthquakes busts cache and re-fetches', async () => {
+    const weatherService = await import('../../services/weatherService')
+    const spy = vi.mocked(weatherService.default.getRecentEarthquakes)
+    spy.mockClear()
+
+    const store = useWeatherStore()
+    clearCache('earthquakes')
+
+    await store.fetchEarthquakes()
+    expect(spy).toHaveBeenCalledTimes(1)
+
+    // refreshEarthquakes should bust cache and fetch again
+    await store.refreshEarthquakes()
+    expect(spy.mock.calls.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('refreshAlerts busts cache and re-fetches', async () => {
+    const weatherService = await import('../../services/weatherService')
+    const spy = vi.mocked(weatherService.default.getActiveAlerts)
+    spy.mockClear()
+
+    const store = useWeatherStore()
+    clearCache('alerts')
+
+    await store.fetchAlerts()
+    await store.refreshAlerts()
+
+    expect(spy.mock.calls.length).toBeGreaterThanOrEqual(2)
+  })
 })

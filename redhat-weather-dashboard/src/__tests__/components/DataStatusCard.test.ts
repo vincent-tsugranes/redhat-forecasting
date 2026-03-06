@@ -26,7 +26,17 @@ vi.mock('../../services/api', () => ({
           'metar.lastFetch': '2024-01-15T09:20:00',
           'earthquakes.ageMinutes': 120,
           'earthquakes.lastFetch': '2024-01-15T08:00:00',
+          'swpc-space-weather.ageMinutes': 2,
+          'swpc-space-weather.lastFetch': '2024-01-15T10:03:00',
         },
+        schedulers: [
+          { name: 'NOAA Forecasts', source: 'noaa-forecast', intervalMinutes: 30, enabled: true, lastRun: '2024-01-15T10:00:00', ageMinutes: 5, nextRunMinutes: 25 },
+          { name: 'Airport Weather', source: 'aviation-metar', intervalMinutes: 15, enabled: true, lastRun: '2024-01-15T10:00:00', ageMinutes: 5, nextRunMinutes: 10 },
+          { name: 'Earthquakes', source: 'usgs-earthquake', intervalMinutes: 10, enabled: true, lastRun: '2024-01-15T10:00:00', ageMinutes: 5, nextRunMinutes: 5 },
+          { name: 'Hurricanes', source: 'nhc-hurricane', intervalMinutes: 60, enabled: true, lastRun: '2024-01-15T09:00:00', ageMinutes: 65, nextRunMinutes: 0 },
+          { name: 'Weather Alerts', source: 'noaa-alerts', intervalMinutes: 15, enabled: true, lastRun: '2024-01-15T10:00:00', ageMinutes: 5, nextRunMinutes: 10 },
+          { name: 'Space Weather', source: 'swpc-space-weather', intervalMinutes: 5, enabled: true, lastRun: '2024-01-15T10:03:00', ageMinutes: 2, nextRunMinutes: 3 },
+        ],
       },
     }),
   },
@@ -123,6 +133,41 @@ describe('DataStatusCard', () => {
 
     expect(wrapper.find('.freshness-section').exists()).toBe(true)
     const freshnessRows = wrapper.findAll('.freshness-row')
-    expect(freshnessRows.length).toBe(3)
+    expect(freshnessRows.length).toBe(4)
+  })
+
+  it('renders space weather in freshness section', async () => {
+    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    const freshnessLabels = wrapper.findAll('.freshness-row .label')
+    const labels = freshnessLabels.map((el) => el.text())
+    expect(labels).toContain('Space Weather')
+  })
+
+  it('renders scheduler section with progress bars', async () => {
+    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    expect(wrapper.find('.scheduler-section').exists()).toBe(true)
+    const schedulerRows = wrapper.findAll('.scheduler-row')
+    expect(schedulerRows.length).toBe(6)
+  })
+
+  it('scheduler rows have progress bars with role="progressbar"', async () => {
+    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    const schedulerProgressBars = wrapper.findAll('.scheduler-progress[role="progressbar"]')
+    expect(schedulerProgressBars.length).toBe(6)
+  })
+
+  it('renders space weather scheduler entry', async () => {
+    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    const schedulerNames = wrapper.findAll('.scheduler-name')
+    const names = schedulerNames.map((el) => el.text())
+    expect(names.some(n => n.includes('Space Weather'))).toBe(true)
   })
 })

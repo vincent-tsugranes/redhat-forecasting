@@ -27,7 +27,14 @@ vi.mock('../../services/weatherService', () => ({
         locationType: 'city',
       },
     ]),
+    getAirports: vi.fn().mockResolvedValue([]),
+    getActiveAlerts: vi.fn().mockResolvedValue([]),
   },
+}))
+
+vi.mock('../../services/api', () => ({
+  default: { get: vi.fn().mockResolvedValue({ data: {} }) },
+  weatherApi: { get: vi.fn().mockResolvedValue({ data: [] }) },
 }))
 
 // Mock router-link
@@ -91,5 +98,56 @@ describe('DashboardView', () => {
 
     expect(wrapper.text()).toContain('New York')
     expect(wrapper.text()).toContain('Los Angeles')
+  })
+
+  it('renders earthquake card with link', async () => {
+    const wrapper = mount(DashboardView, {
+      global: {
+        plugins: [i18n],
+        stubs: {
+          DataStatusCard: true,
+          AirportMap: true,
+          RouterLink,
+        },
+      },
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Earthquake Monitor')
+    expect(wrapper.text()).toContain('View Earthquakes')
+  })
+
+  it('renders space weather card with link', async () => {
+    const wrapper = mount(DashboardView, {
+      global: {
+        plugins: [i18n],
+        stubs: {
+          DataStatusCard: true,
+          AirportMap: true,
+          RouterLink,
+        },
+      },
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Space Weather')
+    expect(wrapper.text()).toContain('View Space Weather')
+  })
+
+  it('renders six dashboard cards', async () => {
+    const wrapper = mount(DashboardView, {
+      global: {
+        plugins: [i18n],
+        stubs: {
+          DataStatusCard: true,
+          AirportMap: true,
+          RouterLink,
+        },
+      },
+    })
+    await flushPromises()
+
+    const gridCards = wrapper.findAll('.grid > .card')
+    expect(gridCards).toHaveLength(6)
   })
 })

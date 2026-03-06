@@ -69,4 +69,71 @@ describe('UnifiedMap', () => {
     const legendSections = wrapper.findAll('.legend-section')
     expect(legendSections).toHaveLength(2)
   })
+
+  it('does not show radar controls when radar is off', async () => {
+    const wrapper = mount(UnifiedMap, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    // Radar is off by default
+    expect(wrapper.find('.radar-controls').exists()).toBe(false)
+  })
+
+  it('shows radar controls when radar is toggled on', async () => {
+    const wrapper = mount(UnifiedMap, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    // Toggle radar on (4th checkbox)
+    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[3]
+    await radarCheckbox.setValue(true)
+    await flushPromises()
+
+    expect(wrapper.find('.radar-controls').exists()).toBe(true)
+  })
+
+  it('renders radar product selector with four options', async () => {
+    const wrapper = mount(UnifiedMap, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    // Toggle radar on
+    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[3]
+    await radarCheckbox.setValue(true)
+    await flushPromises()
+
+    const select = wrapper.find('.radar-select')
+    expect(select.exists()).toBe(true)
+    expect(select.attributes('aria-label')).toBe('Radar Product')
+
+    const options = select.findAll('option')
+    expect(options).toHaveLength(4)
+  })
+
+  it('renders radar opacity slider', async () => {
+    const wrapper = mount(UnifiedMap, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    // Toggle radar on
+    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[3]
+    await radarCheckbox.setValue(true)
+    await flushPromises()
+
+    const slider = wrapper.find('.opacity-slider')
+    expect(slider.exists()).toBe(true)
+    expect(slider.attributes('type')).toBe('range')
+    expect(slider.attributes('min')).toBe('10')
+    expect(slider.attributes('max')).toBe('90')
+  })
+
+  it('displays opacity percentage value', async () => {
+    const wrapper = mount(UnifiedMap, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    // Toggle radar on
+    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[3]
+    await radarCheckbox.setValue(true)
+    await flushPromises()
+
+    const opacityValue = wrapper.find('.opacity-value')
+    expect(opacityValue.exists()).toBe(true)
+    expect(opacityValue.text()).toBe('50%')
+  })
 })

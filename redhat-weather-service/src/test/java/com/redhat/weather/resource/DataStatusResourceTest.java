@@ -52,4 +52,40 @@ class DataStatusResourceTest {
             .body("dataFreshness", notNullValue())
             .body("dataFreshness", instanceOf(java.util.Map.class));
     }
+
+    @Test
+    void testDataStatusIncludesSchedulerList() {
+        given()
+        .when()
+            .get("/api/status/data")
+        .then()
+            .statusCode(200)
+            .body("$", hasKey("schedulers"))
+            .body("schedulers", instanceOf(java.util.List.class))
+            .body("schedulers.size()", greaterThanOrEqualTo(5));
+    }
+
+    @Test
+    void testSchedulerListIncludesSpaceWeather() {
+        given()
+        .when()
+            .get("/api/status/data")
+        .then()
+            .statusCode(200)
+            .body("schedulers.name", hasItem("Space Weather"))
+            .body("schedulers.source", hasItem("swpc-space-weather"));
+    }
+
+    @Test
+    void testSchedulerEntriesHaveRequiredFields() {
+        given()
+        .when()
+            .get("/api/status/data")
+        .then()
+            .statusCode(200)
+            .body("schedulers[0]", hasKey("name"))
+            .body("schedulers[0]", hasKey("source"))
+            .body("schedulers[0]", hasKey("intervalMinutes"))
+            .body("schedulers[0]", hasKey("enabled"));
+    }
 }
