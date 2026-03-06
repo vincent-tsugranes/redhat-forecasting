@@ -118,31 +118,22 @@ describe('DataStatusCard', () => {
     expect(wrapper.find('.freshness-stale').exists()).toBe(true)
   })
 
-  it('renders Active Data section heading', async () => {
+  it('freshness badges are merged into scheduler rows', async () => {
     const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
     await flushPromises()
 
-    const h4s = wrapper.findAll('h4')
-    const activeDataH4 = h4s.filter((h4) => h4.text() === 'Active Data')
-    expect(activeDataH4.length).toBe(1)
+    // All freshness sources map to schedulers, so standalone freshness section should not render
+    const schedulerFreshness = wrapper.findAll('.scheduler-timing .freshness-age')
+    expect(schedulerFreshness.length).toBeGreaterThan(0)
   })
 
-  it('renders Data Freshness section with freshness rows', async () => {
+  it('renders space weather freshness in scheduler row', async () => {
     const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
     await flushPromises()
 
-    expect(wrapper.find('.freshness-section').exists()).toBe(true)
-    const freshnessRows = wrapper.findAll('.freshness-row')
-    expect(freshnessRows.length).toBe(4)
-  })
-
-  it('renders space weather in freshness section', async () => {
-    const wrapper = mount(DataStatusCard, { global: { plugins: [i18n] } })
-    await flushPromises()
-
-    const freshnessLabels = wrapper.findAll('.freshness-row .label')
-    const labels = freshnessLabels.map((el) => el.text())
-    expect(labels).toContain('Space Weather')
+    const schedulerNames = wrapper.findAll('.scheduler-name')
+    const names = schedulerNames.map((el) => el.text())
+    expect(names.some(n => n.includes('Space Weather'))).toBe(true)
   })
 
   it('renders scheduler section with progress bars', async () => {

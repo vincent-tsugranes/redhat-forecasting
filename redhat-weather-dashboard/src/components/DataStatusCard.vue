@@ -1,87 +1,66 @@
 <template>
   <div class="status-card">
-    <h3><span aria-hidden="true">📊</span> {{ $t('status.title') }}</h3>
-    <div v-if="loading" class="loading">{{ $t('status.loadingStatus') }}</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
-    <div v-else class="status-content">
-      <div class="status-grid">
-        <div class="status-item">
-          <span class="label">{{ $t('status.airportsLoaded') }}</span>
-          <span class="value" :class="{ complete: status.loadingComplete }">
-            {{ status.airports?.toLocaleString() }} / {{ status.expectedAirports?.toLocaleString() }}
-          </span>
-        </div>
-        <div class="status-item">
-          <span class="label">{{ $t('status.cities') }}</span>
-          <span class="value">{{ status.cities }}</span>
-        </div>
-        <div class="status-item">
-          <span class="label">{{ $t('status.totalLocations') }}</span>
-          <span class="value">{{ status.totalLocations?.toLocaleString() }}</span>
-        </div>
-      </div>
-      <div
-        v-if="status.percentLoaded !== undefined"
-        class="progress-bar"
-        role="progressbar"
-        :aria-valuenow="status.percentLoaded"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        :aria-label="$t('status.loadingProgress')"
-      >
-        <div class="progress-fill" :style="{ width: status.percentLoaded + '%' }"></div>
-        <span class="progress-text">{{ status.percentLoaded }}%</span>
-      </div>
-      <div
+    <div class="card-header">
+      <h3><span aria-hidden="true">📊</span> {{ $t('status.title') }}</h3>
+      <span
         class="status-badge"
         :class="status.loadingComplete ? 'success' : 'warning'"
         role="status"
       >
         <span aria-hidden="true">{{ status.loadingComplete ? '✓' : '⚠' }}</span>
         {{ status.loadingComplete ? $t('status.dataReady') : $t('status.loading') }}
-      </div>
-
-      <div class="data-counts-section">
-        <h4>Active Data</h4>
-        <div class="data-counts-grid">
-          <div class="data-count-item">
-            <span class="count-icon" aria-hidden="true">🌤️</span>
-            <div class="count-info">
-              <span class="count-value">{{ status.activeForecasts?.toLocaleString() ?? 0 }}</span>
-              <span class="count-label">{{ $t('status.activeForecasts') }}</span>
-            </div>
-          </div>
-          <div class="data-count-item">
-            <span class="count-icon" aria-hidden="true">🌍</span>
-            <div class="count-info">
-              <span class="count-value">{{ status.activeEarthquakes?.toLocaleString() ?? 0 }}</span>
-              <span class="count-label">{{ $t('status.activeEarthquakes') }}</span>
-            </div>
-          </div>
-          <div class="data-count-item">
-            <span class="count-icon" aria-hidden="true">🌀</span>
-            <div class="count-info">
-              <span class="count-value">{{ status.activeHurricanes?.toLocaleString() ?? 0 }}</span>
-              <span class="count-label">{{ $t('status.activeHurricanes') }}</span>
-            </div>
-          </div>
-          <div class="data-count-item">
-            <span class="count-icon" aria-hidden="true">✈️</span>
-            <div class="count-info">
-              <span class="count-value">{{ status.metarReports?.toLocaleString() ?? 0 }}</span>
-              <span class="count-label">{{ $t('status.metarReports') }}</span>
-            </div>
-          </div>
+      </span>
+    </div>
+    <div v-if="loading" class="loading">{{ $t('status.loadingStatus') }}</div>
+    <div v-else-if="error" class="error">{{ error }}</div>
+    <div v-else class="status-content">
+      <div class="location-row">
+        <span class="loc-stat">
+          <span class="label">{{ $t('status.airportsLoaded') }}</span>
+          <span class="value" :class="{ complete: status.loadingComplete }">{{ status.airports?.toLocaleString() }}/{{ status.expectedAirports?.toLocaleString() }}</span>
+        </span>
+        <span class="loc-stat">
+          <span class="label">{{ $t('status.cities') }}</span>
+          <span class="value">{{ status.cities }}</span>
+        </span>
+        <span class="loc-stat">
+          <span class="label">{{ $t('status.totalLocations') }}</span>
+          <span class="value">{{ status.totalLocations?.toLocaleString() }}</span>
+        </span>
+        <div
+          v-if="status.percentLoaded !== undefined && !status.loadingComplete"
+          class="progress-bar"
+          role="progressbar"
+          :aria-valuenow="status.percentLoaded"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          :aria-label="$t('status.loadingProgress')"
+        >
+          <div class="progress-fill" :style="{ width: status.percentLoaded + '%' }"></div>
+          <span class="progress-text">{{ status.percentLoaded }}%</span>
         </div>
       </div>
 
-      <div v-if="freshnessSources.length > 0" class="freshness-section">
-        <h4>{{ $t('status.dataFreshness') }}</h4>
-        <div v-for="source in freshnessSources" :key="source.name" class="freshness-row">
-          <span class="label">{{ source.label }}</span>
-          <span class="freshness-age" :class="source.freshnessClass">
-            {{ source.ageText }}
-          </span>
+      <div class="data-counts-grid">
+        <div class="data-count-item">
+          <span class="count-icon" aria-hidden="true">🌤️</span>
+          <span class="count-value">{{ status.activeForecasts?.toLocaleString() ?? 0 }}</span>
+          <span class="count-label">{{ $t('status.activeForecasts') }}</span>
+        </div>
+        <div class="data-count-item">
+          <span class="count-icon" aria-hidden="true">🌍</span>
+          <span class="count-value">{{ status.activeEarthquakes?.toLocaleString() ?? 0 }}</span>
+          <span class="count-label">{{ $t('status.activeEarthquakes') }}</span>
+        </div>
+        <div class="data-count-item">
+          <span class="count-icon" aria-hidden="true">🌀</span>
+          <span class="count-value">{{ status.activeHurricanes?.toLocaleString() ?? 0 }}</span>
+          <span class="count-label">{{ $t('status.activeHurricanes') }}</span>
+        </div>
+        <div class="data-count-item">
+          <span class="count-icon" aria-hidden="true">✈️</span>
+          <span class="count-value">{{ status.metarReports?.toLocaleString() ?? 0 }}</span>
+          <span class="count-label">{{ $t('status.metarReports') }}</span>
         </div>
       </div>
 
@@ -93,6 +72,7 @@
               <span aria-hidden="true">{{ row.icon }}</span> {{ row.name }}
             </span>
             <span class="scheduler-timing">
+              <span v-if="row.freshnessClass" class="freshness-age" :class="row.freshnessClass">{{ row.freshnessText }}</span>
               <span class="scheduler-last">{{ row.lastRunText }}</span>
               <span class="scheduler-next" :class="row.statusClass">{{ row.nextRunText }}</span>
             </span>
@@ -111,6 +91,16 @@
               :style="{ width: row.progress + '%' }"
             ></div>
           </div>
+        </div>
+      </div>
+
+      <div v-if="standaloneFreshness.length > 0" class="freshness-section">
+        <h4>{{ $t('status.dataFreshness') }}</h4>
+        <div v-for="source in standaloneFreshness" :key="source.name" class="freshness-row">
+          <span class="label">{{ source.label }}</span>
+          <span class="freshness-age" :class="source.freshnessClass">
+            {{ source.ageText }}
+          </span>
         </div>
       </div>
     </div>
@@ -175,10 +165,17 @@ const SOURCE_LABELS: Record<string, string> = {
   alerts: 'Weather Alerts',
 }
 
-const freshnessSources = computed(() => {
-  const df = status.value.dataFreshness
-  if (!df) return []
+// Map freshness source names to scheduler source keys
+const FRESHNESS_TO_SCHEDULER: Record<string, string> = {
+  forecasts: 'noaa-forecast',
+  metar: 'aviation-metar',
+  hurricanes: 'nhc-hurricane',
+  earthquakes: 'usgs-earthquake',
+  'swpc-space-weather': 'swpc-space-weather',
+  alerts: 'noaa-alerts',
+}
 
+function parseFreshness(df: Record<string, string | number>) {
   const sources: { name: string; label: string; ageMinutes: number; ageText: string; freshnessClass: string }[] = []
   const seen = new Set<string>()
 
@@ -196,10 +193,10 @@ const freshnessSources = computed(() => {
     if (ageMinutes < 1) {
       ageText = 'Just now'
     } else if (ageMinutes < 60) {
-      ageText = `${ageMinutes} min ago`
+      ageText = `${ageMinutes}m ago`
     } else {
       const hours = Math.floor(ageMinutes / 60)
-      ageText = `${hours}h ${ageMinutes % 60}m ago`
+      ageText = `${hours}h${ageMinutes % 60}m`
     }
 
     let freshnessClass: string
@@ -215,6 +212,23 @@ const freshnessSources = computed(() => {
   }
 
   return sources.sort((a, b) => a.ageMinutes - b.ageMinutes)
+}
+
+const freshnessSources = computed(() => {
+  const df = status.value.dataFreshness
+  if (!df) return []
+  return parseFreshness(df)
+})
+
+// Freshness sources not covered by any scheduler row
+const standaloneFreshness = computed(() => {
+  const schedulerSourceKeys = new Set(
+    (status.value.schedulers || []).filter(s => s.enabled).map(s => s.source)
+  )
+  return freshnessSources.value.filter(f => {
+    const schedulerKey = FRESHNESS_TO_SCHEDULER[f.name]
+    return !schedulerKey || !schedulerSourceKeys.has(schedulerKey)
+  })
 })
 
 const SCHEDULER_ICONS: Record<string, string> = {
@@ -226,9 +240,16 @@ const SCHEDULER_ICONS: Record<string, string> = {
   'swpc-space-weather': '☀️',
 }
 
+// Reverse map: scheduler source key -> freshness source name
+const SCHEDULER_TO_FRESHNESS: Record<string, string> = Object.fromEntries(
+  Object.entries(FRESHNESS_TO_SCHEDULER).map(([k, v]) => [v, k])
+)
+
 const schedulerRows = computed(() => {
   const schedulers = status.value.schedulers
   if (!schedulers || schedulers.length === 0) return []
+
+  const freshnessMap = new Map(freshnessSources.value.map(f => [f.name, f]))
 
   return schedulers.filter(s => s.enabled).map(s => {
     const icon = SCHEDULER_ICONS[s.source] || '📡'
@@ -244,7 +265,7 @@ const schedulerRows = computed(() => {
     } else if (age < 60) {
       lastRunText = `${age}m ago`
     } else {
-      lastRunText = `${Math.floor(age / 60)}h ${age % 60}m ago`
+      lastRunText = `${Math.floor(age / 60)}h${age % 60}m`
     }
 
     let nextRunText: string
@@ -253,7 +274,7 @@ const schedulerRows = computed(() => {
       nextRunText = 'Pending'
       statusClass = 'scheduler-pending'
     } else if (nextRun === 0) {
-      nextRunText = 'Due now'
+      nextRunText = 'Due'
       statusClass = 'scheduler-due'
     } else {
       nextRunText = `in ${nextRun}m`
@@ -264,7 +285,13 @@ const schedulerRows = computed(() => {
     const progress = age != null ? Math.min(100, Math.round((age / interval) * 100)) : 0
     const progressClass = progress >= 100 ? 'progress-overdue' : progress >= 75 ? 'progress-soon' : 'progress-ok'
 
-    return { name: s.name, icon, lastRunText, nextRunText, statusClass, progress, progressClass, interval }
+    // Merge freshness data if available
+    const freshnessKey = SCHEDULER_TO_FRESHNESS[s.source]
+    const freshness = freshnessKey ? freshnessMap.get(freshnessKey) : undefined
+    const freshnessClass = freshness?.freshnessClass || ''
+    const freshnessText = freshness?.ageText || ''
+
+    return { name: s.name, icon, lastRunText, nextRunText, statusClass, progress, progressClass, interval, freshnessClass, freshnessText }
   })
 })
 
@@ -303,22 +330,30 @@ onUnmounted(() => {
 .status-card {
   background: var(--bg-card, white);
   border-radius: 8px;
-  padding: 20px;
+  padding: 14px;
   box-shadow: 0 2px 4px var(--shadow, rgba(0, 0, 0, 0.1));
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 h3 {
-  margin: 0 0 15px 0;
+  margin: 0;
   color: var(--text-primary, #333);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
 .loading,
 .error {
-  padding: 10px;
+  padding: 6px;
   text-align: center;
   color: var(--text-secondary, #666);
+  font-size: 13px;
 }
 
 .error {
@@ -328,30 +363,33 @@ h3 {
 .status-content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
-.status-grid {
+.location-row {
   display: flex;
-  flex-direction: column;
-}
-
-.status-item {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-light, #eee);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.loc-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
 }
 
 .label {
   font-weight: 500;
   color: var(--text-secondary, #666);
+  font-size: 12px;
 }
 
 .value {
   font-weight: 600;
   color: var(--text-primary, #333);
+  font-size: 13px;
 }
 
 .value.complete {
@@ -360,11 +398,12 @@ h3 {
 
 .progress-bar {
   position: relative;
-  height: 30px;
+  height: 16px;
   background: var(--bg-code, #f0f0f0);
-  border-radius: 15px;
+  border-radius: 8px;
   overflow: hidden;
-  margin: 10px 0;
+  flex: 1;
+  min-width: 60px;
 }
 
 .progress-fill {
@@ -380,15 +419,15 @@ h3 {
   transform: translate(-50%, -50%);
   font-weight: 600;
   color: var(--text-primary, #333);
-  font-size: 0.9rem;
+  font-size: 11px;
 }
 
 .status-badge {
-  padding: 10px 15px;
-  border-radius: 6px;
-  text-align: center;
+  padding: 3px 10px;
+  border-radius: 10px;
   font-weight: 600;
-  margin-top: 10px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .status-badge.success {
@@ -401,65 +440,52 @@ h3 {
   color: #e65100;
 }
 
-.data-counts-section {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid var(--border-light, #eee);
-}
-
-.data-counts-section h4 {
-  margin: 0 0 10px 0;
-  font-size: 0.95rem;
-  color: var(--text-primary, #333);
-}
-
 .data-counts-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
 }
 
 .data-count-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 4px;
+  padding: 4px 6px;
   background: var(--bg-code, #f9f9f9);
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 .count-icon {
-  font-size: 18px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
-.count-info {
-  display: flex;
-  flex-direction: column;
-}
-
 .count-value {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-primary, #333);
-  line-height: 1.2;
+  line-height: 1;
 }
 
 .count-label {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-secondary, #666);
   white-space: nowrap;
+  display: none;
+}
+
+.data-count-item:hover .count-label {
+  display: block;
 }
 
 .freshness-section {
-  margin-top: 15px;
-  padding-top: 15px;
+  padding-top: 6px;
   border-top: 1px solid var(--border-light, #eee);
 }
 
 .freshness-section h4 {
-  margin: 0 0 10px 0;
-  font-size: 0.95rem;
+  margin: 0 0 4px 0;
+  font-size: 0.85rem;
   color: var(--text-primary, #333);
 }
 
@@ -467,14 +493,14 @@ h3 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5px 0;
+  padding: 2px 0;
 }
 
 .freshness-age {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 11px;
   font-weight: 600;
 }
 
@@ -494,19 +520,18 @@ h3 {
 }
 
 .scheduler-section {
-  margin-top: 15px;
-  padding-top: 15px;
+  padding-top: 6px;
   border-top: 1px solid var(--border-light, #eee);
 }
 
 .scheduler-section h4 {
-  margin: 0 0 10px 0;
-  font-size: 0.95rem;
+  margin: 0 0 4px 0;
+  font-size: 0.85rem;
   color: var(--text-primary, #333);
 }
 
 .scheduler-row {
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .scheduler-row:last-child {
@@ -517,19 +542,20 @@ h3 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .scheduler-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-primary, #333);
 }
 
 .scheduler-timing {
   display: flex;
-  gap: 10px;
-  font-size: 12px;
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
 }
 
 .scheduler-last {
@@ -538,9 +564,9 @@ h3 {
 
 .scheduler-next {
   font-weight: 600;
-  padding: 1px 6px;
+  padding: 1px 5px;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .scheduler-ok {
@@ -559,7 +585,7 @@ h3 {
 }
 
 .scheduler-progress {
-  height: 4px;
+  height: 3px;
   background: var(--bg-code, #eee);
   border-radius: 2px;
   overflow: hidden;
@@ -585,7 +611,7 @@ h3 {
 
 @media (max-width: 480px) {
   .data-counts-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>
