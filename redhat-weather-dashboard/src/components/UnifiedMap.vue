@@ -1,5 +1,32 @@
 <template>
   <div class="unified-map-wrapper">
+    <div class="map-search-bar">
+      <label for="unified-map-search" class="sr-only">Search map</label>
+      <input
+        id="unified-map-search"
+        v-model="searchQuery"
+        type="text"
+        :placeholder="$t('map.searchPlaceholder')"
+        class="search-input"
+        @input="onSearchInput"
+        @focus="showResults = true"
+        @keydown.escape="closeSearch"
+      />
+      <div v-if="searchResults.length > 0 && showResults && searchQuery.length >= 2" class="search-results">
+        <div
+          v-for="result in searchResults"
+          :key="result.key"
+          class="search-result-item"
+          @click="selectResult(result)"
+        >
+          <span class="result-icon" aria-hidden="true">{{ result.icon }}</span>
+          <div class="result-info">
+            <div class="result-title">{{ result.title }}</div>
+            <div class="result-subtitle">{{ result.subtitle }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="layer-controls">
       <label class="layer-toggle">
         <input v-model="showAirports" type="checkbox" />
@@ -89,6 +116,126 @@ const showHurricanes = ref(true)
 const showRadar = ref(false)
 const radarProduct = ref('nexrad-n0q-900913')
 const radarOpacity = ref(50)
+
+// Search state
+const searchQuery = ref('')
+const showResults = ref(false)
+
+interface SearchResult {
+  key: string
+  icon: string
+  title: string
+  subtitle: string
+  lat: number
+  lng: number
+  zoom: number
+  type: 'airport' | 'earthquake' | 'hurricane'
+}
+
+const searchResults = ref<SearchResult[]>([])
+
+function onSearchInput() {
+  if (!searchQuery.value || searchQuery.value.length < 2) {
+    searchResults.value = []
+    return
+  }
+
+  const query = searchQuery.value.toLowerCase()
+  const results: SearchResult[] = []
+
+  // Search airports
+  if (showAirports.value) {
+    for (const apt of airports.value) {
+      if (!apt.latitude || !apt.longitude) continue
+      if (
+        apt.name?.toLowerCase().includes(query) ||
+        apt.airportCode?.toLowerCase().includes(query) ||
+        apt.state?.toLowerCase().includes(query) ||
+        apt.country?.toLowerCase().includes(query)
+      ) {
+        results.push({
+          key: `airport-${apt.id}`,
+          icon: '✈️',
+          title: `${apt.airportCode || ''} - ${apt.name}`,
+          subtitle: [apt.state, apt.country].filter(Boolean).join(', '),
+          lat: apt.latitude,
+          lng: apt.longitude,
+          zoom: 12,
+          type: 'airport',
+        })
+      }
+      if (results.length >= 15) break
+    }
+  }
+
+  // Search earthquakes
+  if (showEarthquakes.value && results.length < 15) {
+    for (const eq of earthquakes.value) {
+      if (eq.place?.toLowerCase().includes(query)) {
+        results.push({
+          key: `eq-${eq.id}`,
+          icon: '🌍',
+          title: `M${eq.magnitude} - ${eq.place}`,
+          subtitle: `Depth: ${eq.depthKm} km`,
+          lat: eq.latitude,
+          lng: eq.longitude,
+          zoom: 8,
+          type: 'earthquake',
+        })
+      }
+      if (results.length >= 15) break
+    }
+  }
+
+  // Search hurricanes
+  if (showHurricanes.value && results.length < 15) {
+    for (const storm of hurricanes.value) {
+      const name = storm.stormName || storm.stormId || ''
+      if (name.toLowerCase().includes(query)) {
+        results.push({
+          key: `storm-${storm.id}`,
+          icon: '🌀',
+          title: name,
+          subtitle: storm.category != null
+            ? (storm.category === 0 ? 'Tropical Storm' : `Category ${storm.category}`)
+            : 'Active Storm',
+          lat: storm.latitude,
+          lng: storm.longitude,
+          zoom: 6,
+          type: 'hurricane',
+        })
+      }
+    }
+  }
+
+  searchResults.value = results.slice(0, 15)
+  showResults.value = true
+}
+
+function selectResult(result: SearchResult) {
+  if (!map.value) return
+  map.value.flyTo([result.lat, result.lng], result.zoom)
+  searchQuery.value = result.title
+  showResults.value = false
+
+  // Open the popup for the matching marker
+  const layer = result.type === 'airport' ? airportLayer.value
+    : result.type === 'earthquake' ? earthquakeLayer.value
+    : hurricaneLayer.value
+
+  if (layer) {
+    layer.eachLayer((l: L.Layer) => {
+      const latLng = (l as L.CircleMarker).getLatLng?.() ?? (l as L.Marker).getLatLng?.()
+      if (latLng && Math.abs(latLng.lat - result.lat) < 0.0001 && Math.abs(latLng.lng - result.lng) < 0.0001) {
+        setTimeout(() => (l as L.CircleMarker).openPopup(), 500)
+      }
+    })
+  }
+}
+
+function closeSearch() {
+  showResults.value = false
+}
 
 const CATEGORY_COLORS: Record<number, string> = {
   0: '#007bff', 1: '#ffc107', 2: '#ff9800', 3: '#ff5722', 4: '#f44336', 5: '#9c27b0',
@@ -374,6 +521,96 @@ onMounted(() => {
   position: relative;
   width: 100%;
   height: 100%;
+}
+
+.map-search-bar {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: 90%;
+  max-width: 500px;
+}
+
+.map-search-bar .search-input {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 14px;
+  border: 2px solid var(--border-light, #ddd);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  outline: none;
+  transition: border-color 0.3s;
+  background: var(--bg-card, white);
+  color: var(--text-primary, #333);
+}
+
+.map-search-bar .search-input:focus {
+  border-color: #ee0000;
+}
+
+.search-results {
+  margin-top: 4px;
+  background: var(--bg-card, white);
+  border: 1px solid var(--border-light, #ddd);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-light, #eee);
+  transition: background-color 0.15s;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background-color: var(--bg-code, #f5f5f5);
+}
+
+.result-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.result-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-title {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-primary, #333);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-subtitle {
+  font-size: 11px;
+  color: var(--text-secondary, #666);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
 .map-container {

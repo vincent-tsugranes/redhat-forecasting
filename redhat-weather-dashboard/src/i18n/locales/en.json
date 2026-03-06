@@ -222,7 +222,8 @@
     "radarBaseReflectivity": "Base Reflectivity",
     "radarCompositeReflectivity": "Composite Reflectivity",
     "radarBaseVelocity": "Base Velocity",
-    "radarPrecipitation": "Precipitation"
+    "radarPrecipitation": "Precipitation",
+    "searchPlaceholder": "Search airports, earthquakes, storms..."
   },
   "toast": {
     "refreshSuccess": "Data refreshed successfully",

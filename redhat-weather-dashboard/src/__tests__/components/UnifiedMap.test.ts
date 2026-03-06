@@ -136,4 +136,68 @@ describe('UnifiedMap', () => {
     expect(opacityValue.exists()).toBe(true)
     expect(opacityValue.text()).toBe('50%')
   })
+
+  it('renders search bar with correct placeholder', async () => {
+    const wrapper = mount(UnifiedMap, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    const searchInput = wrapper.find('#unified-map-search')
+    expect(searchInput.exists()).toBe(true)
+    expect(searchInput.attributes('placeholder')).toBe('Search airports, earthquakes, storms...')
+  })
+
+  it('shows search results when typing a query', async () => {
+    const wrapper = mount(UnifiedMap, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    const searchInput = wrapper.find('#unified-map-search')
+    await searchInput.setValue('JFK')
+    await searchInput.trigger('input')
+    await flushPromises()
+
+    const results = wrapper.findAll('.search-result-item')
+    expect(results.length).toBeGreaterThan(0)
+    expect(results[0].find('.result-title').text()).toContain('JFK')
+  })
+
+  it('shows no results for short queries', async () => {
+    const wrapper = mount(UnifiedMap, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    const searchInput = wrapper.find('#unified-map-search')
+    await searchInput.setValue('J')
+    await searchInput.trigger('input')
+    await flushPromises()
+
+    const results = wrapper.findAll('.search-result-item')
+    expect(results.length).toBe(0)
+  })
+
+  it('searches earthquakes by place name', async () => {
+    const wrapper = mount(UnifiedMap, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    const searchInput = wrapper.find('#unified-map-search')
+    await searchInput.setValue('California')
+    await searchInput.trigger('input')
+    await flushPromises()
+
+    const results = wrapper.findAll('.search-result-item')
+    expect(results.length).toBeGreaterThan(0)
+    expect(results[0].find('.result-title').text()).toContain('California')
+  })
+
+  it('searches hurricanes by storm name', async () => {
+    const wrapper = mount(UnifiedMap, { global: { plugins: [i18n] } })
+    await flushPromises()
+
+    const searchInput = wrapper.find('#unified-map-search')
+    await searchInput.setValue('Alberto')
+    await searchInput.trigger('input')
+    await flushPromises()
+
+    const results = wrapper.findAll('.search-result-item')
+    expect(results.length).toBeGreaterThan(0)
+    expect(results[0].find('.result-title').text()).toContain('Alberto')
+  })
 })
