@@ -9,7 +9,9 @@ import com.redhat.weather.service.HurricaneService;
 import com.redhat.weather.service.WeatherAlertService;
 import com.redhat.weather.service.WeatherForecastService;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.quarkus.runtime.Startup;
 import io.quarkus.scheduler.Scheduled;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -23,6 +25,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 
 @ApplicationScoped
+@Startup
 public class WeatherDataScheduler {
 
     private static final Logger LOG = Logger.getLogger(WeatherDataScheduler.class);
@@ -83,6 +86,71 @@ public class WeatherDataScheduler {
 
     private int airportOffset = 0;
     private int forecastOffset = 0;
+
+    /**
+     * Trigger all enabled data sources on startup so the dashboard has data immediately.
+     * Runs in a background thread to avoid blocking application startup.
+     */
+    @PostConstruct
+    void onStartup() {
+        LOG.info("Scheduling initial data fetch for all enabled sources");
+        CompletableFuture.runAsync(() -> {
+            try {
+                // Small delay to let the application fully initialize
+                Thread.sleep(5000);
+                LOG.info("Starting initial data fetch");
+
+                List<CompletableFuture<Void>> initialFetches = new ArrayList<>();
+
+                if (noaaEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: NOAA forecasts");
+                        fetchNoaaForecasts();
+                    }));
+                }
+                if (aviationEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: Airport weather");
+                        fetchAirportWeather();
+                    }));
+                }
+                if (hurricaneEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: Hurricanes");
+                        try {
+                            hurricaneService.fetchAndStoreActiveStorms();
+                            dataFreshnessService.recordSuccess("nhc-hurricane");
+                            meterRegistry.counter("weather_scheduler_execution_total", "job", "nhc-hurricane", "result", "success").increment();
+                        } catch (Exception e) {
+                            meterRegistry.counter("weather_scheduler_execution_total", "job", "nhc-hurricane", "result", "failure").increment();
+                            LOG.error("Initial hurricane fetch failed", e);
+                        }
+                    }));
+                }
+                if (earthquakeEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: Earthquakes");
+                        fetchEarthquakes();
+                    }));
+                }
+                if (alertsEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: Weather alerts");
+                        fetchWeatherAlerts();
+                    }));
+                }
+
+                CompletableFuture.allOf(initialFetches.toArray(new CompletableFuture[0])).join();
+                LOG.info("Initial data fetch completed for all enabled sources");
+
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                LOG.warn("Initial data fetch interrupted");
+            } catch (Exception e) {
+                LOG.error("Error during initial data fetch", e);
+            }
+        });
+    }
 
     /**
      * Fetch NOAA weather forecasts every 30 minutes
