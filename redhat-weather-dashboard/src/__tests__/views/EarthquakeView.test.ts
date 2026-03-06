@@ -43,14 +43,17 @@ describe('EarthquakeView', () => {
     expect(wrapper.find('h1').text()).toBe('Earthquake Monitor')
   })
 
-  it('renders refresh button', async () => {
+  it('renders refresh button and view mode toggles', async () => {
     const wrapper = mount(EarthquakeView, {
       global: { plugins: [i18n] },
     })
     await flushPromises()
-    const btn = wrapper.find('button')
-    expect(btn.exists()).toBe(true)
-    expect(btn.text()).toContain('Refresh Data')
+    const buttons = wrapper.findAll('button')
+    expect(buttons.length).toBeGreaterThanOrEqual(3)
+    const texts = buttons.map(b => b.text())
+    expect(texts.some(t => t.includes('Refresh Data'))).toBe(true)
+    expect(texts.some(t => t.includes('Table'))).toBe(true)
+    expect(texts.some(t => t.includes('Cards'))).toBe(true)
   })
 
   it('shows empty state when no earthquakes', async () => {

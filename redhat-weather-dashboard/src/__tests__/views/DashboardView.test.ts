@@ -27,14 +27,25 @@ vi.mock('../../services/weatherService', () => ({
         locationType: 'city',
       },
     ]),
-    getAirports: vi.fn().mockResolvedValue([]),
+    getAirports: vi.fn().mockResolvedValue([
+      { id: 3, name: 'JFK', latitude: 40.6, longitude: -73.7, locationType: 'airport', airportCode: 'KJFK' },
+    ]),
     getActiveAlerts: vi.fn().mockResolvedValue([]),
+    getRecentEarthquakes: vi.fn().mockResolvedValue([
+      { id: 10, usgsId: 'us1234', magnitude: 4.5, place: 'California', eventTime: '2024-01-15T10:00:00', latitude: 34.0, longitude: -118.0, depthKm: 10 },
+    ]),
+    getActiveStorms: vi.fn().mockResolvedValue([]),
   },
 }))
 
 vi.mock('../../services/api', () => ({
   default: { get: vi.fn().mockResolvedValue({ data: {} }) },
   weatherApi: { get: vi.fn().mockResolvedValue({ data: [] }) },
+}))
+
+vi.mock('../../utils/dateUtils', () => ({
+  formatDate: vi.fn((d: string) => d),
+  formatRelativeTime: vi.fn(() => '5m ago'),
 }))
 
 // Mock router-link
@@ -55,7 +66,7 @@ describe('DashboardView', () => {
         plugins: [i18n],
         stubs: {
           DataStatusCard: true,
-          AirportMap: true,
+          UnifiedMap: true,
           RouterLink,
         },
       },
@@ -72,7 +83,7 @@ describe('DashboardView', () => {
         plugins: [i18n],
         stubs: {
           DataStatusCard: true,
-          AirportMap: true,
+          UnifiedMap: true,
           RouterLink,
         },
       },
@@ -83,30 +94,36 @@ describe('DashboardView', () => {
     expect(refreshBtn.exists()).toBe(true)
   })
 
-  it('renders location list', async () => {
+  it('renders stats row with live counts', async () => {
     const wrapper = mount(DashboardView, {
       global: {
         plugins: [i18n],
         stubs: {
           DataStatusCard: true,
-          AirportMap: true,
+          UnifiedMap: true,
           RouterLink,
         },
       },
     })
     await flushPromises()
 
-    expect(wrapper.text()).toContain('New York')
-    expect(wrapper.text()).toContain('Los Angeles')
+    const statTiles = wrapper.findAll('.stat-tile')
+    expect(statTiles.length).toBe(5)
+    // Should show location count, airport count, etc.
+    expect(wrapper.text()).toContain('Locations')
+    expect(wrapper.text()).toContain('Airports')
+    expect(wrapper.text()).toContain('Active Storms')
+    expect(wrapper.text()).toContain('Earthquakes')
+    expect(wrapper.text()).toContain('Active Alerts')
   })
 
-  it('renders earthquake card with link', async () => {
+  it('renders earthquake table with data', async () => {
     const wrapper = mount(DashboardView, {
       global: {
         plugins: [i18n],
         stubs: {
           DataStatusCard: true,
-          AirportMap: true,
+          UnifiedMap: true,
           RouterLink,
         },
       },
@@ -114,40 +131,43 @@ describe('DashboardView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Earthquake Monitor')
-    expect(wrapper.text()).toContain('View Earthquakes')
+    expect(wrapper.text()).toContain('California')
+    expect(wrapper.find('.magnitude-badge').exists()).toBe(true)
   })
 
-  it('renders space weather card with link', async () => {
+  it('renders quick link cards for forecasts, airports, space weather', async () => {
     const wrapper = mount(DashboardView, {
       global: {
         plugins: [i18n],
         stubs: {
           DataStatusCard: true,
-          AirportMap: true,
+          UnifiedMap: true,
           RouterLink,
         },
       },
     })
     await flushPromises()
 
+    const quickLinks = wrapper.findAll('.quick-link')
+    expect(quickLinks.length).toBe(3)
+    expect(wrapper.text()).toContain('Weather Forecasts')
+    expect(wrapper.text()).toContain('Airport Weather')
     expect(wrapper.text()).toContain('Space Weather')
-    expect(wrapper.text()).toContain('View Space Weather')
   })
 
-  it('renders six dashboard cards', async () => {
+  it('renders unified map instead of airport map', async () => {
     const wrapper = mount(DashboardView, {
       global: {
         plugins: [i18n],
         stubs: {
           DataStatusCard: true,
-          AirportMap: true,
+          UnifiedMap: true,
           RouterLink,
         },
       },
     })
     await flushPromises()
 
-    const gridCards = wrapper.findAll('.grid > .card')
-    expect(gridCards).toHaveLength(6)
+    expect(wrapper.findComponent({ name: 'UnifiedMap' }).exists()).toBe(true)
   })
 })

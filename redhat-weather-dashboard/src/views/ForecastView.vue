@@ -81,43 +81,57 @@
     <div v-if="forecasts.length > 0" class="card">
       <div class="forecast-data-header">
         <h2>{{ $t('forecast.forecastData') }}</h2>
-        <button
-          class="export-btn"
-          :aria-label="$t('forecast.exportAriaLabel')"
-          @click="handleExport"
-        >
-          <span aria-hidden="true">📥</span> {{ $t('forecast.exportCSV') }}
-        </button>
+        <div class="header-actions">
+          <span class="table-meta">
+            <strong>{{ forecasts.length }}</strong> periods
+            <template v-if="forecasts[0]"> &middot; {{ forecasts[0].source.toUpperCase() }}</template>
+          </span>
+          <span v-if="forecasts[0]?.fetchedAt">
+            <FreshnessBadge :fetched-at="forecasts[0].fetchedAt" data-type="forecast" />
+          </span>
+          <button
+            class="btn-sm btn-icon btn-outline"
+            :aria-label="$t('forecast.exportAriaLabel')"
+            @click="handleExport"
+          >
+            <span aria-hidden="true">📥</span> {{ $t('forecast.exportCSV') }}
+          </button>
+        </div>
       </div>
-      <p>
-        <strong>{{ forecasts.length }}</strong> {{ $t('forecast.periodsAvailable', { count: forecasts.length }) }}
-      </p>
-      <p v-if="forecasts[0]">
-        {{ $t('forecast.source') }} <strong>{{ forecasts[0].source.toUpperCase() }}</strong>
-      </p>
-      <p v-if="forecasts[0]?.fetchedAt">
-        {{ $t('forecast.dataFetched') }} <FreshnessBadge :fetched-at="forecasts[0].fetchedAt" data-type="forecast" />
-      </p>
 
-      <div v-for="forecast in forecasts.slice(0, 10)" :key="forecast.id" class="forecast-item">
-        <div class="forecast-header">
-          <strong>{{ formatDate(forecast.validFrom) }}</strong> - {{ formatDate(forecast.validTo) }}
-        </div>
-        <div class="forecast-details">
-          <div>
-            <span aria-hidden="true">🌡️</span> {{ formatTemp(forecast.temperatureFahrenheit) }}
-          </div>
-          <div><span aria-hidden="true">💨</span> {{ $t('common.wind') }} {{ formatSpeed(forecast.windSpeedMph) }}</div>
-          <div v-if="forecast.precipitationProbability != null">
-            <span aria-hidden="true">☔</span> {{ $t('common.precip') }} {{ forecast.precipitationProbability }}%
-          </div>
-          <div v-if="forecast.humidity != null">
-            <span aria-hidden="true">💧</span> {{ $t('common.humidity') }} {{ forecast.humidity }}%
-          </div>
-        </div>
-        <div class="forecast-description">
-          {{ forecast.weatherDescription || forecast.weatherShortDescription }}
-        </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th @click="toggleForecastSort('validFrom')">
+                Period
+                <span class="sort-indicator" :class="{ active: forecastSortKey === 'validFrom' }">{{ forecastSortIcon('validFrom') }}</span>
+              </th>
+              <th @click="toggleForecastSort('temperatureFahrenheit')">
+                Temp
+                <span class="sort-indicator" :class="{ active: forecastSortKey === 'temperatureFahrenheit' }">{{ forecastSortIcon('temperatureFahrenheit') }}</span>
+              </th>
+              <th @click="toggleForecastSort('windSpeedMph')">
+                Wind
+                <span class="sort-indicator" :class="{ active: forecastSortKey === 'windSpeedMph' }">{{ forecastSortIcon('windSpeedMph') }}</span>
+              </th>
+              <th @click="toggleForecastSort('precipitationProbability')">
+                Precip
+                <span class="sort-indicator" :class="{ active: forecastSortKey === 'precipitationProbability' }">{{ forecastSortIcon('precipitationProbability') }}</span>
+              </th>
+              <th>Conditions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="forecast in sortedForecasts" :key="forecast.id">
+              <td class="td-nowrap">{{ formatDate(forecast.validFrom) }}</td>
+              <td>{{ formatTemp(forecast.temperatureFahrenheit) }}</td>
+              <td>{{ formatSpeed(forecast.windSpeedMph) }}</td>
+              <td>{{ forecast.precipitationProbability != null ? forecast.precipitationProbability + '%' : '-' }}</td>
+              <td class="td-conditions">{{ forecast.weatherShortDescription || forecast.weatherDescription || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -235,6 +249,41 @@ function selectLocation(loc: Location) {
   store.fetchForecasts(Number(selectedLocationId.value))
 }
 
+const forecastSortKey = ref('validFrom')
+const forecastSortDir = ref<'asc' | 'desc'>('asc')
+
+function toggleForecastSort(key: string) {
+  if (forecastSortKey.value === key) {
+    forecastSortDir.value = forecastSortDir.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    forecastSortKey.value = key
+    forecastSortDir.value = key === 'validFrom' ? 'asc' : 'desc'
+  }
+}
+
+function forecastSortIcon(key: string) {
+  if (forecastSortKey.value !== key) return '⇅'
+  return forecastSortDir.value === 'asc' ? '↑' : '↓'
+}
+
+const sortedForecasts = computed(() => {
+  const data = [...forecasts.value]
+  const dir = forecastSortDir.value === 'asc' ? 1 : -1
+  const key = forecastSortKey.value as keyof (typeof data)[0]
+
+  data.sort((a, b) => {
+    const av = a[key]
+    const bv = b[key]
+    if (av == null && bv == null) return 0
+    if (av == null) return 1
+    if (bv == null) return -1
+    if (typeof av === 'string' && typeof bv === 'string') return av.localeCompare(bv) * dir
+    return ((av as number) - (bv as number)) * dir
+  })
+
+  return data
+})
+
 function handleExport() {
   if (selectedLocation.value && forecasts.value.length > 0) {
     exportForecastsToCSV(forecasts.value, selectedLocation.value.name)
@@ -330,52 +379,35 @@ onMounted(async () => {
   margin-top: 2px;
 }
 
-.forecast-item {
-  border: 1px solid var(--border-light, #eee);
-  border-radius: 8px;
-  padding: 15px;
-  margin: 10px 0;
-  background: var(--bg-code, #f9f9f9);
-}
-
-.forecast-header {
-  font-size: 1.1rem;
-  color: #ee0000;
-  margin-bottom: 10px;
-}
-
-.forecast-details {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-}
-
-.forecast-details div {
-  color: var(--text-secondary, #666);
-}
-
-.forecast-description {
-  margin-top: 10px;
-  color: var(--text-primary, #333);
-  font-style: italic;
-}
-
 .forecast-data-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .forecast-data-header h2 {
   margin-bottom: 0;
 }
 
-.export-btn {
-  padding: 6px 14px;
-  font-size: 13px;
-  border-radius: 6px;
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.td-conditions {
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.td-nowrap {
+  white-space: nowrap;
 }
 
 .selected-location-header {

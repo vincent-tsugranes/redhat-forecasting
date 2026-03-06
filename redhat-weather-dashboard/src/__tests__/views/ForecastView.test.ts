@@ -164,8 +164,8 @@ describe('ForecastView', () => {
     await store.fetchForecasts(1)
     await flushPromises()
 
-    // Verify the periods text is shown (i18n key: forecast.periodsAvailable)
+    // Verify the period count is shown in the table header
     const text = wrapper.text()
-    expect(text).toContain('forecast')
+    expect(text).toContain('periods')
   })
 })
