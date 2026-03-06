@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useWeatherStore } from '../stores/weatherStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -39,6 +40,25 @@ const router = createRouter({
       component: () => import('../views/MapView.vue'),
     },
   ],
+})
+
+router.beforeEach((to) => {
+  const store = useWeatherStore()
+  switch (to.name) {
+    case 'airports':
+    case 'map':
+      store.fetchAirports()
+      break
+    case 'hurricanes':
+      store.fetchHurricanes()
+      break
+    case 'earthquakes':
+      store.fetchEarthquakes()
+      break
+    case 'forecasts':
+      store.fetchLocations()
+      break
+  }
 })
 
 export default router

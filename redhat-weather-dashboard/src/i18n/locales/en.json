@@ -28,6 +28,12 @@
     "hurricaneTracking": "Hurricane Tracking",
     "activeMonitoring": "Active tropical systems monitoring",
     "viewHurricanes": "View Hurricanes",
+    "earthquakeMonitor": "Earthquake Monitor",
+    "earthquakeUpdates": "USGS seismic data updated every 10 minutes",
+    "viewEarthquakes": "View Earthquakes",
+    "spaceWeather": "Space Weather",
+    "spaceWeatherUpdates": "Solar wind, Kp index, and aurora forecasts",
+    "viewSpaceWeather": "View Space Weather",
     "globalMap": "Global Airport Map",
     "mapDescription": "Explore {count} airports worldwide. Click clusters to zoom in, or search for a specific airport."
   },
@@ -210,7 +216,13 @@
     "layerAirports": "Airports",
     "layerEarthquakes": "Earthquakes",
     "layerHurricanes": "Hurricanes",
-    "layerRadar": "Radar"
+    "layerRadar": "Radar",
+    "radarProduct": "Radar Product",
+    "radarOpacity": "Opacity",
+    "radarBaseReflectivity": "Base Reflectivity",
+    "radarCompositeReflectivity": "Composite Reflectivity",
+    "radarBaseVelocity": "Base Velocity",
+    "radarPrecipitation": "Precipitation"
   },
   "toast": {
     "refreshSuccess": "Data refreshed successfully",

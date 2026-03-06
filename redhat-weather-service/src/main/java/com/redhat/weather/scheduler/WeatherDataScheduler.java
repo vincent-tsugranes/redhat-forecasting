@@ -78,6 +78,9 @@ public class WeatherDataScheduler {
     @ConfigProperty(name = "weather.scheduler.parallelism", defaultValue = "5")
     int parallelism;
 
+    @ConfigProperty(name = "weather.scheduler.airport.sub-batch-size", defaultValue = "50")
+    int airportSubBatchSize;
+
     private int airportOffset = 0;
     private int forecastOffset = 0;
 
@@ -216,10 +219,9 @@ public class WeatherDataScheduler {
             int successCount = 0;
             int failureCount = 0;
 
-            // Process in sub-batches of 30 for bulk API calls
-            int subBatchSize = 30;
-            for (int i = 0; i < batch.size(); i += subBatchSize) {
-                List<LocationEntity> subBatch = batch.subList(i, Math.min(i + subBatchSize, batch.size()));
+            // Process in sub-batches for bulk API calls
+            for (int i = 0; i < batch.size(); i += airportSubBatchSize) {
+                List<LocationEntity> subBatch = batch.subList(i, Math.min(i + airportSubBatchSize, batch.size()));
                 try {
                     List<String> codes = new ArrayList<>();
                     for (LocationEntity airport : subBatch) {

@@ -60,6 +60,9 @@ public class DataStatusResource {
     @ConfigProperty(name = "weather.scheduler.alerts.enabled", defaultValue = "true")
     boolean alertsEnabled;
 
+    @ConfigProperty(name = "weather.scheduler.spaceweather.enabled", defaultValue = "true")
+    boolean spaceWeatherEnabled;
+
     @GET
     @Path("/data")
     @Produces(MediaType.APPLICATION_JSON)
@@ -106,6 +109,7 @@ public class DataStatusResource {
         schedulers.add(buildSchedulerInfo("Earthquakes", "usgs-earthquake", 10, earthquakeEnabled));
         schedulers.add(buildSchedulerInfo("Hurricanes", "nhc-hurricane", 60, hurricaneEnabled));
         schedulers.add(buildSchedulerInfo("Weather Alerts", "noaa-alerts", 15, alertsEnabled));
+        schedulers.add(buildSchedulerInfo("Space Weather", "swpc-space-weather", 5, spaceWeatherEnabled));
         return schedulers;
     }
 

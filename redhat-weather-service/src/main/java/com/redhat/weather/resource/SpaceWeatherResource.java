@@ -1,6 +1,7 @@
 package com.redhat.weather.resource;
 
 import com.redhat.weather.dto.SpaceWeatherDTO;
+import com.redhat.weather.service.DataFreshnessService;
 import com.redhat.weather.service.SpaceWeatherService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -20,6 +21,9 @@ public class SpaceWeatherResource {
     @Inject
     SpaceWeatherService spaceWeatherService;
 
+    @Inject
+    DataFreshnessService dataFreshnessService;
+
     @GET
     @Operation(summary = "Get space weather data",
                description = "Retrieve current space weather conditions including Kp index, solar wind, and alerts")
@@ -29,7 +33,10 @@ public class SpaceWeatherResource {
         CacheControl cc = new CacheControl();
         cc.setMaxAge(300);
         return spaceWeatherService.getSpaceWeather()
-            .map(dto -> Response.ok(dto).cacheControl(cc).build())
+            .map(dto -> {
+                dataFreshnessService.recordSuccess("swpc-space-weather");
+                return Response.ok(dto).cacheControl(cc).build();
+            })
             .orElse(Response.status(Response.Status.SERVICE_UNAVAILABLE)
                 .entity("Space weather data temporarily unavailable")
                 .build());

@@ -8,13 +8,22 @@ import weatherService, {
   type WeatherAlert,
 } from '../services/weatherService'
 
-const CACHE_TTL = 60_000 // 1 minute
+const CACHE_TTLS: Record<string, number> = {
+  locations: 30 * 60_000,
+  airports: 30 * 60_000,
+  alerts: 5 * 60_000,
+  hurricanes: 5 * 60_000,
+  earthquakes: 10 * 60_000,
+}
+const DEFAULT_CACHE_TTL = 60_000 // 1 min fallback (forecasts, history, etc.)
 const pendingRequests = new Map<string, Promise<unknown>>()
 const cache = new Map<string, { data: unknown; timestamp: number }>()
 
 function isCacheValid(key: string): boolean {
   const entry = cache.get(key)
-  return !!entry && Date.now() - entry.timestamp < CACHE_TTL
+  if (!entry) return false
+  const ttl = CACHE_TTLS[key] ?? DEFAULT_CACHE_TTL
+  return Date.now() - entry.timestamp < ttl
 }
 
 async function deduplicatedFetch<T>(key: string, fetcher: () => Promise<T>): Promise<T> {

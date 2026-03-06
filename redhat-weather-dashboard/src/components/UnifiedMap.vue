@@ -17,6 +17,19 @@
         <input v-model="showRadar" type="checkbox" />
         <span aria-hidden="true">📡</span> {{ $t('map.layerRadar') }}
       </label>
+      <div v-if="showRadar" class="radar-controls">
+        <select v-model="radarProduct" class="radar-select" :aria-label="$t('map.radarProduct')">
+          <option value="nexrad-n0q-900913">{{ $t('map.radarBaseReflectivity') }}</option>
+          <option value="nexrad-n0r-900913">{{ $t('map.radarCompositeReflectivity') }}</option>
+          <option value="nexrad-n0u-900913">{{ $t('map.radarBaseVelocity') }}</option>
+          <option value="nexrad-q2-900913">{{ $t('map.radarPrecipitation') }}</option>
+        </select>
+        <label class="opacity-control">
+          {{ $t('map.radarOpacity') }}
+          <input v-model.number="radarOpacity" type="range" min="10" max="90" step="10" class="opacity-slider" />
+          <span class="opacity-value">{{ radarOpacity }}%</span>
+        </label>
+      </div>
     </div>
     <div
       ref="mapContainer"
@@ -74,6 +87,8 @@ const showAirports = ref(true)
 const showEarthquakes = ref(true)
 const showHurricanes = ref(true)
 const showRadar = ref(false)
+const radarProduct = ref('nexrad-n0q-900913')
+const radarOpacity = ref(50)
 
 const CATEGORY_COLORS: Record<number, string> = {
   0: '#007bff', 1: '#ffc107', 2: '#ff9800', 3: '#ff5722', 4: '#f44336', 5: '#9c27b0',
@@ -101,8 +116,8 @@ function initMap() {
   earthquakeLayer.value = L.layerGroup()
   hurricaneLayer.value = L.layerGroup()
   radarLayer.value = L.tileLayer(
-    'https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png',
-    { attribution: 'NEXRAD radar data', opacity: 0.5, maxZoom: 18 },
+    `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/${radarProduct.value}/{z}/{x}/{y}.png`,
+    { attribution: 'NEXRAD radar data &copy; Iowa State University', opacity: radarOpacity.value / 100, maxZoom: 18 },
   )
 
   if (showAirports.value) airportLayer.value.addTo(map.value)
@@ -326,6 +341,21 @@ watch(showRadar, (visible) => {
   else map.value.removeLayer(radarLayer.value)
 })
 
+watch(radarProduct, (product) => {
+  if (!map.value || !radarLayer.value) return
+  const wasVisible = map.value.hasLayer(radarLayer.value)
+  if (wasVisible) map.value.removeLayer(radarLayer.value)
+  radarLayer.value = L.tileLayer(
+    `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/${product}/{z}/{x}/{y}.png`,
+    { attribution: 'NEXRAD radar data &copy; Iowa State University', opacity: radarOpacity.value / 100, maxZoom: 18 },
+  )
+  if (wasVisible) map.value.addLayer(radarLayer.value)
+})
+
+watch(radarOpacity, (opacity) => {
+  if (radarLayer.value) radarLayer.value.setOpacity(opacity / 100)
+})
+
 // Re-render markers when data changes
 watch(airports, placeAirportMarkers, { deep: true })
 watch(earthquakes, placeEarthquakeMarkers, { deep: true })
@@ -380,6 +410,47 @@ onMounted(() => {
 
 .layer-toggle input[type="checkbox"] {
   accent-color: #ee0000;
+}
+
+.radar-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 22px;
+  margin-top: 2px;
+}
+
+.radar-select {
+  font-size: 11px;
+  padding: 3px 6px;
+  border: 1px solid var(--border-light, #ccc);
+  border-radius: 4px;
+  background: var(--bg-card, white);
+  color: var(--text-primary, #333);
+  cursor: pointer;
+}
+
+.opacity-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary, #666);
+  cursor: default;
+}
+
+.opacity-slider {
+  width: 60px;
+  height: 4px;
+  accent-color: #ee0000;
+  cursor: pointer;
+}
+
+.opacity-value {
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 28px;
+  color: var(--text-primary, #333);
 }
 
 .map-legend {

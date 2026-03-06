@@ -171,7 +171,7 @@ const SOURCE_LABELS: Record<string, string> = {
   metar: 'Airport METAR',
   hurricanes: 'Hurricanes',
   earthquakes: 'Earthquakes',
-  'space-weather': 'Space Weather',
+  'swpc-space-weather': 'Space Weather',
   alerts: 'Weather Alerts',
 }
 
@@ -223,6 +223,7 @@ const SCHEDULER_ICONS: Record<string, string> = {
   'usgs-earthquake': '🌍',
   'nhc-hurricane': '🌀',
   'noaa-alerts': '⚠️',
+  'swpc-space-weather': '☀️',
 }
 
 const schedulerRows = computed(() => {

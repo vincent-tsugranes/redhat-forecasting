@@ -44,6 +44,22 @@
           <button>{{ $t('dashboard.viewHurricanes') }}</button>
         </router-link>
       </div>
+
+      <div class="card">
+        <h2><span aria-hidden="true">🌍</span> {{ $t('dashboard.earthquakeMonitor') }}</h2>
+        <p>{{ $t('dashboard.earthquakeUpdates') }}</p>
+        <router-link to="/earthquakes">
+          <button>{{ $t('dashboard.viewEarthquakes') }}</button>
+        </router-link>
+      </div>
+
+      <div class="card">
+        <h2><span aria-hidden="true">☀️</span> {{ $t('dashboard.spaceWeather') }}</h2>
+        <p>{{ $t('dashboard.spaceWeatherUpdates') }}</p>
+        <router-link to="/space-weather">
+          <button>{{ $t('dashboard.viewSpaceWeather') }}</button>
+        </router-link>
+      </div>
     </div>
 
     <div v-if="!loading" class="card" style="margin-top: 20px">
@@ -88,7 +104,11 @@ async function handleRefresh() {
 }
 
 onMounted(() => {
-  store.fetchLocations()
+  Promise.all([
+    store.fetchLocations(),
+    store.fetchAirports(),
+    store.fetchAlerts(),
+  ])
 })
 </script>
 
