@@ -4,6 +4,11 @@ import { createPinia, setActivePinia } from 'pinia'
 import i18n from '../../i18n'
 import AirportView from '../../views/AirportView.vue'
 
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  useRoute: () => ({ path: '/airports', query: {} }),
+}))
+
 // Mock the weather service
 vi.mock('../../services/weatherService', () => ({
   default: {

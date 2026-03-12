@@ -159,10 +159,12 @@ import { ref, shallowRef, watch, onMounted, onBeforeUnmount, nextTick, markRaw }
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 import { useWeatherStore } from '../stores/weatherStore'
 import weatherService, { type AirportWeather, type Location } from '../services/weatherService'
 import { formatDate, formatRelativeTime, getFreshnessLevel } from '../utils/dateUtils'
 
+const router = useRouter()
 const store = useWeatherStore()
 const { airports, earthquakes, hurricanes, pireps, sigmets, cwas, tfrs, groundStops, volcanicAsh, lightning } = storeToRefs(store)
 
@@ -425,6 +427,16 @@ function initMap() {
   if (showVolcanicAsh.value) volcanicAshLayer.value.addTo(map.value)
   if (showLightning.value) lightningLayer.value.addTo(map.value)
 
+  // Intercept airport detail links in popups to use Vue Router
+  mapContainer.value.addEventListener('click', (e: Event) => {
+    const target = (e.target as HTMLElement).closest('[data-airport-link]')
+    if (target) {
+      e.preventDefault()
+      const code = target.getAttribute('data-airport-link')
+      if (code) router.push({ path: '/airports', query: { code } })
+    }
+  })
+
   placeAirportMarkers()
   placeEarthquakeMarkers()
   placeHurricaneMarkers()
@@ -435,13 +447,16 @@ function initMap() {
 }
 
 function createAirportPopupContent(airport: Location) {
+  const code = airport.airportCode || ''
+  const detailUrl = code ? `/airports?code=${encodeURIComponent(code)}` : ''
   return `
     <div class="airport-popup">
-      <div class="popup-header"><strong>${airport.airportCode || ''}</strong> - ${airport.name}</div>
+      <div class="popup-header"><strong>${code}</strong> - ${airport.name}</div>
       <div class="popup-location">${airport.state || ''}${airport.state && airport.country ? ', ' : ''}${airport.country || ''}</div>
       <div class="weather-container">
         <div class="weather-loading">Loading weather...</div>
       </div>
+      ${detailUrl ? `<a href="${detailUrl}" class="popup-detail-link" data-airport-link="${code}">View full details &rarr;</a>` : ''}
     </div>
   `
 }
@@ -1333,6 +1348,22 @@ onBeforeUnmount(() => {
   font-size: 12px;
   color: var(--text-secondary, #666);
   margin-bottom: 4px;
+}
+
+:deep(.popup-detail-link) {
+  display: block;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-light, #e0e0e0);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+:deep(.popup-detail-link:hover) {
+  text-decoration: underline;
 }
 
 :deep(.weather-container) {

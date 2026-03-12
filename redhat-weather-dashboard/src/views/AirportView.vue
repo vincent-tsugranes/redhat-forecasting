@@ -66,45 +66,47 @@
         <div v-if="metar.fetchedAt" style="margin-bottom: 10px">
           <FreshnessBadge :fetched-at="metar.fetchedAt" data-type="airport" />
         </div>
-        <div class="report-raw">{{ metar.rawText }}</div>
-        <div class="report-details">
-          <div
-            v-if="metar.flightCategory"
-            class="flight-category"
-            :class="'category-' + metar.flightCategory"
-            :aria-label="'Flight category: ' + metar.flightCategory"
-          >
-            {{ metar.flightCategory }}
+        <DecodedWeather :raw-text="metar.rawText" type="metar">
+          <div class="report-raw">{{ metar.rawText }}</div>
+          <div class="report-details">
+            <div
+              v-if="metar.flightCategory"
+              class="flight-category"
+              :class="'category-' + metar.flightCategory"
+              :aria-label="'Flight category: ' + metar.flightCategory"
+            >
+              {{ metar.flightCategory }}
+            </div>
+            <div v-if="metar.temperatureCelsius != null">
+              <span aria-hidden="true">🌡️</span> {{ Math.round(metar.temperatureCelsius) }}°C
+            </div>
+            <div v-if="metar.dewpointCelsius != null">
+              <span aria-hidden="true">💧</span> Dew {{ Math.round(metar.dewpointCelsius) }}°C
+            </div>
+            <div v-if="metar.windSpeedKnots != null">
+              <span aria-hidden="true">💨</span>
+              {{ metar.windDirection != null ? metar.windDirection + '° at ' : ''
+              }}{{ metar.windSpeedKnots }} kts{{
+                metar.windGustKnots ? ', gusts ' + metar.windGustKnots + ' kts' : ''
+              }}
+            </div>
+            <div v-if="metar.visibilityMiles != null">
+              <span aria-hidden="true">👁️</span> Visibility: {{ metar.visibilityMiles }} mi
+            </div>
+            <div v-if="metar.ceilingFeet != null">
+              <span aria-hidden="true">☁️</span> Ceiling {{ metar.ceilingFeet }} ft
+            </div>
+            <div v-if="metar.altimeterInches != null">
+              <span aria-hidden="true">📊</span> Altimeter {{ metar.altimeterInches }} inHg
+            </div>
+            <div v-if="metar.skyCondition">
+              <span aria-hidden="true">🌤️</span> Sky: {{ metar.skyCondition }}
+            </div>
+            <div v-if="metar.weatherConditions">
+              <span aria-hidden="true">🌧️</span> {{ metar.weatherConditions }}
+            </div>
           </div>
-          <div v-if="metar.temperatureCelsius != null">
-            <span aria-hidden="true">🌡️</span> {{ Math.round(metar.temperatureCelsius) }}°C
-          </div>
-          <div v-if="metar.dewpointCelsius != null">
-            <span aria-hidden="true">💧</span> Dew {{ Math.round(metar.dewpointCelsius) }}°C
-          </div>
-          <div v-if="metar.windSpeedKnots != null">
-            <span aria-hidden="true">💨</span>
-            {{ metar.windDirection != null ? metar.windDirection + '° at ' : ''
-            }}{{ metar.windSpeedKnots }} kts{{
-              metar.windGustKnots ? ', gusts ' + metar.windGustKnots + ' kts' : ''
-            }}
-          </div>
-          <div v-if="metar.visibilityMiles != null">
-            <span aria-hidden="true">👁️</span> Visibility: {{ metar.visibilityMiles }} mi
-          </div>
-          <div v-if="metar.ceilingFeet != null">
-            <span aria-hidden="true">☁️</span> Ceiling {{ metar.ceilingFeet }} ft
-          </div>
-          <div v-if="metar.altimeterInches != null">
-            <span aria-hidden="true">📊</span> Altimeter {{ metar.altimeterInches }} inHg
-          </div>
-          <div v-if="metar.skyCondition">
-            <span aria-hidden="true">🌤️</span> Sky: {{ metar.skyCondition }}
-          </div>
-          <div v-if="metar.weatherConditions">
-            <span aria-hidden="true">🌧️</span> {{ metar.weatherConditions }}
-          </div>
-        </div>
+        </DecodedWeather>
       </div>
     </div>
 
@@ -118,7 +120,9 @@
         <div v-if="taf.fetchedAt" style="margin-bottom: 10px">
           <FreshnessBadge :fetched-at="taf.fetchedAt" data-type="airport" />
         </div>
-        <div class="report-raw">{{ taf.rawText }}</div>
+        <DecodedWeather :raw-text="taf.rawText" type="taf">
+          <div class="report-raw">{{ taf.rawText }}</div>
+        </DecodedWeather>
       </div>
     </div>
 
@@ -130,14 +134,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import weatherService, { type AirportWeather, type Location } from '../services/weatherService'
 import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
+import DecodedWeather from '../components/DecodedWeather.vue'
 import AirportSkeleton from '../components/skeletons/AirportSkeleton.vue'
 
+const route = useRoute()
 const store = useWeatherStore()
 const { airports } = storeToRefs(store)
 
@@ -264,8 +271,25 @@ async function refreshWeather() {
   }
 }
 
-onMounted(() => {
-  store.fetchAirports()
+function selectByCode(code: string) {
+  const airport = airports.value.find(a => a.airportCode === code)
+  if (airport) {
+    selectAirport(airport)
+  } else {
+    selectedAirportCode.value = code
+    searchQuery.value = code
+    loadAirportWeather()
+  }
+}
+
+onMounted(async () => {
+  await store.fetchAirports()
+  const code = route.query.code as string | undefined
+  if (code) selectByCode(code)
+})
+
+watch(() => route.query.code, (newCode) => {
+  if (newCode && typeof newCode === 'string') selectByCode(newCode)
 })
 
 onUnmounted(() => {
