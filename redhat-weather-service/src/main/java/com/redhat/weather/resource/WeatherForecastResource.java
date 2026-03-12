@@ -90,13 +90,18 @@ public class WeatherForecastResource {
 
     @GET
     @Path("/location/{locationId}/history")
-    @Operation(summary = "Get historical forecasts", description = "Retrieve archived/historical forecast data for a location")
+    @Operation(summary = "Get historical forecasts", description = "Retrieve archived/historical forecast data for a location (paginated)")
     @APIResponse(responseCode = "200", description = "List of historical forecasts")
     public Response getHistoricalForecasts(
             @PathParam("locationId") @Parameter(description = "Location ID") Long locationId,
-            @QueryParam("days") @DefaultValue("7") @Min(1) @Max(90) @Parameter(description = "Number of days of history") int days) {
-        List<WeatherForecastEntity> forecasts = weatherForecastService.getHistoricalForecasts(locationId, days);
-        return Response.ok(forecasts).cacheControl(cacheControl(300)).build();
+            @QueryParam("days") @DefaultValue("7") @Min(1) @Max(90) @Parameter(description = "Number of days of history") int days,
+            @QueryParam("page") @DefaultValue("0") @Min(0) @Parameter(description = "Page number (0-based)") int page,
+            @QueryParam("size") @DefaultValue("50") @Min(1) @Max(200) @Parameter(description = "Page size (max 200)") int size) {
+        int clampedSize = Math.min(Math.max(size, 1), 200);
+        List<WeatherForecastEntity> forecasts = weatherForecastService.getHistoricalForecasts(locationId, days, page, clampedSize);
+        long totalElements = weatherForecastService.countHistoricalForecasts(locationId, days);
+        return Response.ok(buildPageResponse(forecasts, page, clampedSize, totalElements))
+                .cacheControl(cacheControl(300)).build();
     }
 
     @GET

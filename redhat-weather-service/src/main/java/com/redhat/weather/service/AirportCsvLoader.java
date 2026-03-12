@@ -30,6 +30,8 @@ public class AirportCsvLoader {
      * @param csvFilePath Path to the airports.csv file
      * @return Number of airports loaded
      */
+    private static final int MAX_LINE_LENGTH = 10_000;
+
     @Transactional
     public int loadAirportsFromCsv(String csvFilePath) {
         Log.infof("Starting airport CSV import from: %s", csvFilePath);
@@ -57,6 +59,12 @@ public class AirportCsvLoader {
             String line;
             while ((line = reader.readLine()) != null) {
                 totalCount++;
+
+                if (line.length() > MAX_LINE_LENGTH) {
+                    Log.warnf("Skipping oversized line %d (%d chars)", totalCount, line.length());
+                    skippedCount++;
+                    continue;
+                }
 
                 try {
                     LocationEntity airport = parseCsvLine(line);
@@ -240,6 +248,7 @@ public class AirportCsvLoader {
 
             String line;
             while ((line = reader.readLine()) != null) {
+                if (line.length() > MAX_LINE_LENGTH) continue;
                 try {
                     LocationEntity airport = parseCsvLine(line);
                     if (airport != null && airport.airportCode != null && !airport.airportCode.isEmpty()) {

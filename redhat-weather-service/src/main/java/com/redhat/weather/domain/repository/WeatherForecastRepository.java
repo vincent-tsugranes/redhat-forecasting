@@ -95,6 +95,17 @@ public class WeatherForecastRepository implements PanacheRepositoryBase<WeatherF
         );
     }
 
+    public List<WeatherForecastEntity> findHistoricalByLocationPaginated(Long locationId, LocalDateTime since, int page, int size) {
+        return find(
+            "location.id = ?1 AND isActive = false AND forecastTime >= ?2 ORDER BY forecastTime DESC",
+            locationId, since
+        ).page(Page.of(page, size)).list();
+    }
+
+    public long countHistoricalByLocation(Long locationId, LocalDateTime since) {
+        return count("location.id = ?1 AND isActive = false AND forecastTime >= ?2", locationId, since);
+    }
+
     @Transactional
     public long deactivateOldForecasts(LocalDateTime olderThan) {
         return update("isActive = false WHERE fetchedAt < ?1 AND isActive = true", olderThan);

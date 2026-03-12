@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: backend-config
 data:
-  QUARKUS_HTTP_CORS_ORIGINS: "*"
+  CORS_ORIGINS: "http://localhost:5173,http://localhost:8080,http://localhost:3000"

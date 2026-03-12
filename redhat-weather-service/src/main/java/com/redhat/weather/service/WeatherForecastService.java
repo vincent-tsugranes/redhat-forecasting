@@ -234,6 +234,16 @@ public class WeatherForecastService {
         return weatherForecastRepository.findHistoricalByLocation(locationId, since);
     }
 
+    public List<WeatherForecastEntity> getHistoricalForecasts(Long locationId, int days, int page, int size) {
+        LocalDateTime since = LocalDateTime.now().minusDays(days);
+        return weatherForecastRepository.findHistoricalByLocationPaginated(locationId, since, page, Math.min(size, MAX_PAGE_SIZE));
+    }
+
+    public long countHistoricalForecasts(Long locationId, int days) {
+        LocalDateTime since = LocalDateTime.now().minusDays(days);
+        return weatherForecastRepository.countHistoricalByLocation(locationId, since);
+    }
+
     @Transactional
     public void deactivateOldForecasts(LocalDateTime olderThan) {
         long count = weatherForecastRepository.deactivateOldForecasts(olderThan);
