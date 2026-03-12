@@ -441,35 +441,37 @@ public class WeatherDataScheduler {
     }
 
     /**
-     * Fetch hurricane data every hour during hurricane season, every 6 hours otherwise
+     * Fetch tropical cyclone data every hour during peak seasons, every 3 hours otherwise.
+     * Western Pacific typhoons can occur year-round, so we always fetch at least every 3 hours.
      */
     @Scheduled(cron = "0 0 * * * ?", identity = "hurricane-fetch")
     public void fetchHurricanes() {
         if (!hurricaneEnabled) {
-            LOG.debug("Hurricane scheduler is disabled");
+            LOG.debug("Tropical cyclone scheduler is disabled");
             return;
         }
 
-        // Check if it's hurricane season or if it's a 6-hour interval
+        // During Atlantic hurricane season, fetch every hour.
+        // Outside that, fetch every 3 hours (WP typhoons are year-round).
         boolean isHurricaneSeason = isHurricaneSeason();
         int currentHour = LocalDateTime.now().getHour();
 
-        if (!isHurricaneSeason && currentHour % 6 != 0) {
-            LOG.debug("Not hurricane season and not 6-hour interval, skipping");
+        if (!isHurricaneSeason && currentHour % 3 != 0) {
+            LOG.debug("Off-season, not 3-hour interval, skipping");
             return;
         }
 
-        LOG.info("Starting hurricane data fetch");
+        LOG.info("Starting tropical cyclone data fetch (NHC + JTWC)");
 
         try {
             hurricaneService.fetchAndStoreActiveStorms();
             dataFreshnessService.recordSuccess("nhc-hurricane");
             meterRegistry.counter("weather_scheduler_execution_total", "job", "nhc-hurricane", "result", "success").increment();
-            LOG.info("Hurricane data fetch completed");
+            LOG.info("Tropical cyclone data fetch completed");
 
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "nhc-hurricane", "result", "failure").increment();
-            LOG.error("Error in hurricane scheduler", e);
+            LOG.error("Error in tropical cyclone scheduler", e);
         }
     }
 

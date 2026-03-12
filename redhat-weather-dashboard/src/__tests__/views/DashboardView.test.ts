@@ -129,7 +129,7 @@ describe('DashboardView', () => {
     })
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Hurricane Tracking')
+    expect(wrapper.text()).toContain('Tropical Cyclone Tracking')
   })
 
   it('renders unified map instead of airport map', async () => {

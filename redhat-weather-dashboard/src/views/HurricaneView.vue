@@ -3,18 +3,26 @@
     <h1>{{ $t('hurricane.title') }}</h1>
 
     <div class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px">
         <h2>{{ $t('hurricane.activeSystems') }}</h2>
-        <button :disabled="refreshing" @click="refreshHurricanes">
-          {{ refreshing ? $t('airport.refreshing') : $t('hurricane.refreshData') }}
-        </button>
+        <div style="display: flex; gap: 8px; align-items: center">
+          <select v-model="basinFilter" :aria-label="$t('hurricane.basinFilter')" class="basin-filter">
+            <option value="">{{ $t('hurricane.allBasins') }}</option>
+            <option v-for="b in availableBasins" :key="b" :value="b">
+              {{ basinName(b) }}
+            </option>
+          </select>
+          <button :disabled="refreshing" @click="refreshHurricanes">
+            {{ refreshing ? $t('airport.refreshing') : $t('hurricane.refreshData') }}
+          </button>
+        </div>
       </div>
     </div>
 
     <ErrorBoundary>
       <HurricaneMap
-        v-if="hurricanes.length > 0"
-        :storms="hurricanes"
+        v-if="filteredStorms.length > 0"
+        :storms="filteredStorms"
         @storm-selected="onStormSelected"
       />
     </ErrorBoundary>
@@ -22,16 +30,24 @@
     <HurricaneSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
-    <div v-if="hurricanes.length > 0">
+    <div v-if="filteredStorms.length > 0">
       <div
-        v-for="storm in hurricanes"
+        v-for="storm in filteredStorms"
         :key="storm.id"
         class="card"
         :class="{ 'card-selected': selectedStormId === storm.stormId }"
       >
         <div class="storm-header">
-          <h2>{{ storm.stormName || 'Unnamed Storm' }}</h2>
-          <div class="storm-id">{{ storm.stormId }}</div>
+          <div class="storm-header-left">
+            <h2>{{ storm.stormName || 'Unnamed Storm' }}</h2>
+            <span v-if="storm.basin" class="basin-badge" :class="'basin-' + (storm.basin || '').toLowerCase()">
+              {{ basinName(storm.basin) }}
+            </span>
+          </div>
+          <div class="storm-meta">
+            <span class="storm-type">{{ getStormType(storm) }}</span>
+            <span class="storm-id">{{ storm.stormId }}</span>
+          </div>
         </div>
 
         <div class="storm-info">
@@ -40,9 +56,9 @@
             <span
               class="category"
               :class="'cat-' + (storm.category || 0)"
-              :aria-label="'Hurricane category: ' + getCategoryLabel(storm.category)"
+              :aria-label="'Category: ' + getCategoryLabel(storm)"
             >
-              {{ getCategoryLabel(storm.category) }}
+              {{ getCategoryLabel(storm) }}
             </span>
           </div>
           <div class="info-item">
@@ -60,15 +76,15 @@
           <div v-if="storm.movementSpeedMph != null" class="info-item">
             <strong>{{ $t('hurricane.movement') }}</strong>
             {{ storm.movementSpeedMph }} mph{{
-              storm.movementDirection != null ? ` at ${storm.movementDirection}°` : ''
+              storm.movementDirection != null ? ` at ${storm.movementDirection}\u00b0` : ''
             }}
           </div>
         </div>
 
         <div class="storm-location">
           <strong>{{ $t('hurricane.position') }}</strong>
-          {{ storm.latitude }}°{{ storm.latitude >= 0 ? 'N' : 'S' }},
-          {{ Math.abs(storm.longitude) }}°{{ storm.longitude >= 0 ? 'E' : 'W' }}
+          {{ storm.latitude }}\u00b0{{ storm.latitude >= 0 ? 'N' : 'S' }},
+          {{ Math.abs(storm.longitude) }}\u00b0{{ storm.longitude >= 0 ? 'E' : 'W' }}
         </div>
 
         <div class="storm-time">
@@ -91,12 +107,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
 import { formatDate } from '../utils/dateUtils'
+import type { Hurricane } from '../services/weatherService'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import HurricaneMap from '../components/HurricaneMap.vue'
 import HurricaneSkeleton from '../components/skeletons/HurricaneSkeleton.vue'
@@ -110,6 +127,51 @@ const { hurricanes, hurricanesLoading: loading, hurricanesError: error } = store
 
 const refreshing = ref(false)
 const selectedStormId = ref<string | null>(null)
+const basinFilter = ref('')
+
+const BASIN_NAMES: Record<string, string> = {
+  AT: 'Atlantic',
+  EP: 'Eastern Pacific',
+  CP: 'Central Pacific',
+  WP: 'Western Pacific',
+  IO: 'Indian Ocean',
+  SH: 'Southern Hemisphere',
+}
+
+// Basin determines the proper name for major storms
+const BASIN_STORM_TYPES: Record<string, string> = {
+  AT: 'Hurricane',
+  EP: 'Hurricane',
+  CP: 'Hurricane',
+  WP: 'Typhoon',
+  IO: 'Cyclone',
+  SH: 'Cyclone',
+}
+
+function basinName(basin: string): string {
+  return BASIN_NAMES[basin] || basin
+}
+
+function getStormType(storm: Hurricane): string {
+  if (storm.category != null && storm.category >= 1 && storm.basin) {
+    return BASIN_STORM_TYPES[storm.basin] || 'Hurricane'
+  }
+  if (storm.category === 0) return t('hurricane.tropicalStorm')
+  return BASIN_STORM_TYPES[storm.basin || 'AT'] || 'Hurricane'
+}
+
+const availableBasins = computed(() => {
+  const basins = new Set<string>()
+  for (const s of hurricanes.value) {
+    if (s.basin) basins.add(s.basin)
+  }
+  return [...basins].sort()
+})
+
+const filteredStorms = computed(() => {
+  if (!basinFilter.value) return hurricanes.value
+  return hurricanes.value.filter((s) => s.basin === basinFilter.value)
+})
 
 function onStormSelected(stormId: string) {
   selectedStormId.value = stormId
@@ -119,18 +181,19 @@ async function refreshHurricanes() {
   refreshing.value = true
   try {
     await store.refreshHurricanes()
-    toast.success('Hurricane data refreshed')
+    toast.success('Tropical system data refreshed')
   } catch {
-    toast.error('Failed to refresh hurricane data')
+    toast.error('Failed to refresh tropical system data')
   } finally {
     refreshing.value = false
   }
 }
 
-function getCategoryLabel(category: number | undefined): string {
-  if (category === undefined || category === null) return t('hurricane.na')
-  if (category === 0) return t('hurricane.tropicalStorm')
-  return t('hurricane.categoryN', { n: category })
+function getCategoryLabel(storm: Hurricane): string {
+  if (storm.category === undefined || storm.category === null) return t('hurricane.na')
+  if (storm.category === 0) return t('hurricane.tropicalStorm')
+  const type = BASIN_STORM_TYPES[storm.basin || 'AT'] || 'Hurricane'
+  return `${type} Cat ${storm.category}`
 }
 
 onMounted(() => {
@@ -146,11 +209,34 @@ onMounted(() => {
   margin-bottom: 10px;
   border-bottom: 2px solid var(--accent);
   padding-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.storm-header h2 {
+.storm-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.storm-header-left h2 {
   margin: 0;
   color: var(--accent);
+}
+
+.storm-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.storm-type {
+  background: var(--accent);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .storm-id {
@@ -160,6 +246,32 @@ onMounted(() => {
   border-radius: 4px;
   font-family: monospace;
   font-size: 12px;
+}
+
+.basin-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.basin-at { background: #e3f2fd; color: #1565c0; }
+.basin-ep { background: #e8f5e9; color: #2e7d32; }
+.basin-cp { background: #fff3e0; color: #e65100; }
+.basin-wp { background: #fce4ec; color: #c62828; }
+.basin-io { background: #f3e5f5; color: #7b1fa2; }
+.basin-sh { background: #e0f7fa; color: #00695c; }
+
+.basin-filter {
+  padding: 6px 10px;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 6px;
+  background: var(--card-bg, #fff);
+  color: var(--text-primary, #333);
+  font-size: 13px;
 }
 
 .storm-info {
@@ -183,30 +295,12 @@ onMounted(() => {
   display: inline-block;
 }
 
-.cat-0 {
-  background: var(--storm-ts);
-}
-
-.cat-1 {
-  background: var(--storm-cat1);
-  color: var(--storm-cat1-text);
-}
-
-.cat-2 {
-  background: var(--storm-cat2);
-}
-
-.cat-3 {
-  background: var(--storm-cat3);
-}
-
-.cat-4 {
-  background: var(--storm-cat4);
-}
-
-.cat-5 {
-  background: var(--storm-cat5);
-}
+.cat-0 { background: var(--storm-ts); }
+.cat-1 { background: var(--storm-cat1); color: var(--storm-cat1-text); }
+.cat-2 { background: var(--storm-cat2); }
+.cat-3 { background: var(--storm-cat3); }
+.cat-4 { background: var(--storm-cat4); }
+.cat-5 { background: var(--storm-cat5); }
 
 .storm-location,
 .storm-time {

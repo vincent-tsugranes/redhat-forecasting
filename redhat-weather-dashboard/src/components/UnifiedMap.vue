@@ -197,6 +197,11 @@ const showRadar = ref(false)
 const radarProduct = ref('nexrad-n0q-900913')
 const radarOpacity = ref(50)
 
+function getStormTypeName(basin?: string): string {
+  const types: Record<string, string> = { AT: 'Hurricane', EP: 'Hurricane', CP: 'Hurricane', WP: 'Typhoon', IO: 'Cyclone', SH: 'Cyclone' }
+  return types[basin || 'AT'] || 'Hurricane'
+}
+
 // Search state
 const searchQuery = ref('')
 const showResults = ref(false)
@@ -277,7 +282,7 @@ function onSearchInput() {
           icon: '🌀',
           title: name,
           subtitle: storm.category != null
-            ? (storm.category === 0 ? 'Tropical Storm' : `Category ${storm.category}`)
+            ? (storm.category === 0 ? 'Tropical Storm' : `${getStormTypeName(storm.basin)} Cat ${storm.category}`)
             : 'Active Storm',
           lat: storm.latitude,
           lng: storm.longitude,
@@ -684,7 +689,7 @@ function placeHurricaneMarkers() {
     })
     marker.bindPopup(`
       <strong>${storm.stormName || storm.stormId}</strong><br/>
-      ${storm.category != null ? (storm.category === 0 ? 'Tropical Storm' : `Category ${storm.category}`) : 'N/A'}<br/>
+      ${storm.category != null ? (storm.category === 0 ? 'Tropical Storm' : `${getStormTypeName(storm.basin)} Cat ${storm.category}`) : 'N/A'}<br/>
       Winds: ${storm.maxSustainedWindsMph} mph<br/>
       Pressure: ${storm.minCentralPressureMb} mb
     `)

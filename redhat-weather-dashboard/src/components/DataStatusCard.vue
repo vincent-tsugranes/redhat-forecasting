@@ -147,7 +147,7 @@ const error = ref<string | null>(null)
 const SOURCE_LABELS: Record<string, string> = {
   forecasts: 'Forecasts',
   metar: 'Airport METAR',
-  hurricanes: 'Hurricanes',
+  hurricanes: 'Tropical Systems',
   earthquakes: 'Earthquakes',
   'swpc-space-weather': 'Space Weather',
   alerts: 'Weather Alerts',

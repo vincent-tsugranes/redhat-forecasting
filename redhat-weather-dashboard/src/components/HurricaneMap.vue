@@ -4,7 +4,7 @@
       ref="mapContainer"
       class="map-container"
       role="application"
-      aria-label="Hurricane tracking map"
+      aria-label="Tropical cyclone tracking map"
     ></div>
   </div>
 </template>
@@ -38,10 +38,28 @@ function getCategoryColor(category?: number): string {
   return CATEGORY_COLORS[category ?? 0] ?? CATEGORY_COLORS[0]
 }
 
-function getCategoryLabel(category?: number): string {
+const BASIN_STORM_TYPES: Record<string, string> = {
+  AT: 'Hurricane',
+  EP: 'Hurricane',
+  CP: 'Hurricane',
+  WP: 'Typhoon',
+  IO: 'Cyclone',
+  SH: 'Cyclone',
+}
+
+function getStormTypeLabel(category?: number, basin?: string): string {
   if (category === undefined || category === null) return 'N/A'
   if (category === 0) return 'Tropical Storm'
-  return `Category ${category}`
+  const type = BASIN_STORM_TYPES[basin || 'AT'] || 'Hurricane'
+  return `${type} Cat ${category}`
+}
+
+function getBasinLabel(basin?: string): string {
+  const names: Record<string, string> = {
+    AT: 'Atlantic', EP: 'E. Pacific', CP: 'C. Pacific',
+    WP: 'W. Pacific', IO: 'Indian Ocean', SH: 'S. Hemisphere',
+  }
+  return basin ? names[basin] || basin : ''
 }
 
 const mapContainer = ref<HTMLElement | null>(null)
@@ -53,7 +71,7 @@ const selectedStormId = ref<string | null>(null)
 function initializeMap() {
   if (!mapContainer.value) return
 
-  map.value = L.map(mapContainer.value).setView([25, -70], 4)
+  map.value = L.map(mapContainer.value).setView([20, 0], 2)
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
@@ -79,7 +97,8 @@ function placeStormMarkers() {
       }),
     })
 
-    marker.bindTooltip(storm.stormName || storm.stormId, {
+    const basinSuffix = storm.basin ? ` (${getBasinLabel(storm.basin)})` : ''
+    marker.bindTooltip((storm.stormName || storm.stormId) + basinSuffix, {
       permanent: true,
       direction: 'top',
       offset: [0, -16],
@@ -147,8 +166,9 @@ async function loadTrack(stormId: string) {
             <strong>${pt.stormName || pt.stormId}</strong>
           </div>
           <div class="popup-category" style="background:${color};color:${pt.category === 1 ? '#333' : '#fff'}">
-            ${getCategoryLabel(pt.category)}
+            ${getStormTypeLabel(pt.category, pt.basin)}
           </div>
+          ${pt.basin ? `<div class="popup-basin">${getBasinLabel(pt.basin)}</div>` : ''}
           <div class="popup-details">
             ${pt.maxSustainedWindsMph != null ? `<div class="popup-item"><span class="popup-label">Winds:</span> <span class="popup-value">${pt.maxSustainedWindsMph} mph</span></div>` : ''}
             ${pt.minCentralPressureMb != null ? `<div class="popup-item"><span class="popup-label">Pressure:</span> <span class="popup-value">${pt.minCentralPressureMb} mb</span></div>` : ''}
@@ -258,6 +278,13 @@ onBeforeUnmount(() => {
   font-size: 12px;
   font-weight: bold;
   margin-bottom: 8px;
+}
+
+:deep(.track-popup .popup-basin) {
+  font-size: 11px;
+  color: var(--text-secondary, #666);
+  margin-bottom: 6px;
+  font-weight: 500;
 }
 
 :deep(.track-popup .popup-details) {

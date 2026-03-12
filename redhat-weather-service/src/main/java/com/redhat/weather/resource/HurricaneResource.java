@@ -22,7 +22,7 @@ import java.util.List;
 @Path("/api/weather/hurricanes")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Tag(name = "Hurricanes", description = "Hurricane and tropical storm operations")
+@Tag(name = "Tropical Systems", description = "Hurricanes, typhoons, cyclones, and tropical storm operations")
 public class HurricaneResource {
 
     @Inject
@@ -39,7 +39,7 @@ public class HurricaneResource {
 
     @GET
     @Path("/active")
-    @Operation(summary = "Get active storms", description = "Retrieve all currently active tropical systems")
+    @Operation(summary = "Get active storms", description = "Retrieve all active tropical systems (hurricanes, typhoons, cyclones) from NHC and JTWC")
     @APIResponse(responseCode = "200", description = "List of active storms")
     public Response getActiveStorms() {
         List<HurricaneEntity> storms = hurricaneService.getActiveStorms();

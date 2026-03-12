@@ -133,7 +133,9 @@ const results = computed<SearchResult[]>(() => {
       items.push({
         id: `hur-${h.id}`,
         name: h.stormName || h.stormId,
-        detail: h.category != null ? `Category ${h.category}` : undefined,
+        detail: h.category != null
+          ? (h.category === 0 ? 'Tropical Storm' : `Cat ${h.category}${h.basin ? ' (' + h.basin + ')' : ''}`)
+          : undefined,
         icon: '🌀',
         category: 'hurricanes',
         route: { name: 'hurricanes' },

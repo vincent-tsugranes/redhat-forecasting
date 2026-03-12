@@ -39,7 +39,7 @@ describe('HurricaneView', () => {
       global: { plugins: [i18n] },
     })
     await flushPromises()
-    expect(wrapper.find('h1').text()).toBe('Hurricane Tracking')
+    expect(wrapper.find('h1').text()).toBe('Tropical Cyclone Tracking')
   })
 
   it('renders refresh button', async () => {

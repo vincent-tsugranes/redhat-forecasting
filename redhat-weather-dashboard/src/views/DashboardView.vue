@@ -197,6 +197,7 @@
               <thead>
                 <tr>
                   <th>Storm</th>
+                  <th>Basin</th>
                   <th>Category</th>
                   <th>Winds</th>
                   <th>Pressure</th>
@@ -205,9 +206,10 @@
               <tbody>
                 <tr v-for="storm in hurricanes" :key="storm.id">
                   <td class="storm-name-cell">{{ storm.stormName || storm.stormId }}</td>
+                  <td><span v-if="storm.basin" class="basin-tag">{{ storm.basin }}</span></td>
                   <td>
                     <span class="category-badge" :class="'cat-' + (storm.category ?? 0)">
-                      {{ storm.category === 0 ? 'TS' : 'Cat ' + storm.category }}
+                      {{ storm.category === 0 ? 'TS' : stormTypeName(storm.basin) + ' ' + storm.category }}
                     </span>
                   </td>
                   <td>{{ storm.maxSustainedWindsMph }} mph</td>
@@ -428,6 +430,11 @@ function goToFirstResult() {
   if (quickSearchResults.value.length > 0 && quickSearchResults.value[0].airportCode) {
     goToAirport(quickSearchResults.value[0].airportCode)
   }
+}
+
+function stormTypeName(basin?: string): string {
+  const types: Record<string, string> = { AT: 'Cat', EP: 'Cat', CP: 'Cat', WP: 'Typh', IO: 'Cyc', SH: 'Cyc' }
+  return types[basin || 'AT'] || 'Cat'
 }
 
 function getMagnitudeClass(magnitude: number) {
@@ -923,6 +930,17 @@ onUnmounted(() => {
 .cat-3 { background: var(--storm-cat3); }
 .cat-4 { background: var(--storm-cat4); }
 .cat-5 { background: var(--storm-cat5); }
+
+.basin-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--bg-secondary, #f0f0f0);
+  color: var(--text-secondary, #666);
+  letter-spacing: 0.5px;
+}
 
 .storm-name-cell {
   font-weight: 600;
