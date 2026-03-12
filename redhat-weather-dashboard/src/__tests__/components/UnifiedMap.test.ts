@@ -35,7 +35,7 @@ describe('UnifiedMap', () => {
     await flushPromises()
 
     const checkboxes = wrapper.findAll('.layer-toggle input[type="checkbox"]')
-    expect(checkboxes).toHaveLength(4)
+    expect(checkboxes).toHaveLength(8)
   })
 
   it('renders legend sections based on active layers', async () => {
@@ -83,7 +83,7 @@ describe('UnifiedMap', () => {
     await flushPromises()
 
     // Toggle radar on (4th checkbox)
-    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[3]
+    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[7]
     await radarCheckbox.setValue(true)
     await flushPromises()
 
@@ -95,7 +95,7 @@ describe('UnifiedMap', () => {
     await flushPromises()
 
     // Toggle radar on
-    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[3]
+    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[7]
     await radarCheckbox.setValue(true)
     await flushPromises()
 
@@ -112,7 +112,7 @@ describe('UnifiedMap', () => {
     await flushPromises()
 
     // Toggle radar on
-    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[3]
+    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[7]
     await radarCheckbox.setValue(true)
     await flushPromises()
 
@@ -128,7 +128,7 @@ describe('UnifiedMap', () => {
     await flushPromises()
 
     // Toggle radar on
-    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[3]
+    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[7]
     await radarCheckbox.setValue(true)
     await flushPromises()
 
@@ -143,7 +143,7 @@ describe('UnifiedMap', () => {
 
     const searchInput = wrapper.find('#unified-map-search')
     expect(searchInput.exists()).toBe(true)
-    expect(searchInput.attributes('placeholder')).toBe('Search airports, earthquakes, storms...')
+    expect(searchInput.attributes('placeholder')).toBe('Search airports, earthquakes, storms, TFRs...')
   })
 
   it('shows search results when typing a query', async () => {

@@ -264,6 +264,10 @@
     "layerAirports": "Airports",
     "layerEarthquakes": "Earthquakes",
     "layerHurricanes": "Hurricanes",
+    "layerPireps": "PIREPs",
+    "layerSigmets": "SIGMETs",
+    "layerCwas": "CWAs",
+    "layerTfrs": "TFRs",
     "layerRadar": "Radar",
     "radarProduct": "Radar Product",
     "radarOpacity": "Opacity",
@@ -271,7 +275,7 @@
     "radarCompositeReflectivity": "Composite Reflectivity",
     "radarBaseVelocity": "Base Velocity",
     "radarPrecipitation": "Precipitation",
-    "searchPlaceholder": "Search airports, earthquakes, storms..."
+    "searchPlaceholder": "Search airports, earthquakes, storms, TFRs..."
   },
   "toast": {
     "refreshSuccess": "Data refreshed successfully",

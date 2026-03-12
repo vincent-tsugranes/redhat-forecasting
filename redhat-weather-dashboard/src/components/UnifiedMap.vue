@@ -45,6 +45,22 @@
         <span aria-hidden="true">🌀</span> {{ $t('map.layerHurricanes') }}
       </label>
       <label class="layer-toggle">
+        <input v-model="showPireps" type="checkbox" />
+        <span aria-hidden="true">📋</span> {{ $t('map.layerPireps') }}
+      </label>
+      <label class="layer-toggle">
+        <input v-model="showSigmets" type="checkbox" />
+        <span aria-hidden="true">🚨</span> {{ $t('map.layerSigmets') }}
+      </label>
+      <label class="layer-toggle">
+        <input v-model="showCwas" type="checkbox" />
+        <span aria-hidden="true">📡</span> {{ $t('map.layerCwas') }}
+      </label>
+      <label class="layer-toggle">
+        <input v-model="showTfrs" type="checkbox" />
+        <span aria-hidden="true">🚫</span> {{ $t('map.layerTfrs') }}
+      </label>
+      <label class="layer-toggle">
         <input v-model="showRadar" type="checkbox" />
         <span aria-hidden="true">📡</span> {{ $t('map.layerRadar') }}
       </label>
@@ -90,6 +106,25 @@
         <div class="legend-item"><span class="legend-dot" style="background: #f44336"></span> Cat 3-4</div>
         <div class="legend-item"><span class="legend-dot" style="background: #9c27b0"></span> Cat 5</div>
       </div>
+      <div v-if="showPireps" class="legend-section">
+        <div class="legend-title">PIREP Severity</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #4caf50"></span> None/Light</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #ff9800"></span> Moderate</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #f44336"></span> Severe</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #9c27b0"></span> Extreme</div>
+      </div>
+      <div v-if="showSigmets" class="legend-section">
+        <div class="legend-title">SIGMETs</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: rgba(244,67,54,0.25); border: 2px solid #f44336"></span> Active Area</div>
+      </div>
+      <div v-if="showCwas" class="legend-section">
+        <div class="legend-title">CWAs</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: rgba(255,152,0,0.25); border: 2px solid #ff9800"></span> Active Area</div>
+      </div>
+      <div v-if="showTfrs" class="legend-section">
+        <div class="legend-title">TFRs</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: rgba(211,47,47,0.2); border: 2px solid #d32f2f"></span> Restricted Area</div>
+      </div>
     </div>
   </div>
 </template>
@@ -104,7 +139,7 @@ import weatherService, { type AirportWeather, type Location } from '../services/
 import { formatDate, formatRelativeTime, getFreshnessLevel } from '../utils/dateUtils'
 
 const store = useWeatherStore()
-const { airports, earthquakes, hurricanes } = storeToRefs(store)
+const { airports, earthquakes, hurricanes, pireps, sigmets, cwas, tfrs } = storeToRefs(store)
 
 const mapContainer = ref<HTMLElement | null>(null)
 const map = shallowRef<L.Map | null>(null)
@@ -112,11 +147,19 @@ const map = shallowRef<L.Map | null>(null)
 const airportLayer = shallowRef<L.LayerGroup | null>(null)
 const earthquakeLayer = shallowRef<L.LayerGroup | null>(null)
 const hurricaneLayer = shallowRef<L.LayerGroup | null>(null)
+const pirepLayer = shallowRef<L.LayerGroup | null>(null)
+const sigmetLayer = shallowRef<L.LayerGroup | null>(null)
+const cwaLayer = shallowRef<L.LayerGroup | null>(null)
+const tfrLayer = shallowRef<L.LayerGroup | null>(null)
 const radarLayer = shallowRef<L.TileLayer | null>(null)
 
 const showAirports = ref(true)
 const showEarthquakes = ref(true)
 const showHurricanes = ref(true)
+const showPireps = ref(false)
+const showSigmets = ref(false)
+const showCwas = ref(false)
+const showTfrs = ref(false)
 const showRadar = ref(false)
 const radarProduct = ref('nexrad-n0q-900913')
 const radarOpacity = ref(50)
@@ -133,7 +176,7 @@ interface SearchResult {
   lat: number
   lng: number
   zoom: number
-  type: 'airport' | 'earthquake' | 'hurricane'
+  type: 'airport' | 'earthquake' | 'hurricane' | 'pirep' | 'sigmet' | 'cwa' | 'tfr'
 }
 
 const searchResults = ref<SearchResult[]>([])
@@ -212,6 +255,31 @@ function onSearchInput() {
     }
   }
 
+  // Search TFRs
+  if (showTfrs.value && results.length < 15) {
+    for (const tfr of tfrs.value) {
+      if (!tfr.latitude || !tfr.longitude) continue
+      if (
+        tfr.notamId?.toLowerCase().includes(query) ||
+        tfr.facility?.toLowerCase().includes(query) ||
+        tfr.tfrType?.toLowerCase().includes(query) ||
+        tfr.description?.toLowerCase().includes(query)
+      ) {
+        results.push({
+          key: `tfr-${tfr.id}`,
+          icon: '🚫',
+          title: `TFR ${tfr.notamId}`,
+          subtitle: `${tfr.tfrType} - ${tfr.facility}${tfr.state ? ', ' + tfr.state : ''}`,
+          lat: tfr.latitude,
+          lng: tfr.longitude,
+          zoom: 10,
+          type: 'tfr',
+        })
+      }
+      if (results.length >= 15) break
+    }
+  }
+
   searchResults.value = results.slice(0, 15)
   showResults.value = true
 }
@@ -223,9 +291,16 @@ function selectResult(result: SearchResult) {
   showResults.value = false
 
   // Open the popup for the matching marker
-  const layer = result.type === 'airport' ? airportLayer.value
-    : result.type === 'earthquake' ? earthquakeLayer.value
-    : hurricaneLayer.value
+  const layerMap: Record<string, L.LayerGroup | null> = {
+    airport: airportLayer.value,
+    earthquake: earthquakeLayer.value,
+    hurricane: hurricaneLayer.value,
+    pirep: pirepLayer.value,
+    sigmet: sigmetLayer.value,
+    cwa: cwaLayer.value,
+    tfr: tfrLayer.value,
+  }
+  const layer = layerMap[result.type] ?? null
 
   if (layer) {
     layer.eachLayer((l: L.Layer) => {
@@ -266,6 +341,10 @@ function initMap() {
   airportLayer.value = L.layerGroup()
   earthquakeLayer.value = L.layerGroup()
   hurricaneLayer.value = L.layerGroup()
+  pirepLayer.value = L.layerGroup()
+  sigmetLayer.value = L.layerGroup()
+  cwaLayer.value = L.layerGroup()
+  tfrLayer.value = L.layerGroup()
   radarLayer.value = L.tileLayer(
     `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/${radarProduct.value}/{z}/{x}/{y}.png`,
     { attribution: 'NEXRAD radar data &copy; Iowa State University', opacity: radarOpacity.value / 100, maxZoom: 18 },
@@ -274,10 +353,18 @@ function initMap() {
   if (showAirports.value) airportLayer.value.addTo(map.value)
   if (showEarthquakes.value) earthquakeLayer.value.addTo(map.value)
   if (showHurricanes.value) hurricaneLayer.value.addTo(map.value)
+  if (showPireps.value) pirepLayer.value.addTo(map.value)
+  if (showSigmets.value) sigmetLayer.value.addTo(map.value)
+  if (showCwas.value) cwaLayer.value.addTo(map.value)
+  if (showTfrs.value) tfrLayer.value.addTo(map.value)
 
   placeAirportMarkers()
   placeEarthquakeMarkers()
   placeHurricaneMarkers()
+  placePirepMarkers()
+  placeSigmetPolygons()
+  placeCwaPolygons()
+  placeTfrPolygons()
 }
 
 function createAirportPopupContent(airport: Location) {
@@ -511,6 +598,148 @@ function placeHurricaneMarkers() {
   }
 }
 
+const PIREP_SEVERITY_COLORS: Record<string, string> = {
+  NEG: '#4caf50', NONE: '#4caf50', LGT: '#4caf50', 'NEG-LGT': '#4caf50',
+  MOD: '#ff9800', 'LGT-MOD': '#ff9800', 'MOD-SEV': '#f44336',
+  SEV: '#f44336', EXTRM: '#9c27b0', HVY: '#9c27b0',
+}
+
+function getPirepColor(pirep: { turbulenceIntensity?: string; icingIntensity?: string }): string {
+  return PIREP_SEVERITY_COLORS[pirep.turbulenceIntensity ?? '']
+    ?? PIREP_SEVERITY_COLORS[pirep.icingIntensity ?? '']
+    ?? '#4caf50'
+}
+
+function placePirepMarkers() {
+  if (!pirepLayer.value) return
+  pirepLayer.value.clearLayers()
+
+  for (const p of pireps.value) {
+    if (!p.latitude || !p.longitude) continue
+    const color = getPirepColor(p)
+    const marker = L.circleMarker([p.latitude, p.longitude], {
+      radius: 5,
+      fillColor: color,
+      color: '#fff',
+      weight: 1,
+      fillOpacity: 0.8,
+    })
+    const turbStr = p.turbulenceIntensity ? `Turb: ${p.turbulenceIntensity}` : ''
+    const iceStr = p.icingIntensity ? `Ice: ${p.icingIntensity}` : ''
+    const altStr = p.altitudeFt ? `${p.altitudeFt.toLocaleString()} ft` : ''
+    marker.bindPopup(`
+      <strong>${p.reportType}</strong>${altStr ? ' at ' + altStr : ''}<br/>
+      ${[turbStr, iceStr].filter(Boolean).join(' | ')}<br/>
+      ${p.aircraftType ? 'Aircraft: ' + p.aircraftType + '<br/>' : ''}
+      ${formatRelativeTime(p.observationTime)}
+    `)
+    pirepLayer.value.addLayer(marker)
+  }
+}
+
+function placeGeoJsonPolygons(
+  layer: L.LayerGroup,
+  items: { geojson?: object; [key: string]: unknown }[],
+  color: string,
+  popupFn: (item: Record<string, unknown>) => string,
+) {
+  layer.clearLayers()
+  for (const item of items) {
+    if (!item.geojson) continue
+    try {
+      const geoLayer = L.geoJSON(item.geojson as GeoJSON.GeoJsonObject, {
+        style: {
+          color,
+          weight: 2,
+          fillColor: color,
+          fillOpacity: 0.2,
+        },
+      })
+      geoLayer.bindPopup(popupFn(item as Record<string, unknown>))
+      layer.addLayer(geoLayer)
+    } catch {
+      // skip invalid GeoJSON
+    }
+  }
+}
+
+function placeSigmetPolygons() {
+  if (!sigmetLayer.value) return
+  placeGeoJsonPolygons(
+    sigmetLayer.value,
+    sigmets.value,
+    '#f44336',
+    (s) => `
+      <strong>SIGMET ${s.sigmetId}</strong><br/>
+      ${s.hazard ? 'Hazard: ' + s.hazard + '<br/>' : ''}
+      ${s.severity ? 'Severity: ' + s.severity + '<br/>' : ''}
+      ${s.altitudeLowFt || s.altitudeHighFt ? 'Alt: ' + (s.altitudeLowFt ?? '?') + ' - ' + (s.altitudeHighFt ?? '?') + ' ft<br/>' : ''}
+      ${s.scope === 'INTERNATIONAL' && s.firName ? 'FIR: ' + s.firName + '<br/>' : ''}
+      Valid: ${formatRelativeTime(s.validTimeFrom as string)} to ${formatRelativeTime(s.validTimeTo as string)}
+    `,
+  )
+}
+
+function placeCwaPolygons() {
+  if (!cwaLayer.value) return
+  placeGeoJsonPolygons(
+    cwaLayer.value,
+    cwas.value,
+    '#ff9800',
+    (c) => `
+      <strong>CWA ${c.cwaId}</strong> (${c.artcc})<br/>
+      ${c.hazard ? 'Hazard: ' + c.hazard + '<br/>' : ''}
+      ${c.severity ? 'Severity: ' + c.severity + '<br/>' : ''}
+      Valid: ${formatRelativeTime(c.validTimeFrom as string)} to ${formatRelativeTime(c.validTimeTo as string)}
+    `,
+  )
+}
+
+function placeTfrPolygons() {
+  if (!tfrLayer.value) return
+  tfrLayer.value.clearLayers()
+
+  for (const tfr of tfrs.value) {
+    if (tfr.geojson) {
+      try {
+        const geoLayer = L.geoJSON(tfr.geojson as GeoJSON.GeoJsonObject, {
+          style: {
+            color: '#d32f2f',
+            weight: 2,
+            fillColor: '#d32f2f',
+            fillOpacity: 0.2,
+            dashArray: '5, 5',
+          },
+        })
+        geoLayer.bindPopup(`
+          <strong>TFR ${tfr.notamId}</strong>${tfr.isNew ? ' <span style="color:#4caf50;font-weight:bold">NEW</span>' : ''}<br/>
+          Type: ${tfr.tfrType}<br/>
+          Facility: ${tfr.facility}${tfr.state ? ', ' + tfr.state : ''}<br/>
+          ${tfr.description ? '<small>' + tfr.description.slice(0, 200) + (tfr.description.length > 200 ? '...' : '') + '</small>' : ''}
+        `)
+        tfrLayer.value.addLayer(geoLayer)
+      } catch {
+        // skip invalid GeoJSON
+      }
+    } else if (tfr.latitude && tfr.longitude) {
+      // Fallback: point marker if no polygon
+      const marker = L.circleMarker([tfr.latitude, tfr.longitude], {
+        radius: 8,
+        fillColor: '#d32f2f',
+        color: '#fff',
+        weight: 2,
+        fillOpacity: 0.6,
+      })
+      marker.bindPopup(`
+        <strong>TFR ${tfr.notamId}</strong>${tfr.isNew ? ' <span style="color:#4caf50;font-weight:bold">NEW</span>' : ''}<br/>
+        Type: ${tfr.tfrType}<br/>
+        Facility: ${tfr.facility}${tfr.state ? ', ' + tfr.state : ''}
+      `)
+      tfrLayer.value.addLayer(marker)
+    }
+  }
+}
+
 // Toggle layers on/off
 watch(showAirports, (visible) => {
   if (!map.value || !airportLayer.value) return
@@ -528,6 +757,46 @@ watch(showHurricanes, (visible) => {
   if (!map.value || !hurricaneLayer.value) return
   if (visible) map.value.addLayer(hurricaneLayer.value)
   else map.value.removeLayer(hurricaneLayer.value)
+})
+
+watch(showPireps, (visible) => {
+  if (!map.value || !pirepLayer.value) return
+  if (visible) {
+    map.value.addLayer(pirepLayer.value)
+    store.fetchPireps()
+  } else {
+    map.value.removeLayer(pirepLayer.value)
+  }
+})
+
+watch(showSigmets, (visible) => {
+  if (!map.value || !sigmetLayer.value) return
+  if (visible) {
+    map.value.addLayer(sigmetLayer.value)
+    store.fetchSigmets()
+  } else {
+    map.value.removeLayer(sigmetLayer.value)
+  }
+})
+
+watch(showCwas, (visible) => {
+  if (!map.value || !cwaLayer.value) return
+  if (visible) {
+    map.value.addLayer(cwaLayer.value)
+    store.fetchCwas()
+  } else {
+    map.value.removeLayer(cwaLayer.value)
+  }
+})
+
+watch(showTfrs, (visible) => {
+  if (!map.value || !tfrLayer.value) return
+  if (visible) {
+    map.value.addLayer(tfrLayer.value)
+    store.fetchTfrs()
+  } else {
+    map.value.removeLayer(tfrLayer.value)
+  }
 })
 
 watch(showRadar, (visible) => {
@@ -555,6 +824,10 @@ watch(radarOpacity, (opacity) => {
 watch(airports, placeAirportMarkers, { deep: true })
 watch(earthquakes, placeEarthquakeMarkers, { deep: true })
 watch(hurricanes, placeHurricaneMarkers, { deep: true })
+watch(pireps, placePirepMarkers, { deep: true })
+watch(sigmets, placeSigmetPolygons, { deep: true })
+watch(cwas, placeCwaPolygons, { deep: true })
+watch(tfrs, placeTfrPolygons, { deep: true })
 
 onMounted(() => {
   store.fetchAirports()
@@ -783,6 +1056,14 @@ onMounted(() => {
   height: 8px;
   border-radius: 50%;
   border: 1px solid rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
   flex-shrink: 0;
 }
 
