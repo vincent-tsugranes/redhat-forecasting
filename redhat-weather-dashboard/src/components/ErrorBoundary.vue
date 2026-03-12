@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="error-boundary-wrapper">
     <div v-if="error" class="error-boundary">
       <div class="error-content">
         <span class="error-icon" aria-hidden="true">&#x26A0;</span>
@@ -29,6 +29,10 @@ function retry() {
 </script>
 
 <style scoped>
+.error-boundary-wrapper {
+  height: 100%;
+}
+
 .error-boundary {
   padding: 24px;
   text-align: center;
