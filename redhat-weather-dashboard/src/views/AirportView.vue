@@ -126,6 +126,130 @@
       </div>
     </div>
 
+    <!-- Airport detail panels (only when an airport is selected and loaded) -->
+    <template v-if="!loading && selectedAirportCode && (metar || taf)">
+
+      <!-- Delay status banner -->
+      <div v-if="airportDelay && airportDelay.isDelayed" class="card delay-banner">
+        <div class="delay-header">
+          <span class="delay-icon" aria-hidden="true">&#x26A0;&#xFE0F;</span>
+          <strong>{{ airportDelay.airportCode }} — {{ airportDelay.delayType }} Delay</strong>
+        </div>
+        <div class="delay-details">
+          <span v-if="airportDelay.avgDelayMinutes">Avg: {{ airportDelay.avgDelayMinutes }} min</span>
+          <span v-if="airportDelay.reason">Reason: {{ airportDelay.reason }}</span>
+          <span v-if="airportDelay.trend" class="trend-badge" :class="'trend-' + airportDelay.trend">{{ airportDelay.trend }}</span>
+        </div>
+      </div>
+
+      <div class="airport-detail-grid">
+        <!-- Left column: map + forecast + history -->
+        <div class="detail-main">
+          <!-- Mini map -->
+          <div v-if="selectedAirport" class="card">
+            <h2>Location</h2>
+            <div ref="miniMapContainer" class="mini-map"></div>
+            <div class="location-meta">
+              {{ selectedAirport.latitude.toFixed(4) }}{{ selectedAirport.latitude >= 0 ? 'N' : 'S' }},
+              {{ Math.abs(selectedAirport.longitude).toFixed(4) }}{{ selectedAirport.longitude >= 0 ? 'E' : 'W' }}
+              <span v-if="selectedAirport.state || selectedAirport.country" class="location-region">
+                {{ selectedAirport.state ? selectedAirport.state + ', ' : '' }}{{ selectedAirport.country }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Hourly forecast -->
+          <div v-if="forecasts.length > 0" class="card">
+            <HourlyTimeline :forecasts="forecasts" />
+          </div>
+
+          <!-- Historical chart -->
+          <HistoricalChart v-if="selectedAirport?.id" :location-id="selectedAirport.id" />
+        </div>
+
+        <!-- Right column: solar, links, nearby -->
+        <div class="detail-sidebar">
+          <!-- Solar data -->
+          <SolarPanel v-if="selectedAirport?.id" :location-id="selectedAirport.id" />
+
+          <!-- Charts & resources -->
+          <div v-if="isUsAirport" class="card">
+            <h3>Charts &amp; Resources</h3>
+            <div class="resource-links">
+              <a
+                :href="`https://flightaware.com/resources/airport/${selectedAirportCode}/procedures`"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="resource-link"
+              >
+                <span class="resource-icon" aria-hidden="true">&#x1F4C4;</span>
+                <div>
+                  <div class="resource-title">Airport Procedures</div>
+                  <div class="resource-desc">Instrument approaches &amp; diagrams</div>
+                </div>
+              </a>
+              <a
+                :href="`https://skyvector.com/airport/${faaCode}`"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="resource-link"
+              >
+                <span class="resource-icon" aria-hidden="true">&#x1F5FA;&#xFE0F;</span>
+                <div>
+                  <div class="resource-title">SkyVector Chart</div>
+                  <div class="resource-desc">Sectional &amp; IFR charts</div>
+                </div>
+              </a>
+              <a
+                :href="`https://www.airnav.com/airport/${selectedAirportCode}`"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="resource-link"
+              >
+                <span class="resource-icon" aria-hidden="true">&#x2139;&#xFE0F;</span>
+                <div>
+                  <div class="resource-title">AirNav Info</div>
+                  <div class="resource-desc">Runways, frequencies, FBOs</div>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Nearby PIREPs -->
+          <div v-if="nearbyPireps.length > 0" class="card">
+            <h3>Nearby Pilot Reports</h3>
+            <div class="nearby-list">
+              <div v-for="p in nearbyPireps" :key="p.id" class="nearby-item">
+                <div class="nearby-header">
+                  <span class="nearby-type">{{ p.reportType }}</span>
+                  <span class="nearby-time">{{ formatDate(p.observationTime) }}</span>
+                </div>
+                <div v-if="p.altitudeFt" class="nearby-detail">Alt: {{ p.altitudeFt.toLocaleString() }} ft</div>
+                <div v-if="p.turbulenceIntensity" class="nearby-detail nearby-hazard">Turbulence: {{ p.turbulenceIntensity }}</div>
+                <div v-if="p.icingIntensity" class="nearby-detail nearby-hazard">Icing: {{ p.icingIntensity }}</div>
+                <div v-if="p.skyCondition" class="nearby-detail">Sky: {{ p.skyCondition }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active SIGMETs -->
+          <div v-if="nearbySigmets.length > 0" class="card">
+            <h3>Active SIGMETs</h3>
+            <div class="nearby-list">
+              <div v-for="s in nearbySigmets" :key="s.id" class="nearby-item">
+                <div class="nearby-header">
+                  <span class="nearby-type">{{ s.sigmetType }}</span>
+                  <span v-if="s.hazard" class="nearby-hazard">{{ s.hazard }}</span>
+                </div>
+                <div class="nearby-detail">Valid: {{ formatDate(s.validTimeFrom) }} - {{ formatDate(s.validTimeTo) }}</div>
+                <div v-if="s.severity" class="nearby-detail">Severity: {{ s.severity }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
     <div v-if="!loading && !metar && selectedAirportCode" class="card">
       <p>{{ $t('airport.noData') }}</p>
       <p>{{ $t('airport.noDataHint') }}</p>
@@ -134,27 +258,39 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, onUnmounted, watch, nextTick, markRaw } from 'vue'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
-import weatherService, { type AirportWeather, type Location } from '../services/weatherService'
+import weatherService, { type AirportWeather, type WeatherForecast, type Location } from '../services/weatherService'
 import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import DecodedWeather from '../components/DecodedWeather.vue'
+import HourlyTimeline from '../components/HourlyTimeline.vue'
+import HistoricalChart from '../components/HistoricalChart.vue'
+import SolarPanel from '../components/SolarPanel.vue'
 import AirportSkeleton from '../components/skeletons/AirportSkeleton.vue'
 
 const route = useRoute()
 const store = useWeatherStore()
-const { airports } = storeToRefs(store)
+const { airports, pireps, sigmets, delays } = storeToRefs(store)
 
 const selectedAirportCode = ref<string>('')
+const selectedAirport = ref<Location | null>(null)
 const metar = ref<AirportWeather | null>(null)
 const taf = ref<AirportWeather | null>(null)
+const forecasts = ref<WeatherForecast[]>([])
 const loading = ref(false)
 const refreshing = ref(false)
 const error = ref<string | null>(null)
 let refreshTimeout: ReturnType<typeof setTimeout> | null = null
+
+// Mini map
+const miniMapContainer = ref<HTMLElement | null>(null)
+let miniMap: L.Map | null = null
+let miniMapMarker: L.Marker | null = null
 
 // Search state
 const searchQuery = ref('')
@@ -215,6 +351,7 @@ function onSearchKeydown(event: KeyboardEvent) {
 
 function selectAirport(airport: Location) {
   selectedAirportCode.value = airport.airportCode || ''
+  selectedAirport.value = airport
   searchQuery.value = `${airport.airportCode} - ${airport.name}`
   searchResults.value = []
   showResults.value = false
@@ -228,19 +365,30 @@ async function loadAirportWeather() {
   error.value = null
   metar.value = null
   taf.value = null
+  forecasts.value = []
 
   try {
-    const [metarData, tafData] = await Promise.allSettled([
+    const promises: Promise<unknown>[] = [
       weatherService.getLatestMetar(selectedAirportCode.value),
       weatherService.getLatestTaf(selectedAirportCode.value),
-    ])
+    ]
+
+    if (selectedAirport.value?.id) {
+      promises.push(weatherService.getForecastsByLocation(selectedAirport.value.id))
+    }
+
+    const [metarData, tafData, forecastData] = await Promise.allSettled(promises)
 
     if (metarData.status === 'fulfilled') {
-      metar.value = metarData.value
+      metar.value = metarData.value as AirportWeather
     }
 
     if (tafData.status === 'fulfilled') {
-      taf.value = tafData.value
+      taf.value = tafData.value as AirportWeather
+    }
+
+    if (forecastData && forecastData.status === 'fulfilled') {
+      forecasts.value = forecastData.value as WeatherForecast[]
     }
 
     if (metarData.status === 'rejected' && tafData.status === 'rejected') {
@@ -250,8 +398,66 @@ async function loadAirportWeather() {
     error.value = err instanceof Error ? err.message : 'Failed to load airport weather'
   } finally {
     loading.value = false
+    nextTick(() => updateMiniMap())
   }
 }
+
+function updateMiniMap() {
+  const apt = selectedAirport.value
+  if (!apt?.latitude || !apt?.longitude) return
+
+  if (!miniMapContainer.value) return
+
+  if (!miniMap) {
+    miniMap = markRaw(L.map(miniMapContainer.value, {
+      zoomControl: false,
+      attributionControl: false,
+      dragging: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      touchZoom: false,
+    }).setView([apt.latitude, apt.longitude], 10)) as unknown as L.Map
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+    }).addTo(miniMap)
+  } else {
+    miniMap.setView([apt.latitude, apt.longitude], 10)
+  }
+
+  if (miniMapMarker) {
+    miniMapMarker.remove()
+  }
+  miniMapMarker = L.marker([apt.latitude, apt.longitude]).addTo(miniMap)
+  miniMapMarker.bindPopup(`<strong>${apt.airportCode}</strong><br/>${apt.name}`)
+}
+
+// Nearby PIREPs (within ~100nm / ~1.5 degrees)
+const nearbyPireps = computed(() => {
+  const apt = selectedAirport.value
+  if (!apt?.latitude || !apt?.longitude) return []
+  const range = 1.5
+  return pireps.value.filter(p =>
+    Math.abs(p.latitude - apt.latitude) < range &&
+    Math.abs(p.longitude - apt.longitude) < range
+  ).slice(0, 10)
+})
+
+// Nearby SIGMETs — these have geojson but no simple lat/lon center, so check rawText or firName
+const nearbySigmets = computed(() => {
+  // Show all active SIGMETs since we can't easily filter by proximity without geojson parsing
+  return sigmets.value.slice(0, 5)
+})
+
+// Delay status for this airport
+const airportDelay = computed(() => {
+  if (!selectedAirportCode.value) return null
+  return delays.value.find(d => d.airportCode === selectedAirportCode.value) || null
+})
+
+// FAA chart links (US airports starting with K)
+const isUsAirport = computed(() => selectedAirportCode.value.startsWith('K') && selectedAirportCode.value.length === 4)
+const faaCode = computed(() => isUsAirport.value ? selectedAirportCode.value.substring(1) : '')
 
 async function refreshWeather() {
   if (!selectedAirportCode.value) return
@@ -277,6 +483,7 @@ function selectByCode(code: string) {
     selectAirport(airport)
   } else {
     selectedAirportCode.value = code
+    selectedAirport.value = null
     searchQuery.value = code
     loadAirportWeather()
   }
@@ -284,12 +491,24 @@ function selectByCode(code: string) {
 
 onMounted(async () => {
   await store.fetchAirports()
+  // Also ensure pireps/sigmets/delays are loaded for the nearby sections
+  store.fetchPireps()
+  store.fetchSigmets()
+  store.fetchDelays()
   const code = route.query.code as string | undefined
   if (code) selectByCode(code)
 })
 
 watch(() => route.query.code, (newCode) => {
   if (newCode && typeof newCode === 'string') selectByCode(newCode)
+})
+
+onBeforeUnmount(() => {
+  if (miniMap) {
+    miniMap.remove()
+    miniMap = null
+    miniMapMarker = null
+  }
 })
 
 onUnmounted(() => {
@@ -431,5 +650,170 @@ onUnmounted(() => {
 
 .category-LIFR {
   background: var(--flight-lifr);
+}
+
+/* Delay banner */
+.delay-banner {
+  border-left: 4px solid var(--color-warning, #f0ad4e);
+  background: var(--bg-warning, #fff8e1);
+}
+
+.delay-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.delay-icon {
+  font-size: 18px;
+}
+
+.delay-details {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--text-secondary, #666);
+}
+
+.trend-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.trend-increasing { background: var(--severity-high, #e53935); color: white; }
+.trend-decreasing { background: var(--color-success, #43a047); color: white; }
+.trend-stable { background: var(--text-muted, #999); color: white; }
+
+/* Two-column detail grid */
+.airport-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.detail-main,
+.detail-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Mini map */
+.mini-map {
+  height: 200px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.location-meta {
+  font-size: 13px;
+  color: var(--text-secondary, #666);
+  font-family: monospace;
+}
+
+.location-region {
+  margin-left: 8px;
+  font-family: inherit;
+  color: var(--text-primary, #333);
+}
+
+/* Resource links */
+.resource-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resource-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text-primary, #333);
+  background: var(--bg-code, #f5f5f5);
+  transition: background 0.2s;
+}
+
+.resource-link:hover {
+  background: var(--bg-hover, #eee);
+}
+
+.resource-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.resource-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.resource-desc {
+  font-size: 12px;
+  color: var(--text-secondary, #666);
+  margin-top: 1px;
+}
+
+/* Nearby PIREPs / SIGMETs */
+.nearby-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nearby-item {
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--bg-code, #f5f5f5);
+  font-size: 13px;
+}
+
+.nearby-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.nearby-type {
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.nearby-time {
+  font-size: 11px;
+  color: var(--text-muted, #999);
+}
+
+.nearby-detail {
+  font-size: 12px;
+  color: var(--text-secondary, #666);
+  margin-top: 2px;
+}
+
+.nearby-hazard {
+  color: var(--severity-high, #e53935);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .airport-detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
