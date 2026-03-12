@@ -121,8 +121,6 @@
     "loadingStatus": "Loading status...",
     "loadError": "Failed to load data status",
     "airportsLoaded": "Airports Loaded:",
-    "cities": "Cities:",
-    "totalLocations": "Total Locations:",
     "loadingProgress": "Airport data loading progress",
     "dataReady": "Data Ready",
     "loading": "Loading...",
@@ -252,10 +250,9 @@
     "time24h": "24-hour"
   },
   "search": {
-    "placeholder": "Search locations, airports, earthquakes...",
+    "placeholder": "Search airports, earthquakes...",
     "ariaLabel": "Global search",
     "noResults": "No results found",
-    "locations": "Locations",
     "airports": "Airports",
     "earthquakes": "Earthquakes"
   },

@@ -69,13 +69,13 @@ interface SearchResult {
   name: string
   detail?: string
   icon: string
-  category: 'locations' | 'airports' | 'earthquakes'
+  category: 'airports' | 'earthquakes'
   route: { name: string; query?: Record<string, string> }
 }
 
 const router = useRouter()
 const store = useWeatherStore()
-const { locations, airports, earthquakes } = storeToRefs(store)
+const { airports, earthquakes } = storeToRefs(store)
 
 const isOpen = ref(false)
 const query = ref('')
@@ -89,22 +89,8 @@ const results = computed<SearchResult[]>(() => {
   const q = query.value.toLowerCase()
   const items: SearchResult[] = []
 
-  for (const loc of locations.value) {
-    if (items.length >= 20) break
-    if (loc.name?.toLowerCase().includes(q) || loc.state?.toLowerCase().includes(q)) {
-      items.push({
-        id: `loc-${loc.id}`,
-        name: loc.name,
-        detail: loc.state || loc.country,
-        icon: '📍',
-        category: 'locations',
-        route: { name: 'forecasts', query: { locationId: String(loc.id) } },
-      })
-    }
-  }
-
   for (const apt of airports.value) {
-    if (items.length >= 25) break
+    if (items.length >= 20) break
     const code = apt.airportCode || ''
     if (code.toLowerCase().includes(q) || apt.name?.toLowerCase().includes(q)) {
       items.push({
@@ -113,13 +99,13 @@ const results = computed<SearchResult[]>(() => {
         detail: apt.state || apt.country,
         icon: '✈️',
         category: 'airports',
-        route: { name: 'airports' },
+        route: { name: 'forecasts', query: { locationId: String(apt.id) } },
       })
     }
   }
 
   for (const eq of earthquakes.value) {
-    if (items.length >= 30) break
+    if (items.length >= 25) break
     if (eq.place?.toLowerCase().includes(q)) {
       items.push({
         id: `eq-${eq.id}`,
@@ -137,7 +123,7 @@ const results = computed<SearchResult[]>(() => {
 
 const groupedResults = computed(() => {
   const groups: { category: string; items: SearchResult[] }[] = []
-  const categories = ['locations', 'airports', 'earthquakes'] as const
+  const categories = ['airports', 'earthquakes'] as const
 
   for (const cat of categories) {
     const items = results.value.filter((r) => r.category === cat)
@@ -232,7 +218,6 @@ onMounted(() => {
   document.addEventListener('keydown', onGlobalKeydown)
   document.addEventListener('keydown', trapFocus)
   // Pre-load data for search
-  store.fetchLocations()
   store.fetchAirports()
 })
 

@@ -12,8 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "locations", indexes = {
     @Index(name = "idx_location_coordinates", columnList = "latitude,longitude"),
-    @Index(name = "idx_location_type", columnList = "location_type"),
-    @Index(name = "idx_location_name", columnList = "name")
+@Index(name = "idx_location_name", columnList = "name")
 })
 public class LocationEntity extends PanacheEntityBase {
 

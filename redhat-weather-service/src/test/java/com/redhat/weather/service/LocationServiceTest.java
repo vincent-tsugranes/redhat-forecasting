@@ -37,7 +37,7 @@ class LocationServiceTest {
 
     @Test
     void testSearchLocationsByNameReturnsNonNull() {
-        List<LocationEntity> results = locationService.searchLocationsByName("nonexistent-xyz");
+        List<LocationEntity> results = locationService.searchLocationsByName("nonexistent-xyz", 0, 10);
         assertNotNull(results);
         assertTrue(results.isEmpty());
     }
@@ -56,37 +56,33 @@ class LocationServiceTest {
     }
 
     @Test
-    void testGetLocationsByType() {
-        List<LocationEntity> cities = locationService.getLocationsByType("city");
-        assertNotNull(cities);
-    }
-
-    @Test
     void testCreateUpdateDeleteLocation() {
         LocationEntity loc = new LocationEntity();
-        loc.name = "Service Test City";
+        loc.name = "Service Test Airport";
         loc.state = "NY";
         loc.country = "US";
         loc.latitude = BigDecimal.valueOf(40.7128);
         loc.longitude = BigDecimal.valueOf(-74.0060);
-        loc.locationType = "city";
+        loc.locationType = "airport";
+        loc.airportCode = "KTST";
 
         // Create
         LocationEntity created = locationService.createLocation(loc);
         assertNotNull(created.id);
-        assertEquals("Service Test City", created.name);
+        assertEquals("Service Test Airport", created.name);
 
         // Update
         LocationEntity update = new LocationEntity();
-        update.name = "Updated Service City";
+        update.name = "Updated Service Airport";
         update.state = "NY";
         update.country = "US";
         update.latitude = BigDecimal.valueOf(40.7128);
         update.longitude = BigDecimal.valueOf(-74.0060);
-        update.locationType = "city";
+        update.locationType = "airport";
+        update.airportCode = "KTST";
 
         LocationEntity updated = locationService.updateLocation(created.id, update);
-        assertEquals("Updated Service City", updated.name);
+        assertEquals("Updated Service Airport", updated.name);
 
         // Delete
         boolean deleted = locationService.deleteLocation(created.id);

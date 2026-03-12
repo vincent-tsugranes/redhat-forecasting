@@ -15,13 +15,6 @@
 
     <div v-if="!loading" class="stats-row">
       <div class="stat-tile">
-        <span class="stat-icon" aria-hidden="true">📍</span>
-        <div class="stat-body">
-          <span class="stat-value">{{ animatedLocationCount }}</span>
-          <span class="stat-label">Locations</span>
-        </div>
-      </div>
-      <div class="stat-tile">
         <span class="stat-icon" aria-hidden="true">✈️</span>
         <div class="stat-body">
           <span class="stat-value">{{ airports.length.toLocaleString() }}</span>
@@ -210,7 +203,6 @@ import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
-import { useAnimatedNumber } from '../composables/useAnimatedNumber'
 import { formatRelativeTime } from '../utils/dateUtils'
 import UnifiedMap from '../components/UnifiedMap.vue'
 import ErrorBoundary from '../components/ErrorBoundary.vue'
@@ -220,7 +212,6 @@ import FavoriteWeatherCards from '../components/FavoriteWeatherCards.vue'
 
 const store = useWeatherStore()
 const {
-  locations,
   airports,
   hurricanes,
   earthquakes,
@@ -231,15 +222,13 @@ const {
   cwas,
   windsAloft,
   delays,
-  locationsLoading: loading,
-  locationsError: error,
+  airportsLoading: loading,
+  airportsError: error,
 } = storeToRefs(store)
 const toast = useToast()
 
 const delayedAirports = computed(() => delays.value.filter(d => d.isDelayed).length)
 const windsAloftStations = computed(() => new Set(windsAloft.value.map(w => w.stationId)).size)
-const locationCount = computed(() => locations.value.length)
-const animatedLocationCount = useAnimatedNumber(locationCount)
 
 function getMagnitudeClass(magnitude: number) {
   if (magnitude >= 7) return 'mag-major'
@@ -250,7 +239,7 @@ function getMagnitudeClass(magnitude: number) {
 
 async function handleRefresh() {
   try {
-    await store.refreshLocations()
+    await store.fetchAirports()
     toast.success('Data refreshed successfully')
   } catch {
     toast.error('Failed to refresh data')
@@ -259,7 +248,6 @@ async function handleRefresh() {
 
 onMounted(() => {
   Promise.all([
-    store.fetchLocations(),
     store.fetchAirports(),
     store.fetchAlerts(),
     store.fetchEarthquakes(),

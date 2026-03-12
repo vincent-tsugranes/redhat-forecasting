@@ -59,41 +59,6 @@ describe('weatherService', () => {
     })
   })
 
-  describe('getLocations', () => {
-    it('unwraps a paginated response into a plain array', async () => {
-      const locations = [
-        { id: 1, name: 'New York', latitude: 40.7, longitude: -74.0, locationType: 'city' },
-      ]
-      mockGet.mockResolvedValue({
-        data: { data: locations, page: 0, size: 500, totalElements: 1, totalPages: 1 },
-      })
-
-      const result = await weatherService.getLocations()
-      expect(Array.isArray(result)).toBe(true)
-      expect(result).toHaveLength(1)
-      expect(result[0].name).toBe('New York')
-    })
-
-    it('handles a raw array response', async () => {
-      mockGet.mockResolvedValue({
-        data: [{ id: 1, name: 'Boston', latitude: 42.3, longitude: -71.0, locationType: 'city' }],
-      })
-
-      const result = await weatherService.getLocations()
-      expect(Array.isArray(result)).toBe(true)
-      expect(result[0].name).toBe('Boston')
-    })
-
-    it('returns [] when data is empty', async () => {
-      mockGet.mockResolvedValue({
-        data: { data: [], page: 0, size: 500, totalElements: 0, totalPages: 0 },
-      })
-
-      const result = await weatherService.getLocations()
-      expect(result).toEqual([])
-    })
-  })
-
   describe('getForecastsByLocation', () => {
     it('unwraps paginated forecast response', async () => {
       const forecasts = [
@@ -162,12 +127,5 @@ describe('weatherService', () => {
       expect(result).toEqual(rawData)
     })
 
-    it('getLocationById passes through raw response', async () => {
-      const rawData = { id: 1, name: 'New York', latitude: 40.7, longitude: -74.0, locationType: 'city' }
-      mockGet.mockResolvedValue({ data: rawData })
-
-      const result = await weatherService.getLocationById(1)
-      expect(result).toEqual(rawData)
-    })
   })
 })

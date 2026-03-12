@@ -16,7 +16,6 @@ vi.mock('../../services/weatherService', () => ({
       alerts: [],
       fetchedAt: new Date().toISOString(),
     }),
-    getLocations: vi.fn().mockResolvedValue([]),
     getAirports: vi.fn().mockResolvedValue([]),
     getRecentEarthquakes: vi.fn().mockResolvedValue([]),
     getActiveStorms: vi.fn().mockResolvedValue([]),

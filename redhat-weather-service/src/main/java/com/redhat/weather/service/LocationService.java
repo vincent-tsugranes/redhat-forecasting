@@ -26,8 +26,7 @@ public class LocationService {
         LOG.info("Warming location caches...");
         try {
             List<LocationEntity> all = getAllLocations();
-            List<LocationEntity> airports = getAirportLocations();
-            LOG.info("Location caches warmed: " + all.size() + " locations, " + airports.size() + " airports");
+            LOG.info("Location caches warmed: " + all.size() + " locations (all airports)");
         } catch (Exception e) {
             LOG.warn("Failed to warm location caches: " + e.getMessage());
         }
@@ -42,11 +41,6 @@ public class LocationService {
         return locationRepository.findByIdOptional(id);
     }
 
-    @CacheResult(cacheName = "locations-by-type")
-    public List<LocationEntity> getLocationsByType(String locationType) {
-        return locationRepository.findByType(locationType);
-    }
-
     @CacheResult(cacheName = "locations-airports")
     public List<LocationEntity> getAirportLocations() {
         return locationRepository.findAirportLocations();
@@ -56,16 +50,9 @@ public class LocationService {
         return locationRepository.findByAirportCode(airportCode);
     }
 
-    @CacheResult(cacheName = "locations-search")
-    public List<LocationEntity> searchLocationsByName(String name) {
-        return locationRepository.searchByName(name);
-    }
-
     @Transactional
     @CacheInvalidateAll(cacheName = "locations-all")
     @CacheInvalidateAll(cacheName = "locations-airports")
-    @CacheInvalidateAll(cacheName = "locations-by-type")
-    @CacheInvalidateAll(cacheName = "locations-search")
     public LocationEntity createLocation(LocationEntity location) {
         locationRepository.persist(location);
         return location;
@@ -74,15 +61,12 @@ public class LocationService {
     @Transactional
     @CacheInvalidateAll(cacheName = "locations-all")
     @CacheInvalidateAll(cacheName = "locations-airports")
-    @CacheInvalidateAll(cacheName = "locations-by-type")
-    @CacheInvalidateAll(cacheName = "locations-search")
     public LocationEntity updateLocation(Long id, LocationEntity updatedLocation) {
         LocationEntity existingLocation = locationRepository.findById(id);
         if (existingLocation != null) {
             existingLocation.name = updatedLocation.name;
             existingLocation.latitude = updatedLocation.latitude;
             existingLocation.longitude = updatedLocation.longitude;
-            existingLocation.locationType = updatedLocation.locationType;
             existingLocation.airportCode = updatedLocation.airportCode;
             existingLocation.state = updatedLocation.state;
             existingLocation.country = updatedLocation.country;
@@ -95,8 +79,6 @@ public class LocationService {
     @Transactional
     @CacheInvalidateAll(cacheName = "locations-all")
     @CacheInvalidateAll(cacheName = "locations-airports")
-    @CacheInvalidateAll(cacheName = "locations-by-type")
-    @CacheInvalidateAll(cacheName = "locations-search")
     public boolean deleteLocation(Long id) {
         return locationRepository.deleteById(id);
     }
@@ -117,14 +99,6 @@ public class LocationService {
 
     public long countAirportLocations() {
         return locationRepository.countAirportLocations();
-    }
-
-    public List<LocationEntity> getLocationsByType(String locationType, int page, int size) {
-        return locationRepository.findByTypePaginated(locationType, page, size);
-    }
-
-    public long countLocationsByType(String locationType) {
-        return locationRepository.countByType(locationType);
     }
 
     public List<LocationEntity> searchLocationsByName(String name, int page, int size) {

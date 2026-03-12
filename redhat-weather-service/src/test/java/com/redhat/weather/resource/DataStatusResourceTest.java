@@ -18,7 +18,6 @@ class DataStatusResourceTest {
             .statusCode(200)
             .body("totalLocations", notNullValue())
             .body("airports", notNullValue())
-            .body("cities", notNullValue())
             .body("airportsLoaded", notNullValue())
             .body("expectedAirports", equalTo(9313))
             .body("percentLoaded", notNullValue())

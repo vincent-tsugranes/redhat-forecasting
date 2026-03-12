@@ -70,13 +70,10 @@ public class DataStatusResource {
     public Map<String, Object> getDataStatus() {
         Map<String, Object> status = new HashMap<>();
 
-        long totalLocations = locationRepository.count();
-        long airportCount = locationRepository.count("locationType = ?1", "airport");
-        long cityCount = locationRepository.count("locationType = ?1", "city");
+        long airportCount = locationRepository.count();
 
-        status.put("totalLocations", totalLocations);
+        status.put("totalLocations", airportCount);
         status.put("airports", airportCount);
-        status.put("cities", cityCount);
         status.put("airportsLoaded", airportCount > 0);
         status.put("expectedAirports", 9313); // From CSV
         status.put("loadingComplete", airportCount >= 9313);

@@ -7,7 +7,6 @@ import EarthquakeView from '../../views/EarthquakeView.vue'
 // Mock the weather service
 vi.mock('../../services/weatherService', () => ({
   default: {
-    getLocations: vi.fn().mockResolvedValue([]),
     getAirports: vi.fn().mockResolvedValue([]),
     getRecentEarthquakes: vi.fn().mockResolvedValue([]),
     getSignificantEarthquakes: vi.fn().mockResolvedValue([]),

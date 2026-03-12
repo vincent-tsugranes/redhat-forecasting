@@ -15,7 +15,6 @@ import weatherService, {
 } from '../services/weatherService'
 
 const CACHE_TTLS: Record<string, number> = {
-  locations: 30 * 60_000,
   airports: 30 * 60_000,
   alerts: 5 * 60_000,
   hurricanes: 5 * 60_000,
@@ -70,23 +69,6 @@ export function clearCache(key?: string) {
 }
 
 export const useWeatherStore = defineStore('weather', () => {
-  // --- Locations ---
-  const locations = ref<Location[]>([])
-  const locationsLoading = ref(false)
-  const locationsError = ref<string | null>(null)
-
-  async function fetchLocations() {
-    locationsLoading.value = true
-    locationsError.value = null
-    try {
-      locations.value = await deduplicatedFetch('locations', () => weatherService.getLocations())
-    } catch (err: unknown) {
-      locationsError.value = err instanceof Error ? err.message : 'Failed to load locations'
-    } finally {
-      locationsLoading.value = false
-    }
-  }
-
   // --- Airports ---
   const airports = ref<Location[]>([])
   const airportsLoading = ref(false)
@@ -305,11 +287,6 @@ export const useWeatherStore = defineStore('weather', () => {
     await fetchEarthquakes()
   }
 
-  async function refreshLocations() {
-    clearCache('locations')
-    await fetchLocations()
-  }
-
   async function refreshHurricanes() {
     clearCache('hurricanes')
     await weatherService.refreshHurricaneData()
@@ -366,12 +343,6 @@ export const useWeatherStore = defineStore('weather', () => {
   }
 
   return {
-    // Locations
-    locations,
-    locationsLoading,
-    locationsError,
-    fetchLocations,
-    refreshLocations,
     // Airports
     airports,
     airportsLoading,

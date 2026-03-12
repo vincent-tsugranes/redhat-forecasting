@@ -16,16 +16,8 @@
     <div v-else class="status-content">
       <div class="location-row">
         <span class="loc-stat">
-          <span class="label">{{ $t('status.airportsLoaded') }}</span>
+          <span class="label">Airports:</span>
           <span class="value" :class="{ complete: status.loadingComplete }">{{ status.airports?.toLocaleString() }}/{{ status.expectedAirports?.toLocaleString() }}</span>
-        </span>
-        <span class="loc-stat">
-          <span class="label">{{ $t('status.cities') }}</span>
-          <span class="value">{{ status.cities }}</span>
-        </span>
-        <span class="loc-stat">
-          <span class="label">{{ $t('status.totalLocations') }}</span>
-          <span class="value">{{ status.totalLocations?.toLocaleString() }}</span>
         </span>
         <div
           v-if="status.percentLoaded !== undefined && !status.loadingComplete"
@@ -123,9 +115,7 @@ interface SchedulerInfo {
 }
 
 interface DataStatus {
-  totalLocations: number
   airports: number
-  cities: number
   airportsLoaded: boolean
   expectedAirports: number
   loadingComplete: boolean
@@ -139,9 +129,7 @@ interface DataStatus {
 }
 
 const status = ref<DataStatus>({
-  totalLocations: 0,
   airports: 0,
-  cities: 0,
   airportsLoaded: false,
   expectedAirports: 9313,
   loadingComplete: false,

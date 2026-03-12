@@ -7,26 +7,6 @@ import DashboardView from '../../views/DashboardView.vue'
 // Mock the weather service
 vi.mock('../../services/weatherService', () => ({
   default: {
-    getLocations: vi.fn().mockResolvedValue([
-      {
-        id: 1,
-        name: 'New York',
-        state: 'NY',
-        country: 'US',
-        latitude: 40.7,
-        longitude: -74.0,
-        locationType: 'city',
-      },
-      {
-        id: 2,
-        name: 'Los Angeles',
-        state: 'CA',
-        country: 'US',
-        latitude: 34.0,
-        longitude: -118.2,
-        locationType: 'city',
-      },
-    ]),
     getAirports: vi.fn().mockResolvedValue([
       { id: 3, name: 'JFK', latitude: 40.6, longitude: -73.7, locationType: 'airport', airportCode: 'KJFK' },
     ]),
@@ -108,9 +88,8 @@ describe('DashboardView', () => {
     await flushPromises()
 
     const statTiles = wrapper.findAll('.stat-tile')
-    expect(statTiles.length).toBe(11)
-    // Should show location count, airport count, etc.
-    expect(wrapper.text()).toContain('Locations')
+    expect(statTiles.length).toBe(10)
+    // Should show airport count, etc.
     expect(wrapper.text()).toContain('Airports')
     expect(wrapper.text()).toContain('Active Storms')
     expect(wrapper.text()).toContain('Earthquakes')

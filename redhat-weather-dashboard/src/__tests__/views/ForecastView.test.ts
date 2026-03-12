@@ -8,8 +8,8 @@ import { useWeatherStore } from '../../stores/weatherStore'
 // Mock the weather service
 vi.mock('../../services/weatherService', () => ({
   default: {
-    getLocations: vi.fn().mockResolvedValue([
-      { id: 1, name: 'New York', state: 'NY', country: 'US', latitude: 40.7, longitude: -74.0, locationType: 'city' },
+    getAirports: vi.fn().mockResolvedValue([
+      { id: 1, name: 'New York', state: 'NY', country: 'US', latitude: 40.7, longitude: -74.0, locationType: 'airport', airportCode: 'KJFK' },
     ]),
     getActiveAlerts: vi.fn().mockResolvedValue([]),
     getForecastsByLocation: vi.fn().mockResolvedValue([
@@ -142,7 +142,7 @@ describe('ForecastView', () => {
 
     // Fetch locations then select one
     const store = useWeatherStore()
-    await store.fetchLocations()
+    await store.fetchAirports()
     await store.fetchForecasts(1)
     await flushPromises()
 
@@ -160,7 +160,7 @@ describe('ForecastView', () => {
     await flushPromises()
 
     const store = useWeatherStore()
-    await store.fetchLocations()
+    await store.fetchAirports()
     await store.fetchForecasts(1)
     await flushPromises()
 

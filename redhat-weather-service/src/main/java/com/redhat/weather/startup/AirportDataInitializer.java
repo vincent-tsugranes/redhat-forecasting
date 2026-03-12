@@ -46,7 +46,7 @@ public class AirportDataInitializer {
         try {
             // Check if we should skip loading if airports already exist
             if (skipIfExists) {
-                long existingAirportCount = locationRepository.count("locationType = ?1", "airport");
+                long existingAirportCount = locationRepository.count();
                 if (existingAirportCount > 0) {
                     Log.infof("Skipping airport CSV load - %d airports already exist in database", existingAirportCount);
                     return;

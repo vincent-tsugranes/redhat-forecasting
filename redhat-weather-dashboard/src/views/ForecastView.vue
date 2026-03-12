@@ -176,7 +176,7 @@ const store = useWeatherStore()
 const toast = useToast()
 const { formatTemp, formatSpeed } = useUnitPreferences()
 const {
-  locations,
+  airports,
   forecasts,
   forecastsLoading: loading,
   forecastsError: error,
@@ -206,7 +206,7 @@ function onSearchInput() {
   }
 
   const query = searchQuery.value.toLowerCase()
-  searchResults.value = locations.value
+  searchResults.value = airports.value
     .filter(
       (loc) => loc.name?.toLowerCase().includes(query) || loc.state?.toLowerCase().includes(query),
     )
@@ -300,10 +300,10 @@ function toggleFavorite(loc: Location) {
 }
 
 onMounted(async () => {
-  await store.fetchLocations()
+  await store.fetchAirports()
   const qid = route.query.locationId
   if (qid) {
-    const loc = locations.value.find((l) => l.id === Number(qid))
+    const loc = airports.value.find((l) => l.id === Number(qid))
     if (loc) {
       selectLocation(loc)
     }

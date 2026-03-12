@@ -104,7 +104,7 @@ router.beforeEach((to) => {
       store.fetchWindsAloft()
       break
     case 'forecasts':
-      store.fetchLocations()
+      store.fetchAirports()
       break
   }
 })

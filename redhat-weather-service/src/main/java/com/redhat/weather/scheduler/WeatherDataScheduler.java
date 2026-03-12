@@ -241,7 +241,7 @@ public class WeatherDataScheduler {
         }
 
         try {
-            List<LocationEntity> locations = locationRepository.getAllLocations();
+            List<LocationEntity> locations = locationRepository.findAirportLocations();
             int total = locations.size();
 
             if (total == 0) {
@@ -293,7 +293,7 @@ public class WeatherDataScheduler {
         }
 
         try {
-            List<LocationEntity> locations = locationRepository.getAllLocations();
+            List<LocationEntity> locations = locationRepository.findAirportLocations();
             int total = locations.size();
 
             if (total == 0) {

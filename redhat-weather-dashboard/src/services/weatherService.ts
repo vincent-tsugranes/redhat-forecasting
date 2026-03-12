@@ -253,18 +253,6 @@ export interface WeatherAlert {
 }
 
 export const weatherService = {
-  // Locations
-  async getLocations(): Promise<Location[]> {
-    const response = await weatherApi.get('/locations', { params: { size: 500 } })
-    const body = response.data
-    return Array.isArray(body) ? body : body.data ?? []
-  },
-
-  async getLocationById(id: number): Promise<Location> {
-    const response = await weatherApi.get(`/locations/${id}`)
-    return response.data
-  },
-
   async getAirports(): Promise<Location[]> {
     const pageSize = 200
     // Fetch first page to get total page count

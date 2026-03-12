@@ -3,7 +3,6 @@ package com.redhat.weather.resource;
 import com.redhat.weather.domain.entity.LocationEntity;
 import com.redhat.weather.service.LocationService;
 import jakarta.inject.Inject;
-import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -19,7 +18,7 @@ import java.util.Map;
 @Path("/api/weather/locations")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Tag(name = "Locations", description = "Location management operations")
+@Tag(name = "Locations", description = "Airport location operations")
 public class LocationResource {
 
     private static final int MAX_PAGE_SIZE = 200;
@@ -52,21 +51,6 @@ public class LocationResource {
     }
 
     @GET
-    @Path("/type/{type}")
-    @Operation(summary = "Get locations by type", description = "Retrieve locations by type (city, airport, region) (paginated)")
-    @APIResponse(responseCode = "200", description = "Paginated list of locations")
-    public Response getLocationsByType(
-            @PathParam("type") @Parameter(description = "Location type") String type,
-            @QueryParam("page") @DefaultValue("0") @Parameter(description = "Page number (0-based)") int page,
-            @QueryParam("size") @DefaultValue("50") @Parameter(description = "Page size (max 200)") int size) {
-
-        int clampedSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        List<LocationEntity> locations = locationService.getLocationsByType(type, page, clampedSize);
-        long totalElements = locationService.countLocationsByType(type);
-        return Response.ok(buildPageResponse(locations, page, clampedSize, totalElements)).build();
-    }
-
-    @GET
     @Path("/airports")
     @Operation(summary = "Get all airports", description = "Retrieve all airport locations (paginated)")
     @APIResponse(responseCode = "200", description = "Paginated list of airports")
@@ -89,61 +73,6 @@ public class LocationResource {
         return locationService.getLocationByAirportCode(code)
             .map(location -> Response.ok(location).build())
             .orElse(Response.status(Response.Status.NOT_FOUND).build());
-    }
-
-    @GET
-    @Path("/search")
-    @Operation(summary = "Search locations by name", description = "Search locations by name (partial match, paginated)")
-    @APIResponse(responseCode = "200", description = "Paginated list of matching locations")
-    public Response searchLocations(
-            @QueryParam("name") @Parameter(description = "Location name") String name,
-            @QueryParam("page") @DefaultValue("0") @Parameter(description = "Page number (0-based)") int page,
-            @QueryParam("size") @DefaultValue("50") @Parameter(description = "Page size (max 200)") int size) {
-
-        if (name == null || name.trim().isEmpty()) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity("Query parameter 'name' is required")
-                .build();
-        }
-        int clampedSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        List<LocationEntity> locations = locationService.searchLocationsByName(name, page, clampedSize);
-        long totalElements = locationService.countLocationsByName(name);
-        return Response.ok(buildPageResponse(locations, page, clampedSize, totalElements)).build();
-    }
-
-    @POST
-    @Operation(summary = "Create location", description = "Create a new location")
-    @APIResponse(responseCode = "201", description = "Location created")
-    @APIResponse(responseCode = "400", description = "Invalid input")
-    public Response createLocation(@Valid LocationEntity location) {
-        LocationEntity created = locationService.createLocation(location);
-        return Response.status(Response.Status.CREATED).entity(created).build();
-    }
-
-    @PUT
-    @Path("/{id}")
-    @Operation(summary = "Update location", description = "Update an existing location")
-    @APIResponse(responseCode = "200", description = "Location updated")
-    @APIResponse(responseCode = "404", description = "Location not found")
-    public Response updateLocation(@PathParam("id") @Parameter(description = "Location ID") Long id, @Valid LocationEntity location) {
-        LocationEntity updated = locationService.updateLocation(id, location);
-        if (updated != null) {
-            return Response.ok(updated).build();
-        }
-        return Response.status(Response.Status.NOT_FOUND).build();
-    }
-
-    @DELETE
-    @Path("/{id}")
-    @Operation(summary = "Delete location", description = "Delete a location")
-    @APIResponse(responseCode = "204", description = "Location deleted")
-    @APIResponse(responseCode = "404", description = "Location not found")
-    public Response deleteLocation(@PathParam("id") @Parameter(description = "Location ID") Long id) {
-        boolean deleted = locationService.deleteLocation(id);
-        if (deleted) {
-            return Response.noContent().build();
-        }
-        return Response.status(Response.Status.NOT_FOUND).build();
     }
 
     private Map<String, Object> buildPageResponse(List<LocationEntity> data, int page, int size, long totalElements) {

@@ -20,12 +20,8 @@ public class LocationRepository implements PanacheRepositoryBase<LocationEntity,
         return find("id", id).firstResultOptional();
     }
 
-    public List<LocationEntity> findByType(String locationType) {
-        return list("locationType", locationType);
-    }
-
     public List<LocationEntity> findAirportLocations() {
-        return list("locationType = ?1 AND airportCode IS NOT NULL", "airport");
+        return listAll();
     }
 
     public Optional<LocationEntity> findByAirportCode(String airportCode) {
@@ -70,20 +66,11 @@ public class LocationRepository implements PanacheRepositoryBase<LocationEntity,
     }
 
     public List<LocationEntity> findAirportLocationsPaginated(int page, int size) {
-        return find("locationType = ?1 AND airportCode IS NOT NULL", "airport")
-            .page(Page.of(page, size)).list();
+        return findAll().page(Page.of(page, size)).list();
     }
 
     public long countAirportLocations() {
-        return count("locationType = ?1 AND airportCode IS NOT NULL", "airport");
-    }
-
-    public List<LocationEntity> findByTypePaginated(String locationType, int page, int size) {
-        return find("locationType", locationType).page(Page.of(page, size)).list();
-    }
-
-    public long countByType(String locationType) {
-        return count("locationType", locationType);
+        return count();
     }
 
     public List<LocationEntity> searchByNamePaginated(String name, int page, int size) {

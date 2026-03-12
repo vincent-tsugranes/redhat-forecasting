@@ -5,9 +5,6 @@ import { useWeatherStore, clearCache } from '../../stores/weatherStore'
 // Mock the weather service
 vi.mock('../../services/weatherService', () => ({
   default: {
-    getLocations: vi.fn().mockResolvedValue([
-      { id: 1, name: 'Test City', latitude: 40, longitude: -74, locationType: 'city' },
-    ]),
     getAirports: vi.fn().mockResolvedValue([
       { id: 2, name: 'JFK', latitude: 40.6, longitude: -73.7, locationType: 'airport', airportCode: 'KJFK' },
     ]),
@@ -29,17 +26,9 @@ describe('weatherStore', () => {
 
   it('initializes with empty state', () => {
     const store = useWeatherStore()
-    expect(store.locations).toEqual([])
-    expect(store.locationsLoading).toBe(false)
-    expect(store.locationsError).toBeNull()
-  })
-
-  it('fetches locations', async () => {
-    const store = useWeatherStore()
-    await store.fetchLocations()
-    expect(store.locations).toHaveLength(1)
-    expect(store.locations[0].name).toBe('Test City')
-    expect(store.locationsLoading).toBe(false)
+    expect(store.airports).toEqual([])
+    expect(store.airportsLoading).toBe(false)
+    expect(store.airportsError).toBeNull()
   })
 
   it('fetches airports', async () => {
@@ -79,17 +68,17 @@ describe('weatherStore', () => {
 
   it('handles fetch error gracefully', async () => {
     const weatherService = await import('../../services/weatherService')
-    vi.mocked(weatherService.default.getLocations).mockRejectedValueOnce(new Error('Network error'))
+    vi.mocked(weatherService.default.getAirports).mockRejectedValueOnce(new Error('Network error'))
 
     const store = useWeatherStore()
-    clearCache('locations')
-    await store.fetchLocations()
-    expect(store.locationsError).toBe('Network error')
-    expect(store.locationsLoading).toBe(false)
+    clearCache('airports')
+    await store.fetchAirports()
+    expect(store.airportsError).toBe('Network error')
+    expect(store.airportsLoading).toBe(false)
   })
 
   it('clearCache removes specific cache entry', () => {
-    clearCache('locations')
+    clearCache('airports')
     // Should not throw
     expect(true).toBe(true)
   })
@@ -102,16 +91,16 @@ describe('weatherStore', () => {
 
   it('deduplicates concurrent requests', async () => {
     const store = useWeatherStore()
-    clearCache('locations')
+    clearCache('airports')
 
     // Fire two requests simultaneously
-    const p1 = store.fetchLocations()
-    const p2 = store.fetchLocations()
+    const p1 = store.fetchAirports()
+    const p2 = store.fetchAirports()
     await Promise.all([p1, p2])
 
     const weatherService = await import('../../services/weatherService')
     // The second call should reuse the first pending request
-    expect(vi.mocked(weatherService.default.getLocations).mock.calls.length).toBeGreaterThanOrEqual(1)
+    expect(vi.mocked(weatherService.default.getAirports).mock.calls.length).toBeGreaterThanOrEqual(1)
   })
 
   // --- Data flow tests: ensure data is always iterable ---
@@ -136,19 +125,6 @@ describe('weatherStore', () => {
     expect(store.airports.length).toBe(0)
   })
 
-  it('locations has expected items after fetchLocations()', async () => {
-    const store = useWeatherStore()
-    await store.fetchLocations()
-    expect(Array.isArray(store.locations)).toBe(true)
-    expect(store.locations).toHaveLength(1)
-    expect(store.locations[0]).toMatchObject({
-      id: 1,
-      name: 'Test City',
-      latitude: 40,
-      longitude: -74,
-    })
-  })
-
   it('data remains safe default when service throws', async () => {
     const weatherService = await import('../../services/weatherService')
     vi.mocked(weatherService.default.getAirports).mockRejectedValueOnce(new Error('API failure'))
@@ -164,27 +140,27 @@ describe('weatherStore', () => {
 
   it('data is usable with array methods after fetch', async () => {
     const store = useWeatherStore()
-    await store.fetchLocations()
+    await store.fetchAirports()
 
-    const names = store.locations.map((loc) => loc.name)
-    expect(names).toEqual(['Test City'])
+    const names = store.airports.map((apt) => apt.name)
+    expect(names).toEqual(['JFK'])
 
-    const filtered = store.locations.filter((loc) => loc.locationType === 'city')
+    const filtered = store.airports.filter((apt) => apt.locationType === 'airport')
     expect(filtered).toHaveLength(1)
 
-    expect(store.locations.length).toBe(1)
+    expect(store.airports.length).toBe(1)
   })
 
   it('uses cache on repeated calls within TTL', async () => {
     const weatherService = await import('../../services/weatherService')
-    const spy = vi.mocked(weatherService.default.getLocations)
+    const spy = vi.mocked(weatherService.default.getAirports)
     spy.mockClear()
 
     const store = useWeatherStore()
-    clearCache('locations')
+    clearCache('airports')
 
-    await store.fetchLocations()
-    await store.fetchLocations()
+    await store.fetchAirports()
+    await store.fetchAirports()
 
     // Second call should use cache, so service only called once
     expect(spy).toHaveBeenCalledTimes(1)
