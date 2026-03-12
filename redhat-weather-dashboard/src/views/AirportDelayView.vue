@@ -124,9 +124,9 @@ onMounted(() => {
 
 .stats-bar {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .td-truncate {

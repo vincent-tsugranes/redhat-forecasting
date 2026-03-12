@@ -223,21 +223,22 @@ onMounted(async () => {
 /* Compact stats bar */
 .stats-bar {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 6px;
+  margin-bottom: 12px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   padding: 2px 0;
+  flex-wrap: wrap;
 }
 
 .stat-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 5px 10px;
+  gap: 3px;
+  padding: 4px 8px;
   background: var(--bg-card, white);
-  border-radius: 16px;
-  font-size: 12px;
+  border-radius: 12px;
+  font-size: 11px;
   color: var(--text-secondary, #666);
   white-space: nowrap;
   box-shadow: 0 1px 3px var(--shadow, rgba(0, 0, 0, 0.08));
@@ -245,7 +246,7 @@ onMounted(async () => {
 
 .stat-chip strong {
   color: var(--text-primary, #333);
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .stat-chip.stat-alert {
@@ -260,7 +261,7 @@ onMounted(async () => {
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 16px;
   align-items: start;
 }
 
@@ -268,18 +269,18 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .card-header-row h2 {
   margin-bottom: 0;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
 .empty-state {
   color: var(--text-secondary, #666);
   text-align: center;
-  padding: 20px;
+  padding: 12px;
   font-style: italic;
 }
 
@@ -340,8 +341,8 @@ onMounted(async () => {
 }
 
 .map-card h2 {
-  margin-bottom: 12px;
-  font-size: 1.2rem;
+  margin-bottom: 8px;
+  font-size: 1.1rem;
 }
 
 .dashboard-map {
@@ -361,13 +362,9 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-  .stats-bar {
-    gap: 6px;
-  }
-
   .stat-chip {
-    padding: 4px 8px;
-    font-size: 11px;
+    padding: 3px 6px;
+    font-size: 10px;
   }
 
   .dashboard-header {

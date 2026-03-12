@@ -546,7 +546,7 @@ h3 {
 }
 
 .scheduler-row {
-  margin-bottom: 5px;
+  margin-bottom: 3px;
 }
 
 .scheduler-row:last-child {

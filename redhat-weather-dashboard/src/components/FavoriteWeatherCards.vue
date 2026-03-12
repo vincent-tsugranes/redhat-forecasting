@@ -116,12 +116,12 @@ watch(
 
 <style scoped>
 .favorite-weather-section {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .favorite-weather-section h2 {
-  font-size: 1.3rem;
-  margin-bottom: 12px;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
 }
 
 .favorite-weather-scroll {
@@ -143,12 +143,12 @@ watch(
 }
 
 .favorite-weather-card {
-  flex: 0 0 150px;
+  flex: 0 0 130px;
   scroll-snap-align: start;
   background: var(--bg-card, #fff);
   border: 1px solid var(--border-color, #ddd);
-  border-radius: 12px;
-  padding: 14px 10px;
+  border-radius: 10px;
+  padding: 10px 8px;
   text-align: center;
   cursor: pointer;
   transition:
@@ -165,9 +165,9 @@ watch(
 
 .fwc-name {
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-primary, #333);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -180,24 +180,24 @@ watch(
 }
 
 .fwc-icon {
-  font-size: 2rem;
-  margin: 4px 0;
+  font-size: 1.5rem;
+  margin: 2px 0;
 }
 
 .fwc-temp {
   font-weight: 700;
-  font-size: 20px;
+  font-size: 18px;
   color: var(--accent);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .fwc-details {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  font-size: 12px;
+  gap: 6px;
+  font-size: 11px;
   color: var(--text-secondary, #666);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .fwc-condition {
@@ -209,8 +209,8 @@ watch(
 }
 
 .fwc-no-data {
-  padding: 16px 0;
-  font-size: 12px;
+  padding: 10px 0;
+  font-size: 11px;
   color: var(--text-muted, #999);
   font-style: italic;
 }

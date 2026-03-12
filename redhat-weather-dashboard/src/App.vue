@@ -195,7 +195,7 @@ onMounted(() => {
 .app-header {
   background-color: var(--header-bg, #ee0000);
   color: white;
-  padding: 12px 0;
+  padding: 8px 0;
   box-shadow: 0 2px 4px var(--shadow, rgba(0, 0, 0, 0.1));
 }
 
@@ -250,8 +250,8 @@ onMounted(() => {
 .header-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 6px;
 }
 
 .header-actions {
@@ -271,7 +271,7 @@ nav {
 nav > a {
   color: white;
   text-decoration: none;
-  padding: 6px 12px;
+  padding: 4px 10px;
   border-radius: 4px;
   transition: background-color 0.2s;
   font-size: 13px;
@@ -293,7 +293,7 @@ nav > a.router-link-active {
   color: white;
   background: none;
   border: none;
-  padding: 6px 12px;
+  padding: 4px 10px;
   border-radius: 4px;
   font-size: 13px;
   font-weight: 500;
@@ -339,7 +339,7 @@ nav > a.router-link-active {
 .nav-dropdown a {
   color: var(--text-primary, #333);
   text-decoration: none;
-  padding: 8px 16px;
+  padding: 6px 14px;
   font-size: 13px;
   font-weight: 500;
   transition: background-color 0.15s;
@@ -401,8 +401,8 @@ main {
 .app-footer {
   background-color: var(--footer-bg, #333);
   color: white;
-  padding: 20px 0;
-  margin-top: 40px;
+  padding: 12px 0;
+  margin-top: 24px;
   text-align: center;
 }
 

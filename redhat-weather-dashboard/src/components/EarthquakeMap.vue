@@ -111,7 +111,7 @@ onBeforeUnmount(() => {
   position: relative;
   width: 100%;
   height: clamp(300px, 40vh, 500px);
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .map-container {

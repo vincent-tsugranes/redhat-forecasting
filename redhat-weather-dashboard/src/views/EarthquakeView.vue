@@ -293,8 +293,8 @@ onMounted(() => {
 .quake-info {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  margin: 12px 0;
+  gap: 8px;
+  margin: 8px 0;
 }
 
 .info-item {
@@ -329,7 +329,7 @@ onMounted(() => {
 
 .quake-location,
 .quake-time {
-  margin: 8px 0;
+  margin: 6px 0;
   color: var(--text-secondary, #666);
   font-size: 13px;
 }

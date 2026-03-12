@@ -74,8 +74,8 @@ const tooltipText = computed(() => {
 .freshness-badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 8px;
-  border-radius: 12px;
+  padding: 2px 6px;
+  border-radius: 10px;
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;

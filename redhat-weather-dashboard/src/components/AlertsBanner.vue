@@ -111,7 +111,7 @@ onUnmounted(() => {
 <style scoped>
 .alerts-banner {
   border-radius: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   overflow: hidden;
 }
 
@@ -144,7 +144,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 10px 14px;
   cursor: pointer;
   width: 100%;
   background: none;
@@ -180,16 +180,16 @@ onUnmounted(() => {
 }
 
 .alerts-list {
-  padding: 0 16px 16px;
+  padding: 0 14px 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .alert-item {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 6px;
-  padding: 12px;
+  padding: 10px;
 }
 
 .alert-event {
@@ -248,9 +248,9 @@ onUnmounted(() => {
 .alerts-error {
   background: var(--error-bg, #fee);
   color: var(--error-text, #c00);
-  padding: 10px 16px;
+  padding: 8px 14px;
   border-radius: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   font-size: 13px;
   text-align: center;
 }

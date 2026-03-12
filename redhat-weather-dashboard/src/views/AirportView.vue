@@ -321,7 +321,7 @@ onUnmounted(() => {
 }
 
 .search-result-item {
-  padding: 10px 16px;
+  padding: 8px 12px;
   cursor: pointer;
   border-bottom: 1px solid var(--border-light, #eee);
   transition: background-color 0.2s;
@@ -356,23 +356,23 @@ onUnmounted(() => {
 .weather-report {
   background: var(--bg-code, #f9f9f9);
   border-radius: 8px;
-  padding: 15px;
+  padding: 12px;
 }
 
 .report-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
-  font-size: 1.1rem;
+  margin-bottom: 8px;
+  font-size: 1rem;
 }
 
 .report-raw {
   background: var(--bg-input, #fff);
   border: 1px solid var(--border-color, #ddd);
   border-radius: 4px;
-  padding: 10px;
+  padding: 8px;
   font-family: monospace;
-  margin: 10px 0;
+  margin: 8px 0;
   white-space: pre-wrap;
   word-break: break-all;
   color: var(--text-primary, #333);
@@ -380,13 +380,13 @@ onUnmounted(() => {
 
 .report-details {
   display: flex;
-  gap: 20px;
-  margin-top: 10px;
+  gap: 12px;
+  margin-top: 8px;
   flex-wrap: wrap;
 }
 
 .flight-category {
-  padding: 5px 10px;
+  padding: 3px 8px;
   border-radius: 4px;
   font-weight: bold;
   color: white;

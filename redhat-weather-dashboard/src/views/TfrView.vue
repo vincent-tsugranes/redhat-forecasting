@@ -179,9 +179,9 @@ onMounted(() => {
 
 .stats-bar {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .table-controls { margin-bottom: 8px; }

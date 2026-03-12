@@ -85,27 +85,27 @@ watch(
 
 <style scoped>
 .solar-panel h3 {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   font-size: 1.1rem;
 }
 
 .solar-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .solar-item {
   text-align: center;
-  padding: 12px 8px;
+  padding: 10px 6px;
   background: var(--bg-code, #f9f9f9);
   border-radius: 8px;
 }
 
 .solar-icon {
-  font-size: 24px;
-  margin-bottom: 6px;
+  font-size: 20px;
+  margin-bottom: 4px;
 }
 
 .solar-label {

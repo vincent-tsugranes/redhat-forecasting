@@ -143,9 +143,9 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   border-bottom: 2px solid var(--accent);
-  padding-bottom: 10px;
+  padding-bottom: 8px;
 }
 
 .storm-header h2 {
@@ -156,26 +156,27 @@ onMounted(() => {
 .storm-id {
   background: #333;
   color: white;
-  padding: 5px 10px;
+  padding: 3px 8px;
   border-radius: 4px;
   font-family: monospace;
+  font-size: 12px;
 }
 
 .storm-info {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-  margin: 15px 0;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 10px 0;
 }
 
 .info-item {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 3px;
 }
 
 .category {
-  padding: 5px 10px;
+  padding: 3px 8px;
   border-radius: 4px;
   font-weight: bold;
   color: white;
@@ -209,8 +210,9 @@ onMounted(() => {
 
 .storm-location,
 .storm-time {
-  margin: 10px 0;
+  margin: 6px 0;
   color: var(--text-secondary, #666);
+  font-size: 13px;
 }
 
 .card-selected {
