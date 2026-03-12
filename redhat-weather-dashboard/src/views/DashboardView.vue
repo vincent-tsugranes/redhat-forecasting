@@ -89,11 +89,20 @@
         <div v-if="alerts.length > 0" class="card alerts-summary-card">
           <div class="card-header-row">
             <h2><span aria-hidden="true">⚠️</span> Active Alerts</h2>
-            <span class="alert-count-badge" :class="'severity-' + highestAlertSeverity">{{ alerts.length }}</span>
+            <span class="alert-count-badge" :class="'severity-' + highestAlertSeverity">{{ filteredAlerts.length }}/{{ alerts.length }}</span>
+          </div>
+          <div class="alert-filter-row">
+            <button
+              v-for="sev in severityOptions"
+              :key="sev.value"
+              class="alert-filter-btn"
+              :class="{ 'filter-active': alertMinSeverity === sev.value, ['sev-' + sev.value]: true }"
+              @click="alertMinSeverity = sev.value"
+            >{{ sev.label }}</button>
           </div>
           <div class="alerts-summary-list">
             <div
-              v-for="a in alerts.slice(0, 5)"
+              v-for="a in filteredAlerts.slice(0, 5)"
               :key="a.id"
               class="alert-summary-item"
               :class="'alert-' + (a.severity || 'unknown').toLowerCase()"
@@ -105,8 +114,11 @@
               <div v-if="a.headline" class="alert-headline">{{ a.headline }}</div>
               <div v-if="a.areaDesc" class="alert-area">{{ a.areaDesc }}</div>
             </div>
-            <div v-if="alerts.length > 5" class="alerts-more">
-              +{{ alerts.length - 5 }} more alerts
+            <div v-if="filteredAlerts.length > 5" class="alerts-more">
+              +{{ filteredAlerts.length - 5 }} more alerts
+            </div>
+            <div v-if="filteredAlerts.length === 0" class="empty-state">
+              No {{ alertMinSeverity }}+ alerts active
             </div>
           </div>
         </div>
@@ -332,6 +344,14 @@ const {
 const toast = useToast()
 
 const lastRefreshed = ref<string | null>(null)
+const alertMinSeverity = ref<string>('extreme')
+const severityOptions = [
+  { value: 'extreme', label: 'Extreme' },
+  { value: 'severe', label: 'Severe+' },
+  { value: 'moderate', label: 'Moderate+' },
+  { value: 'minor', label: 'Minor+' },
+  { value: 'all', label: 'All' },
+]
 const quickSearch = ref('')
 const quickSearchResults = ref<{ id: number; airportCode?: string; name: string }[]>([])
 let autoRefreshInterval: ReturnType<typeof setInterval> | null = null
@@ -340,17 +360,27 @@ const delayedAirports = computed(() => delays.value.filter(d => d.isDelayed).len
 const delayedAirportsList = computed(() => delays.value.filter(d => d.isDelayed).slice(0, 8))
 
 const highestAlertSeverity = computed(() => {
-  const rank: Record<string, number> = { extreme: 4, severe: 3, moderate: 2, minor: 1 }
   let highest = 'unknown'
   let highestRank = 0
   for (const a of alerts.value) {
     const sev = (a.severity || 'unknown').toLowerCase()
-    if ((rank[sev] || 0) > highestRank) {
-      highestRank = rank[sev] || 0
+    if ((severityRank[sev] || 0) > highestRank) {
+      highestRank = severityRank[sev] || 0
       highest = sev
     }
   }
   return highest
+})
+
+const severityRank: Record<string, number> = { extreme: 4, severe: 3, moderate: 2, minor: 1 }
+
+const filteredAlerts = computed(() => {
+  if (alertMinSeverity.value === 'all') return alerts.value
+  const minRank = severityRank[alertMinSeverity.value] || 0
+  return alerts.value.filter(a => {
+    const rank = severityRank[(a.severity || '').toLowerCase()] || 0
+    return rank >= minRank
+  })
 })
 
 // PIREP hazard aggregation
@@ -627,6 +657,39 @@ onUnmounted(() => {
 .severity-moderate { background: var(--color-warning, #f0ad4e); }
 .severity-minor { background: #0d47a1; }
 .severity-unknown { background: var(--text-muted, #999); }
+
+.alert-filter-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.alert-filter-btn {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 4px;
+  background: var(--bg-card, white);
+  color: var(--text-secondary, #666);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.alert-filter-btn:hover {
+  background: var(--bg-code, #f5f5f5);
+}
+
+.alert-filter-btn.filter-active {
+  color: white;
+  border-color: transparent;
+}
+
+.alert-filter-btn.filter-active.sev-extreme { background: #b71c1c; }
+.alert-filter-btn.filter-active.sev-severe { background: var(--aging-color, #ff9800); }
+.alert-filter-btn.filter-active.sev-moderate { background: var(--color-warning, #f0ad4e); color: #333; }
+.alert-filter-btn.filter-active.sev-minor { background: #0d47a1; }
+.alert-filter-btn.filter-active.sev-all { background: var(--text-muted, #999); }
 
 .alerts-summary-list {
   display: flex;
