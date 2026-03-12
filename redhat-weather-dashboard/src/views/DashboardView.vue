@@ -13,81 +13,37 @@
     <DashboardSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
-    <div v-if="!loading" class="stats-row">
-      <div class="stat-tile">
-        <span class="stat-icon" aria-hidden="true">✈️</span>
-        <div class="stat-body">
-          <span class="stat-value">{{ airports.length.toLocaleString() }}</span>
-          <span class="stat-label">Airports</span>
-        </div>
-      </div>
-      <div class="stat-tile">
-        <span class="stat-icon" aria-hidden="true">🌀</span>
-        <div class="stat-body">
-          <span class="stat-value">{{ hurricanes.length }}</span>
-          <span class="stat-label">Active Storms</span>
-        </div>
-      </div>
-      <div class="stat-tile">
-        <span class="stat-icon" aria-hidden="true">🌍</span>
-        <div class="stat-body">
-          <span class="stat-value">{{ earthquakes.length }}</span>
-          <span class="stat-label">Earthquakes</span>
-        </div>
-      </div>
-      <div class="stat-tile">
-        <span class="stat-icon" aria-hidden="true">⚠️</span>
-        <div class="stat-body">
-          <span class="stat-value">{{ alerts.length }}</span>
-          <span class="stat-label">Active Alerts</span>
-        </div>
-      </div>
-      <div class="stat-tile">
-        <span class="stat-icon" aria-hidden="true">📋</span>
-        <div class="stat-body">
-          <span class="stat-value">{{ pireps.length }}</span>
-          <span class="stat-label">PIREPs</span>
-        </div>
-      </div>
-      <div class="stat-tile">
-        <span class="stat-icon" aria-hidden="true">🚨</span>
-        <div class="stat-body">
-          <span class="stat-value">{{ sigmets.length }}</span>
-          <span class="stat-label">SIGMETs</span>
-        </div>
-      </div>
-      <div class="stat-tile">
-        <span class="stat-icon" aria-hidden="true">🚫</span>
-        <div class="stat-body">
-          <span class="stat-value">{{ tfrs.length }}</span>
-          <span class="stat-label">TFRs</span>
-        </div>
-      </div>
-      <div class="stat-tile">
-        <span class="stat-icon" aria-hidden="true">📡</span>
-        <div class="stat-body">
-          <span class="stat-value">{{ cwas.length }}</span>
-          <span class="stat-label">CWAs</span>
-        </div>
-      </div>
-      <div class="stat-tile">
-        <span class="stat-icon" aria-hidden="true">💨</span>
-        <div class="stat-body">
-          <span class="stat-value">{{ windsAloftStations }}</span>
-          <span class="stat-label">Wind Stns</span>
-        </div>
-      </div>
-      <div class="stat-tile">
-        <span class="stat-icon" aria-hidden="true">⏱️</span>
-        <div class="stat-body">
-          <span class="stat-value">{{ delayedAirports }}</span>
-          <span class="stat-label">Delays</span>
-        </div>
-      </div>
+    <div v-if="!loading" class="stats-bar">
+      <span class="stat-chip">
+        <span aria-hidden="true">✈️</span> <strong>{{ airports.length.toLocaleString() }}</strong> Airports
+      </span>
+      <span class="stat-chip" v-if="hurricanes.length > 0" :class="{ 'stat-alert': true }">
+        <span aria-hidden="true">🌀</span> <strong>{{ hurricanes.length }}</strong> Storms
+      </span>
+      <span class="stat-chip">
+        <span aria-hidden="true">🌍</span> <strong>{{ earthquakes.length }}</strong> Quakes
+      </span>
+      <span class="stat-chip" v-if="alerts.length > 0" :class="{ 'stat-alert': true }">
+        <span aria-hidden="true">⚠️</span> <strong>{{ alerts.length }}</strong> Alerts
+      </span>
+      <span class="stat-chip">
+        <span aria-hidden="true">📋</span> <strong>{{ pireps.length }}</strong> PIREPs
+      </span>
+      <span class="stat-chip">
+        <span aria-hidden="true">🚨</span> <strong>{{ sigmets.length }}</strong> SIGMETs
+      </span>
+      <span class="stat-chip" v-if="tfrs.length > 0">
+        <span aria-hidden="true">🚫</span> <strong>{{ tfrs.length }}</strong> TFRs
+      </span>
+      <span class="stat-chip" v-if="cwas.length > 0">
+        <span aria-hidden="true">📡</span> <strong>{{ cwas.length }}</strong> CWAs
+      </span>
+      <span class="stat-chip" v-if="delayedAirports > 0" :class="{ 'stat-alert': true }">
+        <span aria-hidden="true">⏱️</span> <strong>{{ delayedAirports }}</strong> Delays
+      </span>
     </div>
 
     <div v-if="!loading" class="dashboard-grid">
-      <!-- Left column: quick-access cards -->
       <div class="dashboard-main">
         <!-- Recent earthquakes table -->
         <div class="card">
@@ -156,31 +112,6 @@
           </div>
           <p v-else class="empty-state">No active tropical systems</p>
         </div>
-
-        <!-- Quick links row -->
-        <div class="quick-links">
-          <router-link to="/forecasts" class="quick-link card">
-            <span class="ql-icon" aria-hidden="true">🌤️</span>
-            <div class="ql-text">
-              <strong>{{ $t('dashboard.weatherForecasts') }}</strong>
-              <span>{{ $t('dashboard.forecastUpdates') }}</span>
-            </div>
-          </router-link>
-          <router-link to="/airports" class="quick-link card">
-            <span class="ql-icon" aria-hidden="true">✈️</span>
-            <div class="ql-text">
-              <strong>{{ $t('dashboard.airportWeather') }}</strong>
-              <span>{{ $t('dashboard.metarUpdates') }}</span>
-            </div>
-          </router-link>
-          <router-link to="/space-weather" class="quick-link card">
-            <span class="ql-icon" aria-hidden="true">☀️</span>
-            <div class="ql-text">
-              <strong>{{ $t('dashboard.spaceWeather') }}</strong>
-              <span>{{ $t('dashboard.spaceWeatherUpdates') }}</span>
-            </div>
-          </router-link>
-        </div>
       </div>
 
       <!-- Right column: map -->
@@ -220,7 +151,6 @@ const {
   sigmets,
   tfrs,
   cwas,
-  windsAloft,
   delays,
   airportsLoading: loading,
   airportsError: error,
@@ -228,7 +158,6 @@ const {
 const toast = useToast()
 
 const delayedAirports = computed(() => delays.value.filter(d => d.isDelayed).length)
-const windsAloftStations = computed(() => new Set(windsAloft.value.map(w => w.stationId)).size)
 
 function getMagnitudeClass(magnitude: number) {
   if (magnitude >= 7) return 'mag-major'
@@ -256,7 +185,6 @@ onMounted(() => {
     store.fetchSigmets(),
     store.fetchTfrs(),
     store.fetchCwas(),
-    store.fetchWindsAloft(),
     store.fetchDelays(),
   ])
 })
@@ -267,54 +195,48 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .dashboard-header h1 {
   margin-bottom: 0;
 }
 
-.stats-row {
+/* Compact stats bar */
+.stats-bar {
   display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 16px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  padding: 2px 0;
 }
 
-.stat-tile {
-  flex: 1;
-  min-width: 120px;
-  display: flex;
+.stat-chip {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
+  padding: 5px 10px;
   background: var(--bg-card, white);
-  border-radius: 8px;
-  padding: 14px 16px;
-  box-shadow: 0 2px 4px var(--shadow, rgba(0, 0, 0, 0.1));
-}
-
-.stat-icon {
-  font-size: 24px;
-  flex-shrink: 0;
-}
-
-.stat-body {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-value {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--text-primary, #333);
-  line-height: 1;
-}
-
-.stat-label {
+  border-radius: 16px;
   font-size: 12px;
   color: var(--text-secondary, #666);
-  margin-top: 2px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px var(--shadow, rgba(0, 0, 0, 0.08));
+}
+
+.stat-chip strong {
+  color: var(--text-primary, #333);
+  font-size: 13px;
+}
+
+.stat-chip.stat-alert {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.stat-chip.stat-alert strong {
+  color: #e65100;
 }
 
 .dashboard-grid {
@@ -393,50 +315,6 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-/* Quick links */
-.quick-links {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-.quick-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  text-decoration: none;
-  color: inherit;
-  transition: box-shadow 0.2s, transform 0.15s;
-  margin-bottom: 0;
-}
-
-.quick-link:hover {
-  box-shadow: 0 4px 12px var(--shadow-md, rgba(0, 0, 0, 0.15));
-  transform: translateY(-2px);
-}
-
-.ql-icon {
-  font-size: 28px;
-  flex-shrink: 0;
-}
-
-.ql-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.ql-text strong {
-  font-size: 14px;
-  color: var(--text-primary, #333);
-}
-
-.ql-text span {
-  font-size: 12px;
-  color: var(--text-secondary, #666);
-}
-
 /* Sidebar map */
 .map-card {
   position: sticky;
@@ -459,27 +337,19 @@ onMounted(() => {
     grid-template-columns: 1fr;
   }
 
-  .quick-links {
-    grid-template-columns: 1fr;
-  }
-
   .dashboard-map {
     height: 400px;
   }
 }
 
 @media (max-width: 768px) {
-  .stats-row {
-    gap: 8px;
+  .stats-bar {
+    gap: 6px;
   }
 
-  .stat-tile {
-    min-width: 100px;
-    padding: 10px 12px;
-  }
-
-  .stat-value {
-    font-size: 1.1rem;
+  .stat-chip {
+    padding: 4px 8px;
+    font-size: 11px;
   }
 
   .dashboard-header {

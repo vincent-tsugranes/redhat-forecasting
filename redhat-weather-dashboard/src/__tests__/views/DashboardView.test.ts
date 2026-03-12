@@ -74,7 +74,7 @@ describe('DashboardView', () => {
     expect(refreshBtn.exists()).toBe(true)
   })
 
-  it('renders stats row with live counts', async () => {
+  it('renders stats bar with live counts', async () => {
     const wrapper = mount(DashboardView, {
       global: {
         plugins: [i18n],
@@ -87,19 +87,12 @@ describe('DashboardView', () => {
     })
     await flushPromises()
 
-    const statTiles = wrapper.findAll('.stat-tile')
-    expect(statTiles.length).toBe(10)
-    // Should show airport count, etc.
+    const statChips = wrapper.findAll('.stat-chip')
+    expect(statChips.length).toBeGreaterThanOrEqual(3)
     expect(wrapper.text()).toContain('Airports')
-    expect(wrapper.text()).toContain('Active Storms')
-    expect(wrapper.text()).toContain('Earthquakes')
-    expect(wrapper.text()).toContain('Active Alerts')
+    expect(wrapper.text()).toContain('Quakes')
     expect(wrapper.text()).toContain('PIREPs')
     expect(wrapper.text()).toContain('SIGMETs')
-    expect(wrapper.text()).toContain('TFRs')
-    expect(wrapper.text()).toContain('CWAs')
-    expect(wrapper.text()).toContain('Wind Stns')
-    expect(wrapper.text()).toContain('Delays')
   })
 
   it('renders earthquake table with data', async () => {
@@ -120,7 +113,7 @@ describe('DashboardView', () => {
     expect(wrapper.find('.magnitude-badge').exists()).toBe(true)
   })
 
-  it('renders quick link cards for forecasts, airports, space weather', async () => {
+  it('renders hurricane tracking section', async () => {
     const wrapper = mount(DashboardView, {
       global: {
         plugins: [i18n],
@@ -133,11 +126,7 @@ describe('DashboardView', () => {
     })
     await flushPromises()
 
-    const quickLinks = wrapper.findAll('.quick-link')
-    expect(quickLinks.length).toBe(3)
-    expect(wrapper.text()).toContain('Weather Forecasts')
-    expect(wrapper.text()).toContain('Airport Weather')
-    expect(wrapper.text()).toContain('Space Weather')
+    expect(wrapper.text()).toContain('Hurricane Tracking')
   })
 
   it('renders unified map instead of airport map', async () => {

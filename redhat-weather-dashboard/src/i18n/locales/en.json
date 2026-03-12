@@ -16,9 +16,11 @@
     "delays": "Delays",
     "tfrs": "TFRs",
     "cwas": "CWAs",
-    "windsAloft": "Winds",
-    "spaceWeather": "Space",
-    "map": "Map"
+    "windsAloft": "Winds Aloft",
+    "spaceWeather": "Space Weather",
+    "map": "Map",
+    "aviation": "Aviation",
+    "hazards": "Hazards"
   },
   "dashboard": {
     "title": "Weather Dashboard",

@@ -3,7 +3,7 @@
     <header class="app-header">
       <div class="container header-content">
         <div class="header-top">
-          <h1>{{ $t('app.title') }}</h1>
+          <router-link to="/" class="header-brand">{{ $t('app.title') }}</router-link>
           <button
             class="hamburger"
             :class="{ 'hamburger-open': menuOpen }"
@@ -18,17 +18,44 @@
         </div>
         <div class="header-controls" :class="{ 'nav-open': menuOpen }">
           <nav>
-            <router-link to="/">{{ $t('nav.dashboard') }}</router-link>
+            <router-link to="/" exact>{{ $t('nav.dashboard') }}</router-link>
             <router-link to="/forecasts">{{ $t('nav.forecasts') }}</router-link>
-            <router-link to="/airports">{{ $t('nav.airports') }}</router-link>
-            <router-link to="/hurricanes">{{ $t('nav.hurricanes') }}</router-link>
-            <router-link to="/earthquakes">{{ $t('nav.earthquakes') }}</router-link>
-            <router-link to="/pireps">{{ $t('nav.pireps') }}</router-link>
-            <router-link to="/sigmets">{{ $t('nav.sigmets') }}</router-link>
-            <router-link to="/delays">{{ $t('nav.delays') }}</router-link>
-            <router-link to="/tfrs">{{ $t('nav.tfrs') }}</router-link>
-            <router-link to="/cwas">{{ $t('nav.cwas') }}</router-link>
-            <router-link to="/winds-aloft">{{ $t('nav.windsAloft') }}</router-link>
+
+            <div class="nav-group" @mouseenter="openDropdown = 'aviation'" @mouseleave="openDropdown = null">
+              <button
+                class="nav-group-trigger"
+                :class="{ active: aviationRoutes.includes($route.path) }"
+                :aria-expanded="openDropdown === 'aviation'"
+                @click="openDropdown = openDropdown === 'aviation' ? null : 'aviation'"
+              >
+                {{ $t('nav.aviation') }} <span class="caret" aria-hidden="true">▾</span>
+              </button>
+              <div v-show="openDropdown === 'aviation'" class="nav-dropdown">
+                <router-link to="/airports" @click="openDropdown = null">{{ $t('nav.airports') }}</router-link>
+                <router-link to="/pireps" @click="openDropdown = null">{{ $t('nav.pireps') }}</router-link>
+                <router-link to="/sigmets" @click="openDropdown = null">{{ $t('nav.sigmets') }}</router-link>
+                <router-link to="/cwas" @click="openDropdown = null">{{ $t('nav.cwas') }}</router-link>
+                <router-link to="/tfrs" @click="openDropdown = null">{{ $t('nav.tfrs') }}</router-link>
+                <router-link to="/winds-aloft" @click="openDropdown = null">{{ $t('nav.windsAloft') }}</router-link>
+                <router-link to="/delays" @click="openDropdown = null">{{ $t('nav.delays') }}</router-link>
+              </div>
+            </div>
+
+            <div class="nav-group" @mouseenter="openDropdown = 'hazards'" @mouseleave="openDropdown = null">
+              <button
+                class="nav-group-trigger"
+                :class="{ active: hazardRoutes.includes($route.path) }"
+                :aria-expanded="openDropdown === 'hazards'"
+                @click="openDropdown = openDropdown === 'hazards' ? null : 'hazards'"
+              >
+                {{ $t('nav.hazards') }} <span class="caret" aria-hidden="true">▾</span>
+              </button>
+              <div v-show="openDropdown === 'hazards'" class="nav-dropdown">
+                <router-link to="/hurricanes" @click="openDropdown = null">{{ $t('nav.hurricanes') }}</router-link>
+                <router-link to="/earthquakes" @click="openDropdown = null">{{ $t('nav.earthquakes') }}</router-link>
+              </div>
+            </div>
+
             <router-link to="/space-weather">{{ $t('nav.spaceWeather') }}</router-link>
             <router-link to="/map">{{ $t('nav.map') }}</router-link>
           </nav>
@@ -103,14 +130,19 @@ const { notificationsEnabled, toggleNotifications } = useAlertNotifications()
 const route = useRoute()
 const menuOpen = ref(false)
 const showSettings = ref(false)
+const openDropdown = ref<string | null>(null)
+
+const aviationRoutes = ['/airports', '/pireps', '/sigmets', '/cwas', '/tfrs', '/winds-aloft', '/delays']
+const hazardRoutes = ['/hurricanes', '/earthquakes']
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
 }
 
-// Close menu on route change
+// Close menu and dropdowns on route change
 watch(() => route.path, () => {
   menuOpen.value = false
+  openDropdown.value = null
 })
 
 function loadTheme(): string {
@@ -143,13 +175,16 @@ onMounted(() => {
 .app-header {
   background-color: var(--header-bg, #ee0000);
   color: white;
-  padding: 20px 0;
+  padding: 12px 0;
   box-shadow: 0 2px 4px var(--shadow, rgba(0, 0, 0, 0.1));
 }
 
-.app-header h1 {
+.header-brand {
   color: white;
-  margin: 0 0 10px 0;
+  text-decoration: none;
+  font-size: 1.3rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .header-top {
@@ -195,42 +230,109 @@ onMounted(() => {
 .header-controls {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  margin-top: 8px;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  margin-left: auto;
 }
 
 nav {
   display: flex;
-  gap: 20px;
+  gap: 4px;
+  align-items: center;
   flex-wrap: wrap;
 }
 
-nav a {
+nav > a {
   color: white;
   text-decoration: none;
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 4px;
+  transition: background-color 0.2s;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+nav > a:hover,
+nav > a.router-link-active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Dropdown groups */
+.nav-group {
+  position: relative;
+}
+
+.nav-group-trigger {
+  color: white;
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
   transition: background-color 0.2s;
 }
 
-nav a:hover,
-nav a.router-link-active {
+.nav-group-trigger:hover,
+.nav-group-trigger.active {
   background-color: rgba(255, 255, 255, 0.2);
+}
+
+.caret {
+  font-size: 10px;
+  margin-left: 2px;
+}
+
+.nav-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: var(--bg-card, white);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  min-width: 180px;
+  z-index: 2000;
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-dropdown a {
+  color: var(--text-primary, #333);
+  text-decoration: none;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 0.15s;
+}
+
+.nav-dropdown a:hover {
+  background: var(--bg-code, #f5f5f5);
+}
+
+.nav-dropdown a.router-link-active {
+  color: #ee0000;
+  font-weight: 600;
 }
 
 .header-icon-btn {
   background: rgba(255, 255, 255, 0.2);
   border: none;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -247,10 +349,10 @@ nav a.router-link-active {
   background: rgba(255, 255, 255, 0.2);
   border: none;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -312,12 +414,11 @@ main {
 
 @media (max-width: 768px) {
   .app-header {
-    padding: 12px 0;
+    padding: 10px 0;
   }
 
-  .app-header h1 {
-    font-size: 1.2rem;
-    margin: 0;
+  .header-brand {
+    font-size: 1.1rem;
   }
 
   .hamburger {
@@ -328,33 +429,70 @@ main {
     display: none;
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
-    margin-top: 12px;
+    gap: 8px;
+    margin-top: 10px;
     max-height: 0;
-    overflow: hidden;
+    overflow: visible;
     transition: max-height 0.3s ease;
   }
 
   .header-controls.nav-open {
     display: flex;
-    max-height: 500px;
+    max-height: 600px;
   }
 
   nav {
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
   }
 
-  nav a {
+  nav > a {
     padding: 10px 16px;
     font-size: 14px;
     border-radius: 6px;
+  }
+
+  .nav-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nav-group-trigger {
+    padding: 10px 16px;
+    font-size: 14px;
+    text-align: left;
+    border-radius: 6px;
+  }
+
+  .nav-dropdown {
+    position: static;
+    margin-top: 0;
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 2px 0;
+  }
+
+  .nav-dropdown a {
+    color: white;
+    padding: 8px 16px 8px 32px;
+    font-size: 14px;
+  }
+
+  .nav-dropdown a:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .nav-dropdown a.router-link-active {
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
   }
 
   .header-actions {
     justify-content: center;
     padding-top: 8px;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin-left: 0;
   }
 
   .app-footer {
