@@ -15,6 +15,7 @@ import weatherService, {
   type GroundStop,
   type VolcanicAshAdvisory,
   type LightningStrike,
+  type SpaceWeather,
 } from '../services/weatherService'
 
 const CACHE_TTLS: Record<string, number> = {
@@ -31,6 +32,7 @@ const CACHE_TTLS: Record<string, number> = {
   groundStops: 2 * 60_000,
   volcanicAsh: 5 * 60_000,
   lightning: 2 * 60_000,
+  spaceWeather: 5 * 60_000,
 }
 const DEFAULT_CACHE_TTL = 60_000 // 1 min fallback (forecasts, history, etc.)
 const pendingRequests = new Map<string, Promise<unknown>>()
@@ -323,6 +325,23 @@ export const useWeatherStore = defineStore('weather', () => {
     }
   }
 
+  // --- Space Weather ---
+  const spaceWeather = ref<SpaceWeather | null>(null)
+  const spaceWeatherLoading = ref(false)
+  const spaceWeatherError = ref<string | null>(null)
+
+  async function fetchSpaceWeather() {
+    spaceWeatherLoading.value = true
+    spaceWeatherError.value = null
+    try {
+      spaceWeather.value = await deduplicatedFetch('spaceWeather', () => weatherService.getSpaceWeather())
+    } catch (err: unknown) {
+      spaceWeatherError.value = err instanceof Error ? err.message : 'Failed to load space weather'
+    } finally {
+      spaceWeatherLoading.value = false
+    }
+  }
+
   // --- Alerts ---
   const alerts = ref<WeatherAlert[]>([])
   const alertsError = ref(false)
@@ -355,6 +374,11 @@ export const useWeatherStore = defineStore('weather', () => {
   async function refreshAlerts() {
     clearCache('alerts')
     await fetchAlerts()
+  }
+
+  async function refreshSpaceWeather() {
+    clearCache('spaceWeather')
+    await fetchSpaceWeather()
   }
 
   async function refreshPireps() {
@@ -502,6 +526,12 @@ export const useWeatherStore = defineStore('weather', () => {
     lightningError,
     fetchLightning,
     refreshLightning,
+    // Space Weather
+    spaceWeather,
+    spaceWeatherLoading,
+    spaceWeatherError,
+    fetchSpaceWeather,
+    refreshSpaceWeather,
     // Alerts
     alerts,
     alertsError,
