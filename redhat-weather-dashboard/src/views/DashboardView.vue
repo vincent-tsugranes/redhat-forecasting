@@ -49,6 +49,27 @@
           <span class="stat-label">Active Alerts</span>
         </div>
       </div>
+      <div class="stat-tile">
+        <span class="stat-icon" aria-hidden="true">📋</span>
+        <div class="stat-body">
+          <span class="stat-value">{{ pireps.length }}</span>
+          <span class="stat-label">PIREPs</span>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-icon" aria-hidden="true">🚨</span>
+        <div class="stat-body">
+          <span class="stat-value">{{ sigmets.length }}</span>
+          <span class="stat-label">SIGMETs</span>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-icon" aria-hidden="true">⏱️</span>
+        <div class="stat-body">
+          <span class="stat-value">{{ delayedAirports }}</span>
+          <span class="stat-label">Delays</span>
+        </div>
+      </div>
     </div>
 
     <div v-if="!loading" class="dashboard-grid">
@@ -183,11 +204,15 @@ const {
   hurricanes,
   earthquakes,
   alerts,
+  pireps,
+  sigmets,
+  delays,
   locationsLoading: loading,
   locationsError: error,
 } = storeToRefs(store)
 const toast = useToast()
 
+const delayedAirports = computed(() => delays.value.filter(d => d.isDelayed).length)
 const locationCount = computed(() => locations.value.length)
 const animatedLocationCount = useAnimatedNumber(locationCount)
 
@@ -214,6 +239,9 @@ onMounted(() => {
     store.fetchAlerts(),
     store.fetchEarthquakes(),
     store.fetchHurricanes(),
+    store.fetchPireps(),
+    store.fetchSigmets(),
+    store.fetchDelays(),
   ])
 })
 </script>

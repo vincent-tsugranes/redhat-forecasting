@@ -23,6 +23,9 @@
             <router-link to="/airports">{{ $t('nav.airports') }}</router-link>
             <router-link to="/hurricanes">{{ $t('nav.hurricanes') }}</router-link>
             <router-link to="/earthquakes">{{ $t('nav.earthquakes') }}</router-link>
+            <router-link to="/pireps">{{ $t('nav.pireps') }}</router-link>
+            <router-link to="/sigmets">{{ $t('nav.sigmets') }}</router-link>
+            <router-link to="/delays">{{ $t('nav.delays') }}</router-link>
             <router-link to="/space-weather">{{ $t('nav.spaceWeather') }}</router-link>
             <router-link to="/map">{{ $t('nav.map') }}</router-link>
           </nav>

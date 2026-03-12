@@ -2,10 +2,13 @@ package com.redhat.weather.scheduler;
 
 import com.redhat.weather.domain.entity.LocationEntity;
 import com.redhat.weather.domain.repository.LocationRepository;
+import com.redhat.weather.service.AirportDelayService;
 import com.redhat.weather.service.AirportWeatherService;
 import com.redhat.weather.service.DataFreshnessService;
 import com.redhat.weather.service.EarthquakeService;
 import com.redhat.weather.service.HurricaneService;
+import com.redhat.weather.service.PirepService;
+import com.redhat.weather.service.SigmetService;
 import com.redhat.weather.service.WeatherAlertService;
 import com.redhat.weather.service.WeatherForecastService;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -46,6 +49,15 @@ public class WeatherDataScheduler {
     WeatherAlertService weatherAlertService;
 
     @Inject
+    PirepService pirepService;
+
+    @Inject
+    SigmetService sigmetService;
+
+    @Inject
+    AirportDelayService airportDelayService;
+
+    @Inject
     LocationRepository locationRepository;
 
     @Inject
@@ -71,6 +83,15 @@ public class WeatherDataScheduler {
 
     @ConfigProperty(name = "weather.scheduler.openweather.enabled", defaultValue = "false")
     boolean openWeatherEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.pireps.enabled", defaultValue = "true")
+    boolean pirepsEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.sigmets.enabled", defaultValue = "true")
+    boolean sigmetsEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.delays.enabled", defaultValue = "true")
+    boolean delaysEnabled;
 
     @ConfigProperty(name = "weather.scheduler.airport.batch-size", defaultValue = "500")
     int airportBatchSize;
@@ -137,6 +158,24 @@ public class WeatherDataScheduler {
                     initialFetches.add(CompletableFuture.runAsync(() -> {
                         LOG.info("Initial fetch: Weather alerts");
                         fetchWeatherAlerts();
+                    }));
+                }
+                if (pirepsEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: PIREPs");
+                        fetchPireps();
+                    }));
+                }
+                if (sigmetsEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: SIGMETs/AIRMETs");
+                        fetchSigmets();
+                    }));
+                }
+                if (delaysEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: Airport delays");
+                        fetchAirportDelays();
                     }));
                 }
 
@@ -406,6 +445,73 @@ public class WeatherDataScheduler {
     }
 
     /**
+     * Fetch PIREPs every 10 minutes
+     */
+    @Scheduled(cron = "0 */10 * * * ?", identity = "pirep-fetch")
+    public void fetchPireps() {
+        if (!pirepsEnabled) {
+            LOG.debug("PIREP scheduler is disabled");
+            return;
+        }
+
+        LOG.info("Starting PIREP data fetch");
+        try {
+            pirepService.fetchAndStorePireps();
+            dataFreshnessService.recordSuccess("awc-pireps");
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-pireps", "result", "success").increment();
+            LOG.info("PIREP data fetch completed");
+        } catch (Exception e) {
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-pireps", "result", "failure").increment();
+            LOG.error("Error in PIREP scheduler", e);
+        }
+    }
+
+    /**
+     * Fetch SIGMETs/AIRMETs every 15 minutes
+     */
+    @Scheduled(cron = "0 */15 * * * ?", identity = "sigmet-fetch")
+    public void fetchSigmets() {
+        if (!sigmetsEnabled) {
+            LOG.debug("SIGMET scheduler is disabled");
+            return;
+        }
+
+        LOG.info("Starting SIGMET/AIRMET data fetch");
+        try {
+            sigmetService.deactivateExpired();
+            sigmetService.fetchAndStoreSigmets();
+            dataFreshnessService.recordSuccess("awc-sigmets");
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-sigmets", "result", "success").increment();
+            LOG.info("SIGMET/AIRMET data fetch completed");
+        } catch (Exception e) {
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-sigmets", "result", "failure").increment();
+            LOG.error("Error in SIGMET scheduler", e);
+        }
+    }
+
+    /**
+     * Fetch FAA airport delays every 5 minutes
+     */
+    @Scheduled(cron = "0 */5 * * * ?", identity = "airport-delay-fetch")
+    public void fetchAirportDelays() {
+        if (!delaysEnabled) {
+            LOG.debug("Airport delay scheduler is disabled");
+            return;
+        }
+
+        LOG.info("Starting airport delay data fetch");
+        try {
+            airportDelayService.fetchAndStoreDelays();
+            dataFreshnessService.recordSuccess("faa-delays");
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "faa-delays", "result", "success").increment();
+            LOG.info("Airport delay data fetch completed");
+        } catch (Exception e) {
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "faa-delays", "result", "failure").increment();
+            LOG.error("Error in airport delay scheduler", e);
+        }
+    }
+
+    /**
      * Clean up old forecast data daily at 2 AM.
      * Guards against data starvation: only cleans up if fresh data exists.
      */
@@ -434,11 +540,15 @@ public class WeatherDataScheduler {
                 airportWeatherService.deactivateOldReports(sevenDaysAgo);
             }
 
-            // Hurricane, earthquake, and alert cleanup is always safe:
+            // Hurricane, earthquake, alert, PIREP, SIGMET, and delay cleanup is always safe:
             // old advisories are genuinely stale; deactivateExpired only removes truly expired alerts
             hurricaneService.deactivateOldAdvisories(sevenDaysAgo);
             earthquakeService.deactivateOldEvents(sevenDaysAgo);
             weatherAlertService.deactivateExpired();
+            pirepService.deactivateOldReports(sevenDaysAgo);
+            sigmetService.deactivateExpired();
+            sigmetService.deactivateOldEntries(sevenDaysAgo);
+            airportDelayService.deactivateOldDelays(sevenDaysAgo);
 
             LOG.info("Old data cleanup completed");
 

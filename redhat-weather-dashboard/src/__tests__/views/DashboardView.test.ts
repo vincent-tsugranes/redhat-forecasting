@@ -108,13 +108,16 @@ describe('DashboardView', () => {
     await flushPromises()
 
     const statTiles = wrapper.findAll('.stat-tile')
-    expect(statTiles.length).toBe(5)
+    expect(statTiles.length).toBe(8)
     // Should show location count, airport count, etc.
     expect(wrapper.text()).toContain('Locations')
     expect(wrapper.text()).toContain('Airports')
     expect(wrapper.text()).toContain('Active Storms')
     expect(wrapper.text()).toContain('Earthquakes')
     expect(wrapper.text()).toContain('Active Alerts')
+    expect(wrapper.text()).toContain('PIREPs')
+    expect(wrapper.text()).toContain('SIGMETs')
+    expect(wrapper.text()).toContain('Delays')
   })
 
   it('renders earthquake table with data', async () => {

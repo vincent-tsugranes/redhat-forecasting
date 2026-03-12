@@ -76,4 +76,61 @@ public interface AviationWeatherClient {
         public Double lon;
         public String rawTAF;
     }
+
+    @GET
+    @Path("/pirep")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Retry(maxRetries = 2, delay = 2000, jitter = 500,
+           retryOn = {WebApplicationException.class, IOException.class})
+    @CircuitBreaker(requestVolumeThreshold = 15, failureRatio = 0.5,
+                    delay = 60000, successThreshold = 3)
+    List<PirepResponse> getPIREPs(@QueryParam("age") int ageHours,
+                                   @QueryParam("format") String format);
+
+    @GET
+    @Path("/airsigmet")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Retry(maxRetries = 2, delay = 2000, jitter = 500,
+           retryOn = {WebApplicationException.class, IOException.class})
+    @CircuitBreaker(requestVolumeThreshold = 15, failureRatio = 0.5,
+                    delay = 60000, successThreshold = 3)
+    List<AirSigmetResponse> getAirSigmets(@QueryParam("format") String format);
+
+    class PirepResponse {
+        public String receipt;
+        public String obsTime;
+        public Double lat;
+        public Double lon;
+        public Integer fltlvl;
+        public String acType;
+        public String icgInten;
+        public String icgType;
+        public String turbInten;
+        public String turbType;
+        public String wxString;
+        public Double temp;
+        public Integer wdir;
+        public Integer wspd;
+        public Double visib;
+        public String clouds;
+        public String rawOb;
+        public String pirepType;
+    }
+
+    class AirSigmetResponse {
+        public String airSigmetType;
+        public String hazard;
+        public String severity;
+        public String validTimeFrom;
+        public String validTimeTo;
+        public Integer altitudeLow;
+        public Integer altitudeHi;
+        public String rawAirSigmet;
+        public java.util.List<CoordPair> coords;
+    }
+
+    class CoordPair {
+        public Double lat;
+        public Double lon;
+    }
 }

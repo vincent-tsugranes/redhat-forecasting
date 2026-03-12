@@ -11,6 +11,9 @@
     "airports": "Airports",
     "hurricanes": "Hurricanes",
     "earthquakes": "Earthquakes",
+    "pireps": "PIREPs",
+    "sigmets": "SIGMETs",
+    "delays": "Delays",
     "spaceWeather": "Space",
     "map": "Map"
   },
@@ -190,6 +193,27 @@
     "dayLength": "Day Length",
     "daylight": "Daylight",
     "darkness": "Darkness"
+  },
+  "pirep": {
+    "title": "Pilot Reports (PIREPs)",
+    "recentReports": "Recent Pilot Reports",
+    "refreshData": "Refresh Data",
+    "noRecent": "No pilot reports in the last 3 hours.",
+    "autoFetch": "PIREPs are automatically fetched from the Aviation Weather Center every 10 minutes."
+  },
+  "sigmet": {
+    "title": "SIGMETs & AIRMETs",
+    "activeAdvisories": "Active Advisories",
+    "refreshData": "Refresh Data",
+    "noActive": "No active SIGMETs or AIRMETs at this time.",
+    "autoFetch": "SIGMETs and AIRMETs are automatically fetched every 15 minutes."
+  },
+  "delay": {
+    "title": "Airport Delays",
+    "currentStatus": "Current Airport Status",
+    "refreshData": "Refresh Data",
+    "noDelays": "No airport delays reported at this time.",
+    "autoFetch": "Airport delay data is automatically updated every 5 minutes from the FAA."
   },
   "settings": {
     "title": "Settings",

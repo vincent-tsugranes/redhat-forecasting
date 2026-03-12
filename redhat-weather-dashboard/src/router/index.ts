@@ -35,6 +35,21 @@ const router = createRouter({
       component: () => import('../views/SpaceWeatherView.vue'),
     },
     {
+      path: '/pireps',
+      name: 'pireps',
+      component: () => import('../views/PirepView.vue'),
+    },
+    {
+      path: '/sigmets',
+      name: 'sigmets',
+      component: () => import('../views/SigmetView.vue'),
+    },
+    {
+      path: '/delays',
+      name: 'delays',
+      component: () => import('../views/AirportDelayView.vue'),
+    },
+    {
       path: '/map',
       name: 'map',
       component: () => import('../views/MapView.vue'),
@@ -54,6 +69,15 @@ router.beforeEach((to) => {
       break
     case 'earthquakes':
       store.fetchEarthquakes()
+      break
+    case 'pireps':
+      store.fetchPireps()
+      break
+    case 'sigmets':
+      store.fetchSigmets()
+      break
+    case 'delays':
+      store.fetchDelays()
       break
     case 'forecasts':
       store.fetchLocations()

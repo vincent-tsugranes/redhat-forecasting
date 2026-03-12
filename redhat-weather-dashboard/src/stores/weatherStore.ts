@@ -6,6 +6,9 @@ import weatherService, {
   type Hurricane,
   type Earthquake,
   type WeatherAlert,
+  type Pirep,
+  type Sigmet,
+  type AirportDelay,
 } from '../services/weatherService'
 
 const CACHE_TTLS: Record<string, number> = {
@@ -14,6 +17,9 @@ const CACHE_TTLS: Record<string, number> = {
   alerts: 5 * 60_000,
   hurricanes: 5 * 60_000,
   earthquakes: 10 * 60_000,
+  pireps: 5 * 60_000,
+  sigmets: 5 * 60_000,
+  delays: 2 * 60_000,
 }
 const DEFAULT_CACHE_TTL = 60_000 // 1 min fallback (forecasts, history, etc.)
 const pendingRequests = new Map<string, Promise<unknown>>()
@@ -170,6 +176,57 @@ export const useWeatherStore = defineStore('weather', () => {
     }
   }
 
+  // --- PIREPs ---
+  const pireps = ref<Pirep[]>([])
+  const pirepsLoading = ref(false)
+  const pirepsError = ref<string | null>(null)
+
+  async function fetchPireps() {
+    pirepsLoading.value = true
+    pirepsError.value = null
+    try {
+      pireps.value = await deduplicatedFetch('pireps', () => weatherService.getRecentPireps())
+    } catch (err: unknown) {
+      pirepsError.value = err instanceof Error ? err.message : 'Failed to load PIREPs'
+    } finally {
+      pirepsLoading.value = false
+    }
+  }
+
+  // --- SIGMETs ---
+  const sigmets = ref<Sigmet[]>([])
+  const sigmetsLoading = ref(false)
+  const sigmetsError = ref<string | null>(null)
+
+  async function fetchSigmets() {
+    sigmetsLoading.value = true
+    sigmetsError.value = null
+    try {
+      sigmets.value = await deduplicatedFetch('sigmets', () => weatherService.getActiveSigmets())
+    } catch (err: unknown) {
+      sigmetsError.value = err instanceof Error ? err.message : 'Failed to load SIGMETs'
+    } finally {
+      sigmetsLoading.value = false
+    }
+  }
+
+  // --- Airport Delays ---
+  const delays = ref<AirportDelay[]>([])
+  const delaysLoading = ref(false)
+  const delaysError = ref<string | null>(null)
+
+  async function fetchDelays() {
+    delaysLoading.value = true
+    delaysError.value = null
+    try {
+      delays.value = await deduplicatedFetch('delays', () => weatherService.getActiveDelays())
+    } catch (err: unknown) {
+      delaysError.value = err instanceof Error ? err.message : 'Failed to load airport delays'
+    } finally {
+      delaysLoading.value = false
+    }
+  }
+
   // --- Alerts ---
   const alerts = ref<WeatherAlert[]>([])
   const alertsError = ref(false)
@@ -209,6 +266,27 @@ export const useWeatherStore = defineStore('weather', () => {
     await fetchAlerts()
   }
 
+  async function refreshPireps() {
+    clearCache('pireps')
+    await weatherService.refreshPireps()
+    await new Promise((r) => setTimeout(r, 2000))
+    await fetchPireps()
+  }
+
+  async function refreshSigmets() {
+    clearCache('sigmets')
+    await weatherService.refreshSigmets()
+    await new Promise((r) => setTimeout(r, 2000))
+    await fetchSigmets()
+  }
+
+  async function refreshDelays() {
+    clearCache('delays')
+    await weatherService.refreshDelays()
+    await new Promise((r) => setTimeout(r, 2000))
+    await fetchDelays()
+  }
+
   return {
     // Locations
     locations,
@@ -243,6 +321,24 @@ export const useWeatherStore = defineStore('weather', () => {
     earthquakesError,
     fetchEarthquakes,
     refreshEarthquakes,
+    // PIREPs
+    pireps,
+    pirepsLoading,
+    pirepsError,
+    fetchPireps,
+    refreshPireps,
+    // SIGMETs
+    sigmets,
+    sigmetsLoading,
+    sigmetsError,
+    fetchSigmets,
+    refreshSigmets,
+    // Delays
+    delays,
+    delaysLoading,
+    delaysError,
+    fetchDelays,
+    refreshDelays,
     // Alerts
     alerts,
     alertsError,

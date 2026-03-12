@@ -132,6 +132,59 @@ export interface ClimateNormals {
   fetchedAt: string
 }
 
+export interface Pirep {
+  id: number
+  pirepId: string
+  reportType: string
+  rawText: string
+  observationTime: string
+  latitude: number
+  longitude: number
+  altitudeFt?: number
+  aircraftType?: string
+  skyCondition?: string
+  turbulenceIntensity?: string
+  turbulenceType?: string
+  icingIntensity?: string
+  icingType?: string
+  weatherConditions?: string
+  temperatureCelsius?: number
+  windSpeedKnots?: number
+  windDirection?: number
+  visibilityMiles?: number
+  fetchedAt?: string
+}
+
+export interface Sigmet {
+  id: number
+  sigmetId: string
+  sigmetType: string
+  hazard?: string
+  severity?: string
+  validTimeFrom: string
+  validTimeTo: string
+  altitudeLowFt?: number
+  altitudeHighFt?: number
+  rawText?: string
+  geojson?: object
+  fetchedAt?: string
+}
+
+export interface AirportDelay {
+  id: number
+  delayId: string
+  airportCode: string
+  airportName?: string
+  delayType: string
+  reason?: string
+  avgDelayMinutes?: number
+  minDelayMinutes?: number
+  maxDelayMinutes?: number
+  trend?: string
+  isDelayed: boolean
+  fetchedAt?: string
+}
+
 export interface WeatherAlert {
   id: number
   alertId: string
@@ -290,6 +343,36 @@ export const weatherService = {
 
   async refreshEarthquakes(): Promise<void> {
     await weatherApi.post('/earthquakes/refresh')
+  },
+
+  // PIREPs
+  async getRecentPireps(): Promise<Pirep[]> {
+    const response = await weatherApi.get('/pireps/recent')
+    return response.data
+  },
+
+  async refreshPireps(): Promise<void> {
+    await weatherApi.post('/pireps/refresh')
+  },
+
+  // SIGMETs
+  async getActiveSigmets(): Promise<Sigmet[]> {
+    const response = await weatherApi.get('/sigmets/active')
+    return response.data
+  },
+
+  async refreshSigmets(): Promise<void> {
+    await weatherApi.post('/sigmets/refresh')
+  },
+
+  // Airport Delays
+  async getActiveDelays(): Promise<AirportDelay[]> {
+    const response = await weatherApi.get('/delays/active')
+    return response.data
+  },
+
+  async refreshDelays(): Promise<void> {
+    await weatherApi.post('/delays/refresh')
   },
 
   // Space Weather
