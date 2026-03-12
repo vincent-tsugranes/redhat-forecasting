@@ -14,6 +14,7 @@
     "pireps": "PIREPs",
     "sigmets": "SIGMETs",
     "delays": "Delays",
+    "tfrs": "TFRs",
     "cwas": "CWAs",
     "windsAloft": "Winds",
     "spaceWeather": "Space",
@@ -209,6 +210,13 @@
     "refreshData": "Refresh Data",
     "noActive": "No active SIGMETs or AIRMETs at this time.",
     "autoFetch": "SIGMETs and AIRMETs are automatically fetched every 15 minutes."
+  },
+  "tfr": {
+    "title": "Temporary Flight Restrictions",
+    "activeRestrictions": "Active TFRs",
+    "refreshData": "Refresh Data",
+    "noActive": "No active Temporary Flight Restrictions at this time.",
+    "autoFetch": "TFR data is automatically fetched from the FAA every 15 minutes."
   },
   "cwa": {
     "title": "Center Weather Advisories",

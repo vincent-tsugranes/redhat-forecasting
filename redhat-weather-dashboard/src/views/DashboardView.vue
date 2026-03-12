@@ -64,6 +64,13 @@
         </div>
       </div>
       <div class="stat-tile">
+        <span class="stat-icon" aria-hidden="true">🚫</span>
+        <div class="stat-body">
+          <span class="stat-value">{{ tfrs.length }}</span>
+          <span class="stat-label">TFRs</span>
+        </div>
+      </div>
+      <div class="stat-tile">
         <span class="stat-icon" aria-hidden="true">📡</span>
         <div class="stat-body">
           <span class="stat-value">{{ cwas.length }}</span>
@@ -220,6 +227,7 @@ const {
   alerts,
   pireps,
   sigmets,
+  tfrs,
   cwas,
   windsAloft,
   delays,
@@ -258,6 +266,7 @@ onMounted(() => {
     store.fetchHurricanes(),
     store.fetchPireps(),
     store.fetchSigmets(),
+    store.fetchTfrs(),
     store.fetchCwas(),
     store.fetchWindsAloft(),
     store.fetchDelays(),

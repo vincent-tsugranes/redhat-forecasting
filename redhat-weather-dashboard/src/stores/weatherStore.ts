@@ -10,6 +10,7 @@ import weatherService, {
   type Sigmet,
   type Cwa,
   type WindsAloft,
+  type Tfr,
   type AirportDelay,
 } from '../services/weatherService'
 
@@ -23,6 +24,7 @@ const CACHE_TTLS: Record<string, number> = {
   sigmets: 5 * 60_000,
   cwas: 5 * 60_000,
   windsAloft: 30 * 60_000,
+  tfrs: 10 * 60_000,
   delays: 2 * 60_000,
 }
 const DEFAULT_CACHE_TTL = 60_000 // 1 min fallback (forecasts, history, etc.)
@@ -248,6 +250,23 @@ export const useWeatherStore = defineStore('weather', () => {
     }
   }
 
+  // --- TFRs ---
+  const tfrs = ref<Tfr[]>([])
+  const tfrsLoading = ref(false)
+  const tfrsError = ref<string | null>(null)
+
+  async function fetchTfrs() {
+    tfrsLoading.value = true
+    tfrsError.value = null
+    try {
+      tfrs.value = await deduplicatedFetch('tfrs', () => weatherService.getActiveTfrs())
+    } catch (err: unknown) {
+      tfrsError.value = err instanceof Error ? err.message : 'Failed to load TFRs'
+    } finally {
+      tfrsLoading.value = false
+    }
+  }
+
   // --- Airport Delays ---
   const delays = ref<AirportDelay[]>([])
   const delaysLoading = ref(false)
@@ -332,6 +351,13 @@ export const useWeatherStore = defineStore('weather', () => {
     await fetchWindsAloft()
   }
 
+  async function refreshTfrs() {
+    clearCache('tfrs')
+    await weatherService.refreshTfrs()
+    await new Promise((r) => setTimeout(r, 2000))
+    await fetchTfrs()
+  }
+
   async function refreshDelays() {
     clearCache('delays')
     await weatherService.refreshDelays()
@@ -397,6 +423,12 @@ export const useWeatherStore = defineStore('weather', () => {
     windsAloftError,
     fetchWindsAloft,
     refreshWindsAloft,
+    // TFRs
+    tfrs,
+    tfrsLoading,
+    tfrsError,
+    fetchTfrs,
+    refreshTfrs,
     // Delays
     delays,
     delaysLoading,

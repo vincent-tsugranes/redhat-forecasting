@@ -50,6 +50,11 @@ const router = createRouter({
       component: () => import('../views/AirportDelayView.vue'),
     },
     {
+      path: '/tfrs',
+      name: 'tfrs',
+      component: () => import('../views/TfrView.vue'),
+    },
+    {
       path: '/cwas',
       name: 'cwas',
       component: () => import('../views/CwaView.vue'),
@@ -88,6 +93,9 @@ router.beforeEach((to) => {
       break
     case 'delays':
       store.fetchDelays()
+      break
+    case 'tfrs':
+      store.fetchTfrs()
       break
     case 'cwas':
       store.fetchCwas()

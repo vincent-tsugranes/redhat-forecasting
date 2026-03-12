@@ -10,6 +10,7 @@ import com.redhat.weather.service.EarthquakeService;
 import com.redhat.weather.service.HurricaneService;
 import com.redhat.weather.service.PirepService;
 import com.redhat.weather.service.SigmetService;
+import com.redhat.weather.service.TfrService;
 import com.redhat.weather.service.WeatherAlertService;
 import com.redhat.weather.service.WeatherForecastService;
 import com.redhat.weather.service.WindsAloftService;
@@ -66,6 +67,9 @@ public class WeatherDataScheduler {
     WindsAloftService windsAloftService;
 
     @Inject
+    TfrService tfrService;
+
+    @Inject
     LocationRepository locationRepository;
 
     @Inject
@@ -106,6 +110,9 @@ public class WeatherDataScheduler {
 
     @ConfigProperty(name = "weather.scheduler.winds-aloft.enabled", defaultValue = "true")
     boolean windsAloftEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.tfrs.enabled", defaultValue = "true")
+    boolean tfrsEnabled;
 
     @ConfigProperty(name = "weather.scheduler.airport.batch-size", defaultValue = "500")
     int airportBatchSize;
@@ -202,6 +209,12 @@ public class WeatherDataScheduler {
                     initialFetches.add(CompletableFuture.runAsync(() -> {
                         LOG.info("Initial fetch: Winds aloft");
                         fetchWindsAloft();
+                    }));
+                }
+                if (tfrsEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: TFRs");
+                        fetchTfrs();
                     }));
                 }
 
@@ -562,6 +575,28 @@ public class WeatherDataScheduler {
     }
 
     /**
+     * Fetch TFRs every 15 minutes
+     */
+    @Scheduled(cron = "0 */15 * * * ?", identity = "tfr-fetch")
+    public void fetchTfrs() {
+        if (!tfrsEnabled) {
+            LOG.debug("TFR scheduler is disabled");
+            return;
+        }
+
+        LOG.info("Starting TFR data fetch");
+        try {
+            tfrService.fetchAndStoreTfrs();
+            dataFreshnessService.recordSuccess("faa-tfrs");
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "faa-tfrs", "result", "success").increment();
+            LOG.info("TFR data fetch completed");
+        } catch (Exception e) {
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "faa-tfrs", "result", "failure").increment();
+            LOG.error("Error in TFR scheduler", e);
+        }
+    }
+
+    /**
      * Fetch winds/temps aloft every 6 hours (forecast product, updated 4x daily)
      */
     @Scheduled(cron = "0 0 */6 * * ?", identity = "winds-aloft-fetch")
@@ -624,6 +659,7 @@ public class WeatherDataScheduler {
             cwaService.deactivateExpired();
             cwaService.deactivateOldEntries(sevenDaysAgo);
             windsAloftService.deactivateOldForecasts(sevenDaysAgo);
+            tfrService.deactivateOldTfrs(sevenDaysAgo);
 
             LOG.info("Old data cleanup completed");
 

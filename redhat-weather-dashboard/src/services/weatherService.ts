@@ -204,6 +204,23 @@ export interface WindsAloft {
   fetchedAt?: string
 }
 
+export interface Tfr {
+  id: number
+  notamId: string
+  notamKey?: string
+  facility: string
+  state?: string
+  tfrType: string
+  description?: string
+  effectiveDate?: string
+  expireDate?: string
+  latitude?: number
+  longitude?: number
+  geojson?: object
+  isNew: boolean
+  fetchedAt?: string
+}
+
 export interface AirportDelay {
   id: number
   delayId: string
@@ -417,6 +434,16 @@ export const weatherService = {
 
   async refreshWindsAloft(): Promise<void> {
     await weatherApi.post('/winds-aloft/refresh')
+  },
+
+  // TFRs
+  async getActiveTfrs(): Promise<Tfr[]> {
+    const response = await weatherApi.get('/tfrs/active')
+    return response.data
+  },
+
+  async refreshTfrs(): Promise<void> {
+    await weatherApi.post('/tfrs/refresh')
   },
 
   // Airport Delays
