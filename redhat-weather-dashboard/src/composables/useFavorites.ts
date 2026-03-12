@@ -22,7 +22,7 @@ const favorites = ref<FavoriteLocation[]>(loadFavorites())
 watch(
   favorites,
   (val) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(val))
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(val)) } catch { /* private browsing */ }
   },
   { deep: true },
 )

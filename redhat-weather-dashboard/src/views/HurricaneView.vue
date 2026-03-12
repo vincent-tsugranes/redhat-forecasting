@@ -11,11 +11,13 @@
       </div>
     </div>
 
-    <HurricaneMap
-      v-if="hurricanes.length > 0"
-      :storms="hurricanes"
-      @storm-selected="onStormSelected"
-    />
+    <ErrorBoundary>
+      <HurricaneMap
+        v-if="hurricanes.length > 0"
+        :storms="hurricanes"
+        @storm-selected="onStormSelected"
+      />
+    </ErrorBoundary>
 
     <HurricaneSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
@@ -98,6 +100,7 @@ import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import HurricaneMap from '../components/HurricaneMap.vue'
 import HurricaneSkeleton from '../components/skeletons/HurricaneSkeleton.vue'
+import ErrorBoundary from '../components/ErrorBoundary.vue'
 
 const { t } = useI18n()
 const toast = useToast()

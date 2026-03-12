@@ -105,10 +105,16 @@ watch(() => route.path, () => {
   menuOpen.value = false
 })
 
-const theme = ref(
-  localStorage.getItem('theme') ||
-    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
-)
+function loadTheme(): string {
+  try {
+    return localStorage.getItem('theme') ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  } catch {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  }
+}
+
+const theme = ref(loadTheme())
 
 function applyTheme(t: string) {
   document.documentElement.dataset.theme = t
@@ -116,7 +122,7 @@ function applyTheme(t: string) {
 
 function toggleTheme() {
   theme.value = theme.value === 'dark' ? 'light' : 'dark'
-  localStorage.setItem('theme', theme.value)
+  try { localStorage.setItem('theme', theme.value) } catch { /* private browsing */ }
   applyTheme(theme.value)
 }
 

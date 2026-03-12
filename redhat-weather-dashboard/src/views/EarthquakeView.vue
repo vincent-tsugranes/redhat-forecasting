@@ -19,11 +19,13 @@
       </div>
     </div>
 
-    <EarthquakeMap
-      v-if="earthquakes.length > 0"
-      :earthquakes="earthquakes"
-      @quake-selected="onQuakeSelected"
-    />
+    <ErrorBoundary>
+      <EarthquakeMap
+        v-if="earthquakes.length > 0"
+        :earthquakes="earthquakes"
+        @quake-selected="onQuakeSelected"
+      />
+    </ErrorBoundary>
 
     <EarthquakeSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
@@ -158,6 +160,7 @@ import { formatDate } from '../utils/dateUtils'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import EarthquakeMap from '../components/EarthquakeMap.vue'
 import EarthquakeSkeleton from '../components/skeletons/EarthquakeSkeleton.vue'
+import ErrorBoundary from '../components/ErrorBoundary.vue'
 
 const store = useWeatherStore()
 const toast = useToast()

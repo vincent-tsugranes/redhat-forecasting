@@ -22,7 +22,7 @@ function loadNotifiedIds(): Set<string> {
 }
 
 function saveNotifiedIds(ids: Set<string>) {
-  localStorage.setItem(NOTIFIED_KEY, JSON.stringify([...ids]))
+  try { localStorage.setItem(NOTIFIED_KEY, JSON.stringify([...ids])) } catch { /* private browsing */ }
 }
 
 const notificationsEnabled = ref(loadEnabled())
@@ -39,14 +39,14 @@ export function useAlertNotifications() {
   async function toggleNotifications() {
     if (notificationsEnabled.value) {
       notificationsEnabled.value = false
-      localStorage.setItem(STORAGE_KEY, 'false')
+      try { localStorage.setItem(STORAGE_KEY, 'false') } catch { /* private browsing */ }
       return
     }
 
     const granted = await requestPermission()
     if (granted) {
       notificationsEnabled.value = true
-      localStorage.setItem(STORAGE_KEY, 'true')
+      try { localStorage.setItem(STORAGE_KEY, 'true') } catch { /* private browsing */ }
     }
   }
 

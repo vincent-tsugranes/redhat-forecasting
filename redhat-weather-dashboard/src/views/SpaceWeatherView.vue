@@ -17,7 +17,9 @@
     <div v-if="spaceWeather" class="grid">
       <div class="card kp-card">
         <h3>{{ $t('space.kpIndex') }}</h3>
-        <KpIndexGauge :value="spaceWeather.kpIndex" />
+        <ErrorBoundary>
+          <KpIndexGauge :value="spaceWeather.kpIndex" />
+        </ErrorBoundary>
         <div class="kp-level" :class="'level-' + spaceWeather.kpLevel.replace(/\s+/g, '-')">
           {{ spaceWeather.kpLevel }}
         </div>
@@ -69,6 +71,7 @@ import { useToast } from '../composables/useToast'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import KpIndexGauge from '../components/KpIndexGauge.vue'
 import SpaceWeatherSkeleton from '../components/skeletons/SpaceWeatherSkeleton.vue'
+import ErrorBoundary from '../components/ErrorBoundary.vue'
 
 const toast = useToast()
 const spaceWeather = ref<SpaceWeather | null>(null)

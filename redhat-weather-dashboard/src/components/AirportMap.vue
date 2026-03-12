@@ -138,14 +138,27 @@ function initializeMap() {
   const legend = new L.Control({ position: 'bottomright' })
   legend.onAdd = () => {
     const div = L.DomUtil.create('div', 'flight-category-legend')
-    div.innerHTML = `
-      <div class="legend-title">Flight Category</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#4caf50"></span> VFR</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#2196f3"></span> MVFR</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#ff9800"></span> IFR</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#f44336"></span> LIFR</div>
-      <div class="legend-item"><span class="legend-dot" style="background:#9e9e9e"></span> Unknown</div>
-    `
+    const categories = [
+      { color: '#4caf50', label: 'VFR' },
+      { color: '#2196f3', label: 'MVFR' },
+      { color: '#ff9800', label: 'IFR' },
+      { color: '#f44336', label: 'LIFR' },
+      { color: '#9e9e9e', label: 'Unknown' },
+    ]
+    const title = document.createElement('div')
+    title.className = 'legend-title'
+    title.textContent = 'Flight Category'
+    div.appendChild(title)
+    for (const cat of categories) {
+      const item = document.createElement('div')
+      item.className = 'legend-item'
+      const dot = document.createElement('span')
+      dot.className = 'legend-dot'
+      dot.style.background = cat.color
+      item.appendChild(dot)
+      item.appendChild(document.createTextNode(` ${cat.label}`))
+      div.appendChild(item)
+    }
     return div
   }
   legend.addTo(map.value as L.Map)
@@ -210,6 +223,21 @@ function degreesToCompass(deg: number): string {
   return dirs[Math.round(deg / 22.5) % 16]
 }
 
+function createWeatherItem(label: string, value: string, style?: string): HTMLElement {
+  const item = document.createElement('div')
+  item.className = 'weather-item'
+  const labelEl = document.createElement('span')
+  labelEl.className = 'weather-label'
+  labelEl.textContent = label
+  const valueEl = document.createElement('span')
+  valueEl.className = 'weather-value'
+  valueEl.textContent = value
+  if (style) valueEl.setAttribute('style', style)
+  item.appendChild(labelEl)
+  item.appendChild(valueEl)
+  return item
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location) {
   const popupElement = popup.getElement()
@@ -218,8 +246,9 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
   const weatherContainer = popupElement.querySelector('.weather-container')
   if (!weatherContainer) return
 
+  weatherContainer.textContent = ''
+
   if (weather) {
-    // Convert Celsius to Fahrenheit
     const tempC = weather.temperatureCelsius
     const tempF = tempC !== null && tempC !== undefined ? Math.round((tempC * 9) / 5 + 32) : null
     const dewC = weather.dewpointCelsius
@@ -230,10 +259,6 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
     const gustMph = gustKnots ? Math.round(gustKnots * 1.151) : null
     const windDir = weather.windDirection
     const windDirStr = windDir != null ? degreesToCompass(windDir) : null
-    const visibility = weather.visibilityMiles
-    const ceiling = weather.ceilingFeet
-    const skyCondition = weather.skyCondition
-    const weatherConditions = weather.weatherConditions
     const flightCategory = weather.flightCategory
     const observationTime = weather.observationTime
       ? new Date(weather.observationTime).toLocaleString()
@@ -242,15 +267,10 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
     const relativeTime = fetchedAt ? formatRelativeTime(fetchedAt) : null
     const freshnessLevel = fetchedAt ? getFreshnessLevel(fetchedAt, 'airport') : 'fresh'
 
-    // Flight category colors
     const categoryColors: Record<string, string> = {
-      VFR: '#4caf50',
-      MVFR: '#2196f3',
-      IFR: '#ff9800',
-      LIFR: '#f44336',
+      VFR: '#4caf50', MVFR: '#2196f3', IFR: '#ff9800', LIFR: '#f44336',
     }
 
-    // Build wind string
     let windStr = ''
     if (windMph) {
       windStr = `${windMph} mph`
@@ -258,116 +278,70 @@ function updatePopupWithWeather(popup: L.Popup, weather: any, _airport: Location
       if (gustMph) windStr += `, gusts ${gustMph}`
     }
 
-    weatherContainer.innerHTML = `
-      <div class="weather-divider"></div>
-      <div class="weather-title">✈️ METAR Conditions</div>
-      <div class="weather-info">
-        ${
-          tempC !== null && tempC !== undefined
-            ? `
-          <div class="weather-item">
-            <span class="weather-label">Temperature:</span>
-            <span class="weather-value">${tempF}°F / ${tempC}°C</span>
-          </div>
-        `
-            : ''
-        }
-        ${
-          dewF !== null
-            ? `
-          <div class="weather-item">
-            <span class="weather-label">Dew Point:</span>
-            <span class="weather-value">${dewF}°F / ${dewC}°C</span>
-          </div>
-        `
-            : ''
-        }
-        ${
-          windStr
-            ? `
-          <div class="weather-item">
-            <span class="weather-label">Wind:</span>
-            <span class="weather-value">${windStr}</span>
-          </div>
-        `
-            : ''
-        }
-        ${
-          visibility !== null && visibility !== undefined
-            ? `
-          <div class="weather-item">
-            <span class="weather-label">Visibility:</span>
-            <span class="weather-value">${visibility} mi</span>
-          </div>
-        `
-            : ''
-        }
-        ${
-          ceiling != null
-            ? `
-          <div class="weather-item">
-            <span class="weather-label">Ceiling:</span>
-            <span class="weather-value">${ceiling} ft</span>
-          </div>
-        `
-            : ''
-        }
-        ${
-          skyCondition
-            ? `
-          <div class="weather-item">
-            <span class="weather-label">Sky:</span>
-            <span class="weather-value">${skyCondition}</span>
-          </div>
-        `
-            : ''
-        }
-        ${
-          weatherConditions
-            ? `
-          <div class="weather-item">
-            <span class="weather-label">Weather:</span>
-            <span class="weather-value">${weatherConditions}</span>
-          </div>
-        `
-            : ''
-        }
-        ${
-          flightCategory
-            ? `
-          <div class="weather-item">
-            <span class="weather-label">Flight Category:</span>
-            <span class="weather-value" style="color: ${categoryColors[flightCategory] || '#666'}; font-weight: bold;">
-              ${flightCategory}
-            </span>
-          </div>
-        `
-            : ''
-        }
-        ${
-          observationTime
-            ? `
-          <div class="weather-time">
-            Observed: ${observationTime}
-            ${relativeTime ? `<span class="freshness-indicator freshness-${freshnessLevel}">${relativeTime}</span>` : ''}
-          </div>
-        `
-            : ''
-        }
-      </div>
-    `
+    const divider = document.createElement('div')
+    divider.className = 'weather-divider'
+    weatherContainer.appendChild(divider)
+
+    const title = document.createElement('div')
+    title.className = 'weather-title'
+    title.textContent = '✈️ METAR Conditions'
+    weatherContainer.appendChild(title)
+
+    const info = document.createElement('div')
+    info.className = 'weather-info'
+
+    if (tempF != null) info.appendChild(createWeatherItem('Temperature:', `${tempF}°F / ${tempC}°C`))
+    if (dewF != null) info.appendChild(createWeatherItem('Dew Point:', `${dewF}°F / ${dewC}°C`))
+    if (windStr) info.appendChild(createWeatherItem('Wind:', windStr))
+    if (weather.visibilityMiles != null) info.appendChild(createWeatherItem('Visibility:', `${weather.visibilityMiles} mi`))
+    if (weather.ceilingFeet != null) info.appendChild(createWeatherItem('Ceiling:', `${weather.ceilingFeet} ft`))
+    if (weather.skyCondition) info.appendChild(createWeatherItem('Sky:', weather.skyCondition))
+    if (weather.weatherConditions) info.appendChild(createWeatherItem('Weather:', weather.weatherConditions))
+    if (flightCategory) {
+      info.appendChild(createWeatherItem('Flight Category:', flightCategory,
+        `color: ${categoryColors[flightCategory] || '#666'}; font-weight: bold;`))
+    }
+
+    weatherContainer.appendChild(info)
+
+    if (observationTime) {
+      const timeEl = document.createElement('div')
+      timeEl.className = 'weather-time'
+      timeEl.textContent = `Observed: ${observationTime}`
+      if (relativeTime) {
+        const badge = document.createElement('span')
+        badge.className = `freshness-indicator freshness-${freshnessLevel}`
+        badge.textContent = relativeTime
+        timeEl.appendChild(document.createTextNode(' '))
+        timeEl.appendChild(badge)
+      }
+      weatherContainer.appendChild(timeEl)
+    }
   } else {
-    // Show helpful airport info instead when weather unavailable
-    weatherContainer.innerHTML = `
-      <div class="weather-divider"></div>
-      <div class="weather-info-alt">
-        <div class="info-note">
-          <span class="info-icon">📡</span>
-          <span>Weather data updates every 15 minutes</span>
-        </div>
-        <div class="weather-hint">Click refresh or check back soon for live METAR conditions</div>
-      </div>
-    `
+    const divider = document.createElement('div')
+    divider.className = 'weather-divider'
+    weatherContainer.appendChild(divider)
+
+    const alt = document.createElement('div')
+    alt.className = 'weather-info-alt'
+
+    const note = document.createElement('div')
+    note.className = 'info-note'
+    const icon = document.createElement('span')
+    icon.className = 'info-icon'
+    icon.textContent = '📡'
+    note.appendChild(icon)
+    const noteText = document.createElement('span')
+    noteText.textContent = 'Weather data updates every 15 minutes'
+    note.appendChild(noteText)
+    alt.appendChild(note)
+
+    const hint = document.createElement('div')
+    hint.className = 'weather-hint'
+    hint.textContent = 'Click refresh or check back soon for live METAR conditions'
+    alt.appendChild(hint)
+
+    weatherContainer.appendChild(alt)
   }
 }
 

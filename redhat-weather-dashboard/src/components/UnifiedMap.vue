@@ -304,21 +304,40 @@ async function fetchAirportWeather(code: string): Promise<{ metar: AirportWeathe
   }
 }
 
+function createWeatherItem(label: string, value: string, style?: string): HTMLElement {
+  const item = document.createElement('div')
+  item.className = 'weather-item'
+  const labelEl = document.createElement('span')
+  labelEl.className = 'weather-label'
+  labelEl.textContent = label
+  const valueEl = document.createElement('span')
+  valueEl.className = 'weather-value'
+  valueEl.textContent = value
+  if (style) valueEl.setAttribute('style', style)
+  item.appendChild(labelEl)
+  item.appendChild(valueEl)
+  return item
+}
+
 function updateAirportPopup(popup: L.Popup, metar: AirportWeather | null, taf: AirportWeather | null) {
   const el = popup.getElement()
   if (!el) return
   const container = el.querySelector('.weather-container')
   if (!container) return
 
+  container.textContent = ''
+
+  const divider = document.createElement('div')
+  divider.className = 'weather-divider'
+  container.appendChild(divider)
+
   if (!metar && !taf) {
-    container.innerHTML = `
-      <div class="weather-divider"></div>
-      <div class="weather-no-data">No weather data available. Check back soon.</div>
-    `
+    const noData = document.createElement('div')
+    noData.className = 'weather-no-data'
+    noData.textContent = 'No weather data available. Check back soon.'
+    container.appendChild(noData)
     return
   }
-
-  let html = '<div class="weather-divider"></div>'
 
   if (metar) {
     const tempC = metar.temperatureCelsius
@@ -346,30 +365,55 @@ function updateAirportPopup(popup: L.Popup, metar: AirportWeather | null, taf: A
     const flightCategory = metar.flightCategory
     const catColor = flightCategory ? (FLIGHT_CATEGORY_COLORS[flightCategory] || '#666') : '#666'
 
-    html += '<div class="weather-title">METAR Conditions</div><div class="weather-info">'
-    if (tempF != null) html += `<div class="weather-item"><span class="weather-label">Temperature:</span><span class="weather-value">${tempF}°F / ${tempC}°C</span></div>`
-    if (dewF != null) html += `<div class="weather-item"><span class="weather-label">Dew Point:</span><span class="weather-value">${dewF}°F / ${dewC}°C</span></div>`
-    if (windStr) html += `<div class="weather-item"><span class="weather-label">Wind:</span><span class="weather-value">${windStr}</span></div>`
-    if (metar.visibilityMiles != null) html += `<div class="weather-item"><span class="weather-label">Visibility:</span><span class="weather-value">${metar.visibilityMiles} mi</span></div>`
-    if (metar.ceilingFeet != null) html += `<div class="weather-item"><span class="weather-label">Ceiling:</span><span class="weather-value">${metar.ceilingFeet} ft</span></div>`
-    if (metar.skyCondition) html += `<div class="weather-item"><span class="weather-label">Sky:</span><span class="weather-value">${metar.skyCondition}</span></div>`
-    if (metar.weatherConditions) html += `<div class="weather-item"><span class="weather-label">Weather:</span><span class="weather-value">${metar.weatherConditions}</span></div>`
-    if (flightCategory) html += `<div class="weather-item"><span class="weather-label">Flight Cat:</span><span class="weather-value" style="color:${catColor};font-weight:bold">${flightCategory}</span></div>`
-    html += '</div>'
+    const title = document.createElement('div')
+    title.className = 'weather-title'
+    title.textContent = 'METAR Conditions'
+    container.appendChild(title)
+
+    const info = document.createElement('div')
+    info.className = 'weather-info'
+    if (tempF != null) info.appendChild(createWeatherItem('Temperature:', `${tempF}°F / ${tempC}°C`))
+    if (dewF != null) info.appendChild(createWeatherItem('Dew Point:', `${dewF}°F / ${dewC}°C`))
+    if (windStr) info.appendChild(createWeatherItem('Wind:', windStr))
+    if (metar.visibilityMiles != null) info.appendChild(createWeatherItem('Visibility:', `${metar.visibilityMiles} mi`))
+    if (metar.ceilingFeet != null) info.appendChild(createWeatherItem('Ceiling:', `${metar.ceilingFeet} ft`))
+    if (metar.skyCondition) info.appendChild(createWeatherItem('Sky:', metar.skyCondition))
+    if (metar.weatherConditions) info.appendChild(createWeatherItem('Weather:', metar.weatherConditions))
+    if (flightCategory) {
+      info.appendChild(createWeatherItem('Flight Cat:', flightCategory, `color:${catColor};font-weight:bold`))
+    }
+    container.appendChild(info)
+
     if (observationTime) {
-      html += `<div class="weather-time">Observed: ${observationTime}`
-      if (relativeTime) html += ` <span class="freshness-indicator freshness-${freshnessLevel}">${relativeTime}</span>`
-      html += '</div>'
+      const timeEl = document.createElement('div')
+      timeEl.className = 'weather-time'
+      timeEl.textContent = `Observed: ${observationTime}`
+      if (relativeTime) {
+        const badge = document.createElement('span')
+        badge.className = `freshness-indicator freshness-${freshnessLevel}`
+        badge.textContent = relativeTime
+        timeEl.appendChild(document.createTextNode(' '))
+        timeEl.appendChild(badge)
+      }
+      container.appendChild(timeEl)
     }
   }
 
   if (taf) {
-    html += '<div class="weather-divider"></div>'
-    html += '<div class="weather-title">TAF Forecast</div>'
-    html += `<div class="taf-raw">${taf.rawText || 'No TAF text available'}</div>`
-  }
+    const tafDivider = document.createElement('div')
+    tafDivider.className = 'weather-divider'
+    container.appendChild(tafDivider)
 
-  container.innerHTML = html
+    const tafTitle = document.createElement('div')
+    tafTitle.className = 'weather-title'
+    tafTitle.textContent = 'TAF Forecast'
+    container.appendChild(tafTitle)
+
+    const tafRaw = document.createElement('div')
+    tafRaw.className = 'taf-raw'
+    tafRaw.textContent = taf.rawText || 'No TAF text available'
+    container.appendChild(tafRaw)
+  }
 }
 
 function placeAirportMarkers() {
