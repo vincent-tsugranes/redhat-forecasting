@@ -155,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, shallowRef, watch, onMounted, onBeforeUnmount, nextTick, markRaw } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { storeToRefs } from 'pinia'
@@ -392,27 +392,27 @@ const DEFAULT_MARKER_COLOR = '#2196f3'
 function initMap() {
   if (!mapContainer.value) return
 
-  map.value = L.map(mapContainer.value).setView([30, -40], 3)
+  map.value = markRaw(L.map(mapContainer.value, { preferCanvas: true }).setView([30, -40], 3))
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
     maxZoom: 18,
   }).addTo(map.value)
 
-  airportLayer.value = L.layerGroup()
-  earthquakeLayer.value = L.layerGroup()
-  hurricaneLayer.value = L.layerGroup()
-  pirepLayer.value = L.layerGroup()
-  sigmetLayer.value = L.layerGroup()
-  cwaLayer.value = L.layerGroup()
-  tfrLayer.value = L.layerGroup()
-  groundStopLayer.value = L.layerGroup()
-  volcanicAshLayer.value = L.layerGroup()
-  lightningLayer.value = L.layerGroup()
-  radarLayer.value = L.tileLayer(
+  airportLayer.value = markRaw(L.layerGroup())
+  earthquakeLayer.value = markRaw(L.layerGroup())
+  hurricaneLayer.value = markRaw(L.layerGroup())
+  pirepLayer.value = markRaw(L.layerGroup())
+  sigmetLayer.value = markRaw(L.layerGroup())
+  cwaLayer.value = markRaw(L.layerGroup())
+  tfrLayer.value = markRaw(L.layerGroup())
+  groundStopLayer.value = markRaw(L.layerGroup())
+  volcanicAshLayer.value = markRaw(L.layerGroup())
+  lightningLayer.value = markRaw(L.layerGroup())
+  radarLayer.value = markRaw(L.tileLayer(
     `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/${radarProduct.value}/{z}/{x}/{y}.png`,
     { attribution: 'NEXRAD radar data &copy; Iowa State University', opacity: radarOpacity.value / 100, maxZoom: 18 },
-  )
+  ))
 
   if (showAirports.value) airportLayer.value.addTo(map.value)
   if (showEarthquakes.value) earthquakeLayer.value.addTo(map.value)
@@ -574,11 +574,27 @@ function updateAirportPopup(popup: L.Popup, metar: AirportWeather | null, taf: A
   }
 }
 
-function placeAirportMarkers() {
+// Track the latest call to cancel stale async placement
+let airportPlacementId = 0
+
+async function placeAirportMarkers() {
   if (!airportLayer.value) return
   airportLayer.value.clearLayers()
 
-  for (const apt of airports.value) {
+  const layer = airportLayer.value
+  const data = airports.value
+  const currentId = ++airportPlacementId
+  const BATCH_SIZE = 500
+
+  for (let i = 0; i < data.length; i++) {
+    // Yield to main thread every BATCH_SIZE markers
+    if (i > 0 && i % BATCH_SIZE === 0) {
+      await new Promise(r => setTimeout(r, 0))
+      // Abort if a newer placement started
+      if (airportPlacementId !== currentId) return
+    }
+
+    const apt = data[i]
     if (!apt.latitude || !apt.longitude) continue
     const marker = L.circleMarker([apt.latitude, apt.longitude], {
       radius: 4,
@@ -602,7 +618,7 @@ function placeAirportMarkers() {
       }
     })
 
-    airportLayer.value.addLayer(marker)
+    layer.addLayer(marker)
   }
 }
 
@@ -974,10 +990,10 @@ watch(radarProduct, (product) => {
   if (!map.value || !radarLayer.value) return
   const wasVisible = map.value.hasLayer(radarLayer.value)
   if (wasVisible) map.value.removeLayer(radarLayer.value)
-  radarLayer.value = L.tileLayer(
+  radarLayer.value = markRaw(L.tileLayer(
     `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/${product}/{z}/{x}/{y}.png`,
     { attribution: 'NEXRAD radar data &copy; Iowa State University', opacity: radarOpacity.value / 100, maxZoom: 18 },
-  )
+  ))
   if (wasVisible) map.value.addLayer(radarLayer.value)
 })
 
@@ -985,23 +1001,20 @@ watch(radarOpacity, (opacity) => {
   if (radarLayer.value) radarLayer.value.setOpacity(opacity / 100)
 })
 
-// Re-render markers when data changes
-watch(airports, placeAirportMarkers, { deep: true })
-watch(earthquakes, placeEarthquakeMarkers, { deep: true })
-watch(hurricanes, placeHurricaneMarkers, { deep: true })
-watch(pireps, placePirepMarkers, { deep: true })
-watch(sigmets, placeSigmetPolygons, { deep: true })
-watch(cwas, placeCwaPolygons, { deep: true })
-watch(tfrs, placeTfrPolygons, { deep: true })
-watch(groundStops, placeGroundStopMarkers, { deep: true })
-watch(volcanicAsh, placeVolcanicAshPolygons, { deep: true })
-watch(lightning, placeLightningMarkers, { deep: true })
+// Re-render markers when data changes (shallow watch — store replaces arrays, not mutates)
+watch(airports, placeAirportMarkers)
+watch(earthquakes, placeEarthquakeMarkers)
+watch(hurricanes, placeHurricaneMarkers)
+watch(pireps, placePirepMarkers)
+watch(sigmets, placeSigmetPolygons)
+watch(cwas, placeCwaPolygons)
+watch(tfrs, placeTfrPolygons)
+watch(groundStops, placeGroundStopMarkers)
+watch(volcanicAsh, placeVolcanicAshPolygons)
+watch(lightning, placeLightningMarkers)
 
 onMounted(() => {
-  store.fetchAirports()
-  store.fetchEarthquakes()
-  store.fetchHurricanes()
-  initMap()
+  nextTick(() => initMap())
 })
 
 onBeforeUnmount(() => {

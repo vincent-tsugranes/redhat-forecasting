@@ -240,7 +240,9 @@ const sortedEarthquakes = computed(() => {
   return data
 })
 
-
+onMounted(() => {
+  store.fetchEarthquakes()
+})
 </script>
 
 <style scoped>

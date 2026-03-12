@@ -1,12 +1,14 @@
 <template>
-  <div v-if="error" class="error-boundary">
-    <div class="error-content">
-      <span class="error-icon" aria-hidden="true">&#x26A0;</span>
-      <p class="error-message">{{ $t('error.sectionFailed') }}</p>
-      <button class="error-retry" @click="retry">{{ $t('error.retry') }}</button>
+  <div>
+    <div v-if="error" class="error-boundary">
+      <div class="error-content">
+        <span class="error-icon" aria-hidden="true">&#x26A0;</span>
+        <p class="error-message">{{ $t('error.sectionFailed') }}</p>
+        <button class="error-retry" @click="retry">{{ $t('error.retry') }}</button>
+      </div>
     </div>
+    <slot v-else />
   </div>
-  <slot v-else />
 </template>
 
 <script setup lang="ts">

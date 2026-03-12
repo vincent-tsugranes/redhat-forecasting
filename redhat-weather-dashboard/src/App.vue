@@ -98,13 +98,7 @@
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
     <main id="main-content">
-      <router-view v-slot="{ Component }">
-        <Transition name="fade" mode="out-in">
-          <ErrorBoundary>
-            <component :is="Component" />
-          </ErrorBoundary>
-        </Transition>
-      </router-view>
+      <router-view />
     </main>
 
     <footer class="app-footer">
@@ -126,7 +120,6 @@ import { useAlertNotifications } from './composables/useAlertNotifications'
 import ToastContainer from './components/ToastContainer.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
 import GlobalSearch from './components/GlobalSearch.vue'
-import ErrorBoundary from './components/ErrorBoundary.vue'
 
 const { notificationsEnabled, toggleNotifications } = useAlertNotifications()
 

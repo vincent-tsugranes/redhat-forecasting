@@ -3,6 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import i18n from '../../i18n'
 import UnifiedMap from '../../components/UnifiedMap.vue'
+import { useWeatherStore } from '../../stores/weatherStore'
 
 // Mock the weather service (store depends on it)
 vi.mock('../../services/weatherService', () => ({
@@ -150,6 +151,10 @@ describe('UnifiedMap', () => {
   })
 
   it('shows search results when typing a query', async () => {
+    const store = useWeatherStore()
+    await store.fetchAirports()
+    await flushPromises()
+
     const wrapper = mount(UnifiedMap, { global: { plugins: [i18n] } })
     await flushPromises()
 
@@ -177,6 +182,10 @@ describe('UnifiedMap', () => {
   })
 
   it('searches earthquakes by place name', async () => {
+    const store = useWeatherStore()
+    await store.fetchEarthquakes()
+    await flushPromises()
+
     const wrapper = mount(UnifiedMap, { global: { plugins: [i18n] } })
     await flushPromises()
 
@@ -191,6 +200,10 @@ describe('UnifiedMap', () => {
   })
 
   it('searches hurricanes by storm name', async () => {
+    const store = useWeatherStore()
+    await store.fetchHurricanes()
+    await flushPromises()
+
     const wrapper = mount(UnifiedMap, { global: { plugins: [i18n] } })
     await flushPromises()
 

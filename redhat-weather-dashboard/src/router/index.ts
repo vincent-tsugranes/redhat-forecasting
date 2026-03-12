@@ -91,8 +91,12 @@ router.beforeEach((to) => {
   const store = useWeatherStore()
   switch (to.name) {
     case 'airports':
+      store.fetchAirports()
+      break
     case 'map':
       store.fetchAirports()
+      store.fetchEarthquakes()
+      store.fetchHurricanes()
       break
     case 'hurricanes':
       store.fetchHurricanes()
