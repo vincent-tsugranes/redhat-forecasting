@@ -15,12 +15,11 @@ describe('ToastContainer', () => {
   })
 
   it('renders without toasts', () => {
-    const wrapper = mount(ToastContainer)
-    expect(wrapper.exists()).toBe(true)
+    expect(mount(ToastContainer).exists()).toBe(true)
   })
 
   it('renders success toast when added', async () => {
-    const wrapper = mount(ToastContainer)
+    mount(ToastContainer)
     const { success } = useToast()
     success('Test message')
     await flushPromises()
@@ -42,7 +41,7 @@ describe('ToastContainer', () => {
   })
 
   it('toast has role="status" for accessibility', async () => {
-    const wrapper = mount(ToastContainer)
+    mount(ToastContainer)
     const { success } = useToast()
     success('Accessible toast')
     await flushPromises()

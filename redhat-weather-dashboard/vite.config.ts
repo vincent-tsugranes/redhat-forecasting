@@ -12,9 +12,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          leaflet: ['leaflet', 'leaflet.markercluster'],
-          charts: ['chart.js', 'vue-chartjs'],
+        manualChunks(id) {
+          if (id.includes('leaflet')) return 'leaflet'
+          if (id.includes('chart.js') || id.includes('vue-chartjs')) return 'charts'
         },
       },
     },
