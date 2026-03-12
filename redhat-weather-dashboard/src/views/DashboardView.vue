@@ -38,6 +38,15 @@
       <span class="stat-chip" v-if="cwas.length > 0">
         <span aria-hidden="true">📡</span> <strong>{{ cwas.length }}</strong> CWAs
       </span>
+      <span class="stat-chip" v-if="groundStops.length > 0" :class="{ 'stat-alert': true }">
+        <span aria-hidden="true">🛑</span> <strong>{{ groundStops.length }}</strong> Ground Stops
+      </span>
+      <span class="stat-chip" v-if="volcanicAsh.length > 0" :class="{ 'stat-alert': true }">
+        <span aria-hidden="true">🌋</span> <strong>{{ volcanicAsh.length }}</strong> Volcanic Ash
+      </span>
+      <span class="stat-chip" v-if="lightning.length > 0">
+        <span aria-hidden="true">⚡</span> <strong>{{ lightning.length }}</strong> Lightning
+      </span>
       <span class="stat-chip" v-if="delayedAirports > 0" :class="{ 'stat-alert': true }">
         <span aria-hidden="true">⏱️</span> <strong>{{ delayedAirports }}</strong> Delays
       </span>
@@ -152,6 +161,9 @@ const {
   tfrs,
   cwas,
   delays,
+  groundStops,
+  volcanicAsh,
+  lightning,
   airportsLoading: loading,
   airportsError: error,
 } = storeToRefs(store)
@@ -186,6 +198,9 @@ onMounted(() => {
     store.fetchTfrs(),
     store.fetchCwas(),
     store.fetchDelays(),
+    store.fetchGroundStops(),
+    store.fetchVolcanicAsh(),
+    store.fetchLightning(),
   ])
 })
 </script>

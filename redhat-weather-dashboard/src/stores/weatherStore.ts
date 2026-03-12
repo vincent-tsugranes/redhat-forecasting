@@ -12,6 +12,9 @@ import weatherService, {
   type WindsAloft,
   type Tfr,
   type AirportDelay,
+  type GroundStop,
+  type VolcanicAshAdvisory,
+  type LightningStrike,
 } from '../services/weatherService'
 
 const CACHE_TTLS: Record<string, number> = {
@@ -25,6 +28,9 @@ const CACHE_TTLS: Record<string, number> = {
   windsAloft: 30 * 60_000,
   tfrs: 10 * 60_000,
   delays: 2 * 60_000,
+  groundStops: 2 * 60_000,
+  volcanicAsh: 5 * 60_000,
+  lightning: 2 * 60_000,
 }
 const DEFAULT_CACHE_TTL = 60_000 // 1 min fallback (forecasts, history, etc.)
 const pendingRequests = new Map<string, Promise<unknown>>()
@@ -266,6 +272,57 @@ export const useWeatherStore = defineStore('weather', () => {
     }
   }
 
+  // --- Ground Stops ---
+  const groundStops = ref<GroundStop[]>([])
+  const groundStopsLoading = ref(false)
+  const groundStopsError = ref<string | null>(null)
+
+  async function fetchGroundStops() {
+    groundStopsLoading.value = true
+    groundStopsError.value = null
+    try {
+      groundStops.value = await deduplicatedFetch('groundStops', () => weatherService.getActiveGroundStops())
+    } catch (err: unknown) {
+      groundStopsError.value = err instanceof Error ? err.message : 'Failed to load ground stops'
+    } finally {
+      groundStopsLoading.value = false
+    }
+  }
+
+  // --- Volcanic Ash ---
+  const volcanicAsh = ref<VolcanicAshAdvisory[]>([])
+  const volcanicAshLoading = ref(false)
+  const volcanicAshError = ref<string | null>(null)
+
+  async function fetchVolcanicAsh() {
+    volcanicAshLoading.value = true
+    volcanicAshError.value = null
+    try {
+      volcanicAsh.value = await deduplicatedFetch('volcanicAsh', () => weatherService.getActiveVolcanicAsh())
+    } catch (err: unknown) {
+      volcanicAshError.value = err instanceof Error ? err.message : 'Failed to load volcanic ash advisories'
+    } finally {
+      volcanicAshLoading.value = false
+    }
+  }
+
+  // --- Lightning ---
+  const lightning = ref<LightningStrike[]>([])
+  const lightningLoading = ref(false)
+  const lightningError = ref<string | null>(null)
+
+  async function fetchLightning() {
+    lightningLoading.value = true
+    lightningError.value = null
+    try {
+      lightning.value = await deduplicatedFetch('lightning', () => weatherService.getRecentLightning())
+    } catch (err: unknown) {
+      lightningError.value = err instanceof Error ? err.message : 'Failed to load lightning data'
+    } finally {
+      lightningLoading.value = false
+    }
+  }
+
   // --- Alerts ---
   const alerts = ref<WeatherAlert[]>([])
   const alertsError = ref(false)
@@ -342,6 +399,27 @@ export const useWeatherStore = defineStore('weather', () => {
     await fetchDelays()
   }
 
+  async function refreshGroundStops() {
+    clearCache('groundStops')
+    await weatherService.refreshGroundStops()
+    await new Promise((r) => setTimeout(r, 2000))
+    await fetchGroundStops()
+  }
+
+  async function refreshVolcanicAsh() {
+    clearCache('volcanicAsh')
+    await weatherService.refreshVolcanicAsh()
+    await new Promise((r) => setTimeout(r, 2000))
+    await fetchVolcanicAsh()
+  }
+
+  async function refreshLightning() {
+    clearCache('lightning')
+    await weatherService.refreshLightning()
+    await new Promise((r) => setTimeout(r, 2000))
+    await fetchLightning()
+  }
+
   return {
     // Airports
     airports,
@@ -406,6 +484,24 @@ export const useWeatherStore = defineStore('weather', () => {
     delaysError,
     fetchDelays,
     refreshDelays,
+    // Ground Stops
+    groundStops,
+    groundStopsLoading,
+    groundStopsError,
+    fetchGroundStops,
+    refreshGroundStops,
+    // Volcanic Ash
+    volcanicAsh,
+    volcanicAshLoading,
+    volcanicAshError,
+    fetchVolcanicAsh,
+    refreshVolcanicAsh,
+    // Lightning
+    lightning,
+    lightningLoading,
+    lightningError,
+    fetchLightning,
+    refreshLightning,
     // Alerts
     alerts,
     alertsError,

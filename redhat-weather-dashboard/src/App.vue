@@ -38,6 +38,7 @@
                 <router-link to="/tfrs" @click="openDropdown = null">{{ $t('nav.tfrs') }}</router-link>
                 <router-link to="/winds-aloft" @click="openDropdown = null">{{ $t('nav.windsAloft') }}</router-link>
                 <router-link to="/delays" @click="openDropdown = null">{{ $t('nav.delays') }}</router-link>
+                <router-link to="/ground-stops" @click="openDropdown = null">{{ $t('nav.groundStops') }}</router-link>
               </div>
             </div>
 
@@ -53,6 +54,8 @@
               <div v-show="openDropdown === 'hazards'" class="nav-dropdown">
                 <router-link to="/hurricanes" @click="openDropdown = null">{{ $t('nav.hurricanes') }}</router-link>
                 <router-link to="/earthquakes" @click="openDropdown = null">{{ $t('nav.earthquakes') }}</router-link>
+                <router-link to="/volcanic-ash" @click="openDropdown = null">{{ $t('nav.volcanicAsh') }}</router-link>
+                <router-link to="/lightning" @click="openDropdown = null">{{ $t('nav.lightning') }}</router-link>
               </div>
             </div>
 
@@ -132,8 +135,8 @@ const menuOpen = ref(false)
 const showSettings = ref(false)
 const openDropdown = ref<string | null>(null)
 
-const aviationRoutes = ['/airports', '/pireps', '/sigmets', '/cwas', '/tfrs', '/winds-aloft', '/delays']
-const hazardRoutes = ['/hurricanes', '/earthquakes']
+const aviationRoutes = ['/airports', '/pireps', '/sigmets', '/cwas', '/tfrs', '/winds-aloft', '/delays', '/ground-stops']
+const hazardRoutes = ['/hurricanes', '/earthquakes', '/volcanic-ash', '/lightning']
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value

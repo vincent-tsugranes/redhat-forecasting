@@ -17,6 +17,9 @@ vi.mock('../../services/weatherService', () => ({
     getActiveStorms: vi.fn().mockResolvedValue([
       { id: 20, stormId: 'AL012024', stormName: 'Alberto', latitude: 25.0, longitude: -80.0, category: 1, maxSustainedWindsMph: 80, minCentralPressureMb: 985, advisoryTime: '2024-01-15T10:00:00' },
     ]),
+    getActiveGroundStops: vi.fn().mockResolvedValue([]),
+    getActiveVolcanicAsh: vi.fn().mockResolvedValue([]),
+    getRecentLightning: vi.fn().mockResolvedValue([]),
   },
 }))
 
@@ -35,7 +38,7 @@ describe('UnifiedMap', () => {
     await flushPromises()
 
     const checkboxes = wrapper.findAll('.layer-toggle input[type="checkbox"]')
-    expect(checkboxes).toHaveLength(8)
+    expect(checkboxes).toHaveLength(11)
   })
 
   it('renders legend sections based on active layers', async () => {
@@ -83,7 +86,7 @@ describe('UnifiedMap', () => {
     await flushPromises()
 
     // Toggle radar on (4th checkbox)
-    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[7]
+    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[10]
     await radarCheckbox.setValue(true)
     await flushPromises()
 
@@ -95,7 +98,7 @@ describe('UnifiedMap', () => {
     await flushPromises()
 
     // Toggle radar on
-    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[7]
+    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[10]
     await radarCheckbox.setValue(true)
     await flushPromises()
 
@@ -112,7 +115,7 @@ describe('UnifiedMap', () => {
     await flushPromises()
 
     // Toggle radar on
-    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[7]
+    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[10]
     await radarCheckbox.setValue(true)
     await flushPromises()
 
@@ -128,7 +131,7 @@ describe('UnifiedMap', () => {
     await flushPromises()
 
     // Toggle radar on
-    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[7]
+    const radarCheckbox = wrapper.findAll('.layer-toggle input[type="checkbox"]')[10]
     await radarCheckbox.setValue(true)
     await flushPromises()
 

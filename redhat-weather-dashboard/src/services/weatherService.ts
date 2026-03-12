@@ -221,6 +221,47 @@ export interface Tfr {
   fetchedAt?: string
 }
 
+export interface GroundStop {
+  id: number
+  groundStopId: string
+  airportCode: string
+  airportName?: string
+  programType: string
+  reason?: string
+  endTime?: string
+  avgDelayMinutes?: number
+  maxDelayMinutes?: number
+  fetchedAt?: string
+}
+
+export interface VolcanicAshAdvisory {
+  id: number
+  advisoryId: string
+  firId?: string
+  firName?: string
+  volcanoName?: string
+  hazard?: string
+  severity?: string
+  validTimeFrom: string
+  validTimeTo: string
+  altitudeLowFt?: number
+  altitudeHighFt?: number
+  rawText?: string
+  geojson?: object
+  fetchedAt?: string
+}
+
+export interface LightningStrike {
+  id: number
+  strikeId: string
+  latitude: number
+  longitude: number
+  strikeTime: string
+  amplitudeKa?: number
+  strikeType?: string
+  fetchedAt?: string
+}
+
 export interface AirportDelay {
   id: number
   delayId: string
@@ -432,6 +473,36 @@ export const weatherService = {
 
   async refreshTfrs(): Promise<void> {
     await weatherApi.post('/tfrs/refresh')
+  },
+
+  // Ground Stops
+  async getActiveGroundStops(): Promise<GroundStop[]> {
+    const response = await weatherApi.get('/ground-stops/active')
+    return response.data
+  },
+
+  async refreshGroundStops(): Promise<void> {
+    await weatherApi.post('/ground-stops/refresh')
+  },
+
+  // Volcanic Ash Advisories
+  async getActiveVolcanicAsh(): Promise<VolcanicAshAdvisory[]> {
+    const response = await weatherApi.get('/volcanic-ash/active')
+    return response.data
+  },
+
+  async refreshVolcanicAsh(): Promise<void> {
+    await weatherApi.post('/volcanic-ash/refresh')
+  },
+
+  // Lightning
+  async getRecentLightning(): Promise<LightningStrike[]> {
+    const response = await weatherApi.get('/lightning/recent')
+    return response.data
+  },
+
+  async refreshLightning(): Promise<void> {
+    await weatherApi.post('/lightning/refresh')
   },
 
   // Airport Delays

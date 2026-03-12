@@ -61,6 +61,18 @@
         <span aria-hidden="true">🚫</span> {{ $t('map.layerTfrs') }}
       </label>
       <label class="layer-toggle">
+        <input v-model="showGroundStops" type="checkbox" />
+        <span aria-hidden="true">🛑</span> {{ $t('map.layerGroundStops') }}
+      </label>
+      <label class="layer-toggle">
+        <input v-model="showVolcanicAsh" type="checkbox" />
+        <span aria-hidden="true">🌋</span> {{ $t('map.layerVolcanicAsh') }}
+      </label>
+      <label class="layer-toggle">
+        <input v-model="showLightning" type="checkbox" />
+        <span aria-hidden="true">⚡</span> {{ $t('map.layerLightning') }}
+      </label>
+      <label class="layer-toggle">
         <input v-model="showRadar" type="checkbox" />
         <span aria-hidden="true">📡</span> {{ $t('map.layerRadar') }}
       </label>
@@ -125,6 +137,19 @@
         <div class="legend-title">TFRs</div>
         <div class="legend-item"><span class="legend-swatch" style="background: rgba(211,47,47,0.2); border: 2px solid #d32f2f"></span> Restricted Area</div>
       </div>
+      <div v-if="showGroundStops" class="legend-section">
+        <div class="legend-title">Ground Stops</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #d32f2f"></span> Ground Stop</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #ff9800"></span> Ground Delay</div>
+      </div>
+      <div v-if="showVolcanicAsh" class="legend-section">
+        <div class="legend-title">Volcanic Ash</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: rgba(121,85,72,0.25); border: 2px solid #795548"></span> Ash Cloud</div>
+      </div>
+      <div v-if="showLightning" class="legend-section">
+        <div class="legend-title">Lightning</div>
+        <div class="legend-item"><span class="legend-dot" style="background: #ffeb3b"></span> Recent Strike</div>
+      </div>
     </div>
   </div>
 </template>
@@ -139,7 +164,7 @@ import weatherService, { type AirportWeather, type Location } from '../services/
 import { formatDate, formatRelativeTime, getFreshnessLevel } from '../utils/dateUtils'
 
 const store = useWeatherStore()
-const { airports, earthquakes, hurricanes, pireps, sigmets, cwas, tfrs } = storeToRefs(store)
+const { airports, earthquakes, hurricanes, pireps, sigmets, cwas, tfrs, groundStops, volcanicAsh, lightning } = storeToRefs(store)
 
 const mapContainer = ref<HTMLElement | null>(null)
 const map = shallowRef<L.Map | null>(null)
@@ -151,6 +176,9 @@ const pirepLayer = shallowRef<L.LayerGroup | null>(null)
 const sigmetLayer = shallowRef<L.LayerGroup | null>(null)
 const cwaLayer = shallowRef<L.LayerGroup | null>(null)
 const tfrLayer = shallowRef<L.LayerGroup | null>(null)
+const groundStopLayer = shallowRef<L.LayerGroup | null>(null)
+const volcanicAshLayer = shallowRef<L.LayerGroup | null>(null)
+const lightningLayer = shallowRef<L.LayerGroup | null>(null)
 const radarLayer = shallowRef<L.TileLayer | null>(null)
 
 const showAirports = ref(true)
@@ -160,6 +188,9 @@ const showPireps = ref(false)
 const showSigmets = ref(false)
 const showCwas = ref(false)
 const showTfrs = ref(false)
+const showGroundStops = ref(false)
+const showVolcanicAsh = ref(false)
+const showLightning = ref(false)
 const showRadar = ref(false)
 const radarProduct = ref('nexrad-n0q-900913')
 const radarOpacity = ref(50)
@@ -176,7 +207,7 @@ interface SearchResult {
   lat: number
   lng: number
   zoom: number
-  type: 'airport' | 'earthquake' | 'hurricane' | 'pirep' | 'sigmet' | 'cwa' | 'tfr'
+  type: 'airport' | 'earthquake' | 'hurricane' | 'pirep' | 'sigmet' | 'cwa' | 'tfr' | 'groundStop' | 'volcanicAsh' | 'lightning'
 }
 
 const searchResults = ref<SearchResult[]>([])
@@ -280,6 +311,33 @@ function onSearchInput() {
     }
   }
 
+  // Search ground stops
+  if (showGroundStops.value && results.length < 15) {
+    for (const gs of groundStops.value) {
+      if (
+        gs.airportCode?.toLowerCase().includes(query) ||
+        gs.airportName?.toLowerCase().includes(query) ||
+        gs.programType?.toLowerCase().includes(query)
+      ) {
+        // Ground stops don't have lat/lon, so look up airport coords
+        const apt = airports.value.find(a => a.airportCode === gs.airportCode)
+        if (apt?.latitude && apt?.longitude) {
+          results.push({
+            key: `gs-${gs.id}`,
+            icon: '🛑',
+            title: `${gs.airportCode} - ${gs.programType}`,
+            subtitle: gs.reason || gs.airportName || '',
+            lat: apt.latitude,
+            lng: apt.longitude,
+            zoom: 10,
+            type: 'groundStop',
+          })
+        }
+      }
+      if (results.length >= 15) break
+    }
+  }
+
   searchResults.value = results.slice(0, 15)
   showResults.value = true
 }
@@ -299,6 +357,9 @@ function selectResult(result: SearchResult) {
     sigmet: sigmetLayer.value,
     cwa: cwaLayer.value,
     tfr: tfrLayer.value,
+    groundStop: groundStopLayer.value,
+    volcanicAsh: volcanicAshLayer.value,
+    lightning: lightningLayer.value,
   }
   const layer = layerMap[result.type] ?? null
 
@@ -345,6 +406,9 @@ function initMap() {
   sigmetLayer.value = L.layerGroup()
   cwaLayer.value = L.layerGroup()
   tfrLayer.value = L.layerGroup()
+  groundStopLayer.value = L.layerGroup()
+  volcanicAshLayer.value = L.layerGroup()
+  lightningLayer.value = L.layerGroup()
   radarLayer.value = L.tileLayer(
     `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/${radarProduct.value}/{z}/{x}/{y}.png`,
     { attribution: 'NEXRAD radar data &copy; Iowa State University', opacity: radarOpacity.value / 100, maxZoom: 18 },
@@ -357,6 +421,9 @@ function initMap() {
   if (showSigmets.value) sigmetLayer.value.addTo(map.value)
   if (showCwas.value) cwaLayer.value.addTo(map.value)
   if (showTfrs.value) tfrLayer.value.addTo(map.value)
+  if (showGroundStops.value) groundStopLayer.value.addTo(map.value)
+  if (showVolcanicAsh.value) volcanicAshLayer.value.addTo(map.value)
+  if (showLightning.value) lightningLayer.value.addTo(map.value)
 
   placeAirportMarkers()
   placeEarthquakeMarkers()
@@ -740,6 +807,74 @@ function placeTfrPolygons() {
   }
 }
 
+function placeGroundStopMarkers() {
+  if (!groundStopLayer.value) return
+  groundStopLayer.value.clearLayers()
+
+  for (const gs of groundStops.value) {
+    // Look up airport coords
+    const apt = airports.value.find(a => a.airportCode === gs.airportCode)
+    if (!apt?.latitude || !apt?.longitude) continue
+
+    const isStop = gs.programType.toLowerCase().includes('stop')
+    const color = isStop ? '#d32f2f' : '#ff9800'
+    const marker = L.circleMarker([apt.latitude, apt.longitude], {
+      radius: 10,
+      fillColor: color,
+      color: '#fff',
+      weight: 2,
+      fillOpacity: 0.8,
+    })
+    marker.bindPopup(`
+      <strong>${gs.airportCode}</strong> - ${gs.programType}<br/>
+      ${gs.airportName ? gs.airportName + '<br/>' : ''}
+      ${gs.reason ? 'Reason: ' + gs.reason + '<br/>' : ''}
+      ${gs.avgDelayMinutes ? 'Avg Delay: ' + gs.avgDelayMinutes + ' min<br/>' : ''}
+      ${gs.maxDelayMinutes ? 'Max Delay: ' + gs.maxDelayMinutes + ' min' : ''}
+    `)
+    groundStopLayer.value.addLayer(marker)
+  }
+}
+
+function placeVolcanicAshPolygons() {
+  if (!volcanicAshLayer.value) return
+  placeGeoJsonPolygons(
+    volcanicAshLayer.value,
+    volcanicAsh.value,
+    '#795548',
+    (v) => `
+      <strong>Volcanic Ash Advisory</strong><br/>
+      ${v.volcanoName ? 'Volcano: ' + v.volcanoName + '<br/>' : ''}
+      ${v.firName ? 'FIR: ' + v.firName + '<br/>' : ''}
+      ${v.hazard ? 'Hazard: ' + v.hazard + '<br/>' : ''}
+      ${v.altitudeLowFt || v.altitudeHighFt ? 'Alt: ' + (v.altitudeLowFt ?? '?') + ' - ' + (v.altitudeHighFt ?? '?') + ' ft<br/>' : ''}
+      Valid: ${formatRelativeTime(v.validTimeFrom as string)} to ${formatRelativeTime(v.validTimeTo as string)}
+    `,
+  )
+}
+
+function placeLightningMarkers() {
+  if (!lightningLayer.value) return
+  lightningLayer.value.clearLayers()
+
+  for (const strike of lightning.value) {
+    const marker = L.circleMarker([strike.latitude, strike.longitude], {
+      radius: 3,
+      fillColor: '#ffeb3b',
+      color: '#f57f17',
+      weight: 1,
+      fillOpacity: 0.9,
+    })
+    marker.bindPopup(`
+      <strong>Lightning Strike</strong><br/>
+      ${strike.amplitudeKa ? 'Amplitude: ' + strike.amplitudeKa.toFixed(1) + ' kA<br/>' : ''}
+      ${strike.strikeType ? 'Type: ' + strike.strikeType + '<br/>' : ''}
+      ${formatRelativeTime(strike.strikeTime)}
+    `)
+    lightningLayer.value.addLayer(marker)
+  }
+}
+
 // Toggle layers on/off
 watch(showAirports, (visible) => {
   if (!map.value || !airportLayer.value) return
@@ -799,6 +934,36 @@ watch(showTfrs, (visible) => {
   }
 })
 
+watch(showGroundStops, (visible) => {
+  if (!map.value || !groundStopLayer.value) return
+  if (visible) {
+    map.value.addLayer(groundStopLayer.value)
+    store.fetchGroundStops()
+  } else {
+    map.value.removeLayer(groundStopLayer.value)
+  }
+})
+
+watch(showVolcanicAsh, (visible) => {
+  if (!map.value || !volcanicAshLayer.value) return
+  if (visible) {
+    map.value.addLayer(volcanicAshLayer.value)
+    store.fetchVolcanicAsh()
+  } else {
+    map.value.removeLayer(volcanicAshLayer.value)
+  }
+})
+
+watch(showLightning, (visible) => {
+  if (!map.value || !lightningLayer.value) return
+  if (visible) {
+    map.value.addLayer(lightningLayer.value)
+    store.fetchLightning()
+  } else {
+    map.value.removeLayer(lightningLayer.value)
+  }
+})
+
 watch(showRadar, (visible) => {
   if (!map.value || !radarLayer.value) return
   if (visible) map.value.addLayer(radarLayer.value)
@@ -828,6 +993,9 @@ watch(pireps, placePirepMarkers, { deep: true })
 watch(sigmets, placeSigmetPolygons, { deep: true })
 watch(cwas, placeCwaPolygons, { deep: true })
 watch(tfrs, placeTfrPolygons, { deep: true })
+watch(groundStops, placeGroundStopMarkers, { deep: true })
+watch(volcanicAsh, placeVolcanicAshPolygons, { deep: true })
+watch(lightning, placeLightningMarkers, { deep: true })
 
 onMounted(() => {
   store.fetchAirports()

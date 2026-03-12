@@ -7,10 +7,13 @@ import com.redhat.weather.service.AirportWeatherService;
 import com.redhat.weather.service.CwaService;
 import com.redhat.weather.service.DataFreshnessService;
 import com.redhat.weather.service.EarthquakeService;
+import com.redhat.weather.service.GroundStopService;
 import com.redhat.weather.service.HurricaneService;
+import com.redhat.weather.service.LightningService;
 import com.redhat.weather.service.PirepService;
 import com.redhat.weather.service.SigmetService;
 import com.redhat.weather.service.TfrService;
+import com.redhat.weather.service.VolcanicAshService;
 import com.redhat.weather.service.WeatherAlertService;
 import com.redhat.weather.service.WeatherForecastService;
 import com.redhat.weather.service.WindsAloftService;
@@ -70,6 +73,15 @@ public class WeatherDataScheduler {
     TfrService tfrService;
 
     @Inject
+    GroundStopService groundStopService;
+
+    @Inject
+    VolcanicAshService volcanicAshService;
+
+    @Inject
+    LightningService lightningService;
+
+    @Inject
     LocationRepository locationRepository;
 
     @Inject
@@ -113,6 +125,15 @@ public class WeatherDataScheduler {
 
     @ConfigProperty(name = "weather.scheduler.tfrs.enabled", defaultValue = "true")
     boolean tfrsEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.ground-stops.enabled", defaultValue = "true")
+    boolean groundStopsEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.volcanic-ash.enabled", defaultValue = "true")
+    boolean volcanicAshEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.lightning.enabled", defaultValue = "false")
+    boolean lightningEnabled;
 
     @ConfigProperty(name = "weather.scheduler.airport.batch-size", defaultValue = "500")
     int airportBatchSize;
@@ -215,6 +236,24 @@ public class WeatherDataScheduler {
                     initialFetches.add(CompletableFuture.runAsync(() -> {
                         LOG.info("Initial fetch: TFRs");
                         fetchTfrs();
+                    }));
+                }
+                if (groundStopsEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: Ground stops");
+                        fetchGroundStops();
+                    }));
+                }
+                if (volcanicAshEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: Volcanic ash advisories");
+                        fetchVolcanicAsh();
+                    }));
+                }
+                if (lightningEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: Lightning");
+                        fetchLightning();
                     }));
                 }
 
@@ -619,6 +658,74 @@ public class WeatherDataScheduler {
     }
 
     /**
+     * Fetch FAA ground stops every 5 minutes
+     */
+    @Scheduled(cron = "0 */5 * * * ?", identity = "ground-stop-fetch")
+    public void fetchGroundStops() {
+        if (!groundStopsEnabled) {
+            LOG.debug("Ground stop scheduler is disabled");
+            return;
+        }
+
+        LOG.info("Starting ground stop data fetch");
+        try {
+            groundStopService.fetchAndStoreGroundStops();
+            dataFreshnessService.recordSuccess("faa-ground-stops");
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "faa-ground-stops", "result", "success").increment();
+            LOG.info("Ground stop data fetch completed");
+        } catch (Exception e) {
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "faa-ground-stops", "result", "failure").increment();
+            LOG.error("Error in ground stop scheduler", e);
+        }
+    }
+
+    /**
+     * Fetch volcanic ash advisories every 15 minutes
+     */
+    @Scheduled(cron = "0 */15 * * * ?", identity = "volcanic-ash-fetch")
+    public void fetchVolcanicAsh() {
+        if (!volcanicAshEnabled) {
+            LOG.debug("Volcanic ash scheduler is disabled");
+            return;
+        }
+
+        LOG.info("Starting volcanic ash advisory fetch");
+        try {
+            volcanicAshService.deactivateExpired();
+            volcanicAshService.fetchAndStoreAdvisories();
+            dataFreshnessService.recordSuccess("awc-volcanic-ash");
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-volcanic-ash", "result", "success").increment();
+            LOG.info("Volcanic ash advisory fetch completed");
+        } catch (Exception e) {
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-volcanic-ash", "result", "failure").increment();
+            LOG.error("Error in volcanic ash scheduler", e);
+        }
+    }
+
+    /**
+     * Fetch lightning data every 5 minutes (when enabled)
+     */
+    @Scheduled(cron = "0 */5 * * * ?", identity = "lightning-fetch")
+    public void fetchLightning() {
+        if (!lightningEnabled) {
+            LOG.debug("Lightning scheduler is disabled");
+            return;
+        }
+
+        LOG.info("Starting lightning data fetch");
+        try {
+            lightningService.deactivateOldStrikes(LocalDateTime.now().minusHours(2));
+            lightningService.fetchAndStoreStrikes();
+            dataFreshnessService.recordSuccess("lightning");
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "lightning", "result", "success").increment();
+            LOG.info("Lightning data fetch completed");
+        } catch (Exception e) {
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "lightning", "result", "failure").increment();
+            LOG.error("Error in lightning scheduler", e);
+        }
+    }
+
+    /**
      * Clean up old forecast data daily at 2 AM.
      * Guards against data starvation: only cleans up if fresh data exists.
      */
@@ -660,6 +767,10 @@ public class WeatherDataScheduler {
             cwaService.deactivateOldEntries(sevenDaysAgo);
             windsAloftService.deactivateOldForecasts(sevenDaysAgo);
             tfrService.deactivateOldTfrs(sevenDaysAgo);
+            groundStopService.deactivateOldEntries(sevenDaysAgo);
+            volcanicAshService.deactivateExpired();
+            volcanicAshService.deactivateOldEntries(sevenDaysAgo);
+            lightningService.deactivateOldStrikes(sevenDaysAgo);
 
             LOG.info("Old data cleanup completed");
 

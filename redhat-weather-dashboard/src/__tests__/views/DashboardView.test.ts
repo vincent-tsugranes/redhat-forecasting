@@ -15,6 +15,9 @@ vi.mock('../../services/weatherService', () => ({
       { id: 10, usgsId: 'us1234', magnitude: 4.5, place: 'California', eventTime: '2024-01-15T10:00:00', latitude: 34.0, longitude: -118.0, depthKm: 10 },
     ]),
     getActiveStorms: vi.fn().mockResolvedValue([]),
+    getActiveGroundStops: vi.fn().mockResolvedValue([]),
+    getActiveVolcanicAsh: vi.fn().mockResolvedValue([]),
+    getRecentLightning: vi.fn().mockResolvedValue([]),
   },
 }))
 
