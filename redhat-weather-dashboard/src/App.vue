@@ -31,14 +31,38 @@
                 {{ $t('nav.aviation') }} <span class="caret" aria-hidden="true">▾</span>
               </button>
               <div v-show="openDropdown === 'aviation'" class="nav-dropdown" @mouseenter="cancelCloseDropdown" @mouseleave="scheduleCloseDropdown">
-                <router-link to="/airports" @click="openDropdown = null">{{ $t('nav.airports') }}</router-link>
-                <router-link to="/pireps" @click="openDropdown = null">{{ $t('nav.pireps') }}</router-link>
-                <router-link to="/sigmets" @click="openDropdown = null">{{ $t('nav.sigmets') }}</router-link>
-                <router-link to="/cwas" @click="openDropdown = null">{{ $t('nav.cwas') }}</router-link>
-                <router-link to="/tfrs" @click="openDropdown = null">{{ $t('nav.tfrs') }}</router-link>
-                <router-link to="/winds-aloft" @click="openDropdown = null">{{ $t('nav.windsAloft') }}</router-link>
-                <router-link to="/delays" @click="openDropdown = null">{{ $t('nav.delays') }}</router-link>
-                <router-link to="/ground-stops" @click="openDropdown = null">{{ $t('nav.groundStops') }}</router-link>
+                <router-link to="/airports" class="nav-dropdown-item" @click="openDropdown = null">
+                  <span class="nav-icon" aria-hidden="true">✈️</span> {{ $t('nav.airports') }}
+                  <span v-if="airports.length" class="nav-count">{{ airports.length.toLocaleString() }}</span>
+                </router-link>
+                <router-link to="/pireps" class="nav-dropdown-item" @click="openDropdown = null">
+                  <span class="nav-icon" aria-hidden="true">📋</span> {{ $t('nav.pireps') }}
+                  <span v-if="pireps.length" class="nav-count">{{ pireps.length }}</span>
+                </router-link>
+                <router-link to="/sigmets" class="nav-dropdown-item" @click="openDropdown = null">
+                  <span class="nav-icon" aria-hidden="true">🚨</span> {{ $t('nav.sigmets') }}
+                  <span v-if="sigmets.length" class="nav-count">{{ sigmets.length }}</span>
+                </router-link>
+                <router-link to="/cwas" class="nav-dropdown-item" @click="openDropdown = null">
+                  <span class="nav-icon" aria-hidden="true">📡</span> {{ $t('nav.cwas') }}
+                  <span v-if="cwas.length" class="nav-count">{{ cwas.length }}</span>
+                </router-link>
+                <router-link to="/tfrs" class="nav-dropdown-item" @click="openDropdown = null">
+                  <span class="nav-icon" aria-hidden="true">🚫</span> {{ $t('nav.tfrs') }}
+                  <span v-if="tfrs.length" class="nav-count">{{ tfrs.length }}</span>
+                </router-link>
+                <router-link to="/winds-aloft" class="nav-dropdown-item" @click="openDropdown = null">
+                  <span class="nav-icon" aria-hidden="true">💨</span> {{ $t('nav.windsAloft') }}
+                  <span v-if="windsAloft.length" class="nav-count">{{ windsAloft.length }}</span>
+                </router-link>
+                <router-link to="/delays" class="nav-dropdown-item" @click="openDropdown = null">
+                  <span class="nav-icon" aria-hidden="true">⏱️</span> {{ $t('nav.delays') }}
+                  <span v-if="delayedCount" class="nav-count nav-count-alert">{{ delayedCount }}</span>
+                </router-link>
+                <router-link to="/ground-stops" class="nav-dropdown-item" @click="openDropdown = null">
+                  <span class="nav-icon" aria-hidden="true">🛑</span> {{ $t('nav.groundStops') }}
+                  <span v-if="groundStops.length" class="nav-count nav-count-alert">{{ groundStops.length }}</span>
+                </router-link>
               </div>
             </div>
 
@@ -52,10 +76,22 @@
                 {{ $t('nav.hazards') }} <span class="caret" aria-hidden="true">▾</span>
               </button>
               <div v-show="openDropdown === 'hazards'" class="nav-dropdown" @mouseenter="cancelCloseDropdown" @mouseleave="scheduleCloseDropdown">
-                <router-link to="/hurricanes" @click="openDropdown = null">{{ $t('nav.hurricanes') }}</router-link>
-                <router-link to="/earthquakes" @click="openDropdown = null">{{ $t('nav.earthquakes') }}</router-link>
-                <router-link to="/volcanic-ash" @click="openDropdown = null">{{ $t('nav.volcanicAsh') }}</router-link>
-                <router-link to="/lightning" @click="openDropdown = null">{{ $t('nav.lightning') }}</router-link>
+                <router-link to="/hurricanes" class="nav-dropdown-item" @click="openDropdown = null">
+                  <span class="nav-icon" aria-hidden="true">🌀</span> {{ $t('nav.hurricanes') }}
+                  <span v-if="hurricanes.length" class="nav-count nav-count-alert">{{ hurricanes.length }}</span>
+                </router-link>
+                <router-link to="/earthquakes" class="nav-dropdown-item" @click="openDropdown = null">
+                  <span class="nav-icon" aria-hidden="true">🌍</span> {{ $t('nav.earthquakes') }}
+                  <span v-if="earthquakes.length" class="nav-count">{{ earthquakes.length }}</span>
+                </router-link>
+                <router-link to="/volcanic-ash" class="nav-dropdown-item" @click="openDropdown = null">
+                  <span class="nav-icon" aria-hidden="true">🌋</span> {{ $t('nav.volcanicAsh') }}
+                  <span v-if="volcanicAsh.length" class="nav-count nav-count-alert">{{ volcanicAsh.length }}</span>
+                </router-link>
+                <router-link to="/lightning" class="nav-dropdown-item" @click="openDropdown = null">
+                  <span class="nav-icon" aria-hidden="true">⚡</span> {{ $t('nav.lightning') }}
+                  <span v-if="lightning.length" class="nav-count">{{ lightning.length }}</span>
+                </router-link>
               </div>
             </div>
 
@@ -114,14 +150,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import { useAlertNotifications } from './composables/useAlertNotifications'
+import { useWeatherStore } from './stores/weatherStore'
 import ToastContainer from './components/ToastContainer.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
 import GlobalSearch from './components/GlobalSearch.vue'
 
 const { notificationsEnabled, toggleNotifications } = useAlertNotifications()
+
+const store = useWeatherStore()
+const {
+  airports, pireps, sigmets, cwas, tfrs, windsAloft, delays, groundStops,
+  hurricanes, earthquakes, volcanicAsh, lightning,
+} = storeToRefs(store)
+
+const delayedCount = computed(() => delays.value.filter(d => d.isDelayed).length)
 
 const route = useRoute()
 const menuOpen = ref(false)
@@ -345,6 +391,36 @@ nav > a.router-link-active {
   transition: background-color 0.15s;
 }
 
+.nav-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-icon {
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nav-count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--bg-code, #f0f0f0);
+  color: var(--text-secondary, #666);
+  padding: 1px 6px;
+  border-radius: 8px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.nav-count-alert {
+  background: var(--accent);
+  color: white;
+}
+
 .nav-dropdown a:hover {
   background: var(--bg-code, #f5f5f5);
 }
@@ -504,7 +580,7 @@ main {
 
   .nav-dropdown a {
     color: white;
-    padding: 8px 16px 8px 32px;
+    padding: 8px 16px 8px 24px;
     font-size: 14px;
   }
 
@@ -515,6 +591,15 @@ main {
   .nav-dropdown a.router-link-active {
     color: white;
     background: rgba(255, 255, 255, 0.2);
+  }
+
+  .nav-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+  }
+
+  .nav-count-alert {
+    background: rgba(255, 255, 255, 0.4);
   }
 
   .header-actions {
