@@ -92,10 +92,11 @@
                   <span class="nav-icon" aria-hidden="true">⚡</span> {{ $t('nav.lightning') }}
                   <span v-if="lightning.length" class="nav-count">{{ lightning.length }}</span>
                 </router-link>
+                <router-link to="/space-weather" class="nav-dropdown-item" @click="openDropdown = null">
+                  <span class="nav-icon" aria-hidden="true">☀️</span> {{ $t('nav.spaceWeather') }}
+                </router-link>
               </div>
             </div>
-
-            <router-link to="/space-weather">{{ $t('nav.spaceWeather') }}</router-link>
             <router-link to="/map">{{ $t('nav.map') }}</router-link>
           </nav>
           <div class="header-actions">
@@ -175,7 +176,7 @@ const showSettings = ref(false)
 const openDropdown = ref<string | null>(null)
 
 const aviationRoutes = ['/airports', '/pireps', '/sigmets', '/cwas', '/tfrs', '/winds-aloft', '/delays', '/ground-stops']
-const hazardRoutes = ['/hurricanes', '/earthquakes', '/volcanic-ash', '/lightning']
+const hazardRoutes = ['/hurricanes', '/earthquakes', '/volcanic-ash', '/lightning', '/space-weather']
 
 let dropdownCloseTimer: ReturnType<typeof setTimeout> | null = null
 
