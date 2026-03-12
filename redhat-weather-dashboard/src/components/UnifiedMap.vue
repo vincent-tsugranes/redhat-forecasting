@@ -12,12 +12,16 @@
         @focus="showResults = true"
         @keydown.escape="closeSearch"
       />
-      <div v-if="searchResults.length > 0 && showResults && searchQuery.length >= 2" class="search-results">
+      <div v-if="searchResults.length > 0 && showResults && searchQuery.length >= 2" class="search-results" role="listbox" aria-label="Map search results">
         <div
           v-for="result in searchResults"
           :key="result.key"
           class="search-result-item"
+          role="option"
+          tabindex="0"
           @click="selectResult(result)"
+          @keydown.enter.prevent="selectResult(result)"
+          @keydown.space.prevent="selectResult(result)"
         >
           <span class="result-icon" aria-hidden="true">{{ result.icon }}</span>
           <div class="result-info">

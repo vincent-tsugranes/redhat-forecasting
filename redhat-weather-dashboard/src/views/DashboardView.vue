@@ -63,7 +63,7 @@
             </router-link>
           </div>
           <div v-if="earthquakes.length > 0" class="table-wrapper">
-            <table class="data-table">
+            <table class="data-table" aria-label="Recent earthquakes">
               <thead>
                 <tr>
                   <th>Mag</th>
@@ -96,7 +96,7 @@
             </router-link>
           </div>
           <div v-if="hurricanes.length > 0" class="table-wrapper">
-            <table class="data-table">
+            <table class="data-table" aria-label="Active tropical storms">
               <thead>
                 <tr>
                   <th>Storm</th>
@@ -327,7 +327,7 @@ onMounted(() => {
 }
 
 .cat-0 { background: #007bff; }
-.cat-1 { background: #ffc107; color: #333; }
+.cat-1 { background: #e6a800; color: #1a1a1a; }
 .cat-2 { background: #ff9800; }
 .cat-3 { background: #ff5722; }
 .cat-4 { background: #f44336; }

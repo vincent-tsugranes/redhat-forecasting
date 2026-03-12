@@ -23,19 +23,24 @@
               <kbd class="search-shortcut">ESC</kbd>
             </div>
 
-            <div v-if="query.length >= 2" class="search-results">
+            <div v-if="query.length >= 2" class="search-results" role="listbox" :aria-label="$t('search.ariaLabel')">
               <div v-if="results.length === 0" class="no-results">
                 {{ $t('search.noResults') }}
               </div>
 
               <template v-for="group in groupedResults" :key="group.category">
-                <div class="result-category">{{ $t('search.' + group.category) }}</div>
+                <div class="result-category" role="presentation">{{ $t('search.' + group.category) }}</div>
                 <div
                   v-for="(item, idx) in group.items"
                   :key="item.id"
                   class="result-item"
                   :class="{ 'result-active': flatIndex(group, idx) === highlightedIndex }"
+                  role="option"
+                  :aria-selected="flatIndex(group, idx) === highlightedIndex"
+                  tabindex="-1"
                   @click="navigateTo(item)"
+                  @keydown.enter.prevent="navigateTo(item)"
+                  @keydown.space.prevent="navigateTo(item)"
                   @mouseenter="highlightedIndex = flatIndex(group, idx)"
                 >
                   <span class="result-icon" aria-hidden="true">{{ item.icon }}</span>

@@ -100,22 +100,22 @@
       </div>
 
       <div class="table-wrapper">
-        <table class="data-table">
+        <table class="data-table" aria-label="Forecast data periods">
           <thead>
             <tr>
-              <th @click="toggleForecastSort('validFrom')">
+              <th role="columnheader" tabindex="0" aria-sort="none" @click="toggleForecastSort('validFrom')" @keydown.enter.prevent="toggleForecastSort('validFrom')" @keydown.space.prevent="toggleForecastSort('validFrom')">
                 Period
                 <span class="sort-indicator" :class="{ active: forecastSortKey === 'validFrom' }">{{ forecastSortIcon('validFrom') }}</span>
               </th>
-              <th @click="toggleForecastSort('temperatureFahrenheit')">
+              <th role="columnheader" tabindex="0" aria-sort="none" @click="toggleForecastSort('temperatureFahrenheit')" @keydown.enter.prevent="toggleForecastSort('temperatureFahrenheit')" @keydown.space.prevent="toggleForecastSort('temperatureFahrenheit')">
                 Temp
                 <span class="sort-indicator" :class="{ active: forecastSortKey === 'temperatureFahrenheit' }">{{ forecastSortIcon('temperatureFahrenheit') }}</span>
               </th>
-              <th @click="toggleForecastSort('windSpeedMph')">
+              <th role="columnheader" tabindex="0" aria-sort="none" @click="toggleForecastSort('windSpeedMph')" @keydown.enter.prevent="toggleForecastSort('windSpeedMph')" @keydown.space.prevent="toggleForecastSort('windSpeedMph')">
                 Wind
                 <span class="sort-indicator" :class="{ active: forecastSortKey === 'windSpeedMph' }">{{ forecastSortIcon('windSpeedMph') }}</span>
               </th>
-              <th @click="toggleForecastSort('precipitationProbability')">
+              <th role="columnheader" tabindex="0" aria-sort="none" @click="toggleForecastSort('precipitationProbability')" @keydown.enter.prevent="toggleForecastSort('precipitationProbability')" @keydown.space.prevent="toggleForecastSort('precipitationProbability')">
                 Precip
                 <span class="sort-indicator" :class="{ active: forecastSortKey === 'precipitationProbability' }">{{ forecastSortIcon('precipitationProbability') }}</span>
               </th>

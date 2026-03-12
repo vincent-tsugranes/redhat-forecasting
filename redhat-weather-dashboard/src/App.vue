@@ -59,7 +59,9 @@
 
     <SettingsPanel v-if="showSettings" @close="showSettings = false" />
 
-    <main>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <main id="main-content">
       <router-view v-slot="{ Component }">
         <Transition name="fade" mode="out-in">
           <ErrorBoundary>
@@ -271,6 +273,24 @@ main {
   margin: 0;
   font-size: 14px;
   color: var(--footer-text, #ccc);
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #ee0000;
+  color: white;
+  padding: 8px 16px;
+  z-index: 10000;
+  font-size: 14px;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
 }
 
 /* Page transitions */

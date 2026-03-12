@@ -33,7 +33,9 @@
     <!-- TABLE VIEW -->
     <div v-if="earthquakes.length > 0 && viewMode === 'table'" class="card">
       <div class="table-controls">
+        <label for="earthquake-filter" class="sr-only">Filter earthquakes by location</label>
         <input
+          id="earthquake-filter"
           v-model="filterText"
           type="text"
           class="table-filter"
@@ -42,22 +44,22 @@
         <span class="table-meta">{{ filteredEarthquakes.length }} of {{ earthquakes.length }} earthquakes</span>
       </div>
       <div class="table-wrapper">
-        <table class="data-table">
+        <table class="data-table" aria-label="Earthquake data">
           <thead>
             <tr>
-              <th @click="toggleSort('magnitude')">
+              <th role="columnheader" tabindex="0" aria-sort="none" @click="toggleSort('magnitude')" @keydown.enter.prevent="toggleSort('magnitude')" @keydown.space.prevent="toggleSort('magnitude')">
                 Mag
                 <span class="sort-indicator" :class="{ active: sortKey === 'magnitude' }">{{ sortIcon('magnitude') }}</span>
               </th>
-              <th @click="toggleSort('place')">
+              <th role="columnheader" tabindex="0" aria-sort="none" @click="toggleSort('place')" @keydown.enter.prevent="toggleSort('place')" @keydown.space.prevent="toggleSort('place')">
                 Location
                 <span class="sort-indicator" :class="{ active: sortKey === 'place' }">{{ sortIcon('place') }}</span>
               </th>
-              <th @click="toggleSort('depthKm')">
+              <th role="columnheader" tabindex="0" aria-sort="none" @click="toggleSort('depthKm')" @keydown.enter.prevent="toggleSort('depthKm')" @keydown.space.prevent="toggleSort('depthKm')">
                 Depth
                 <span class="sort-indicator" :class="{ active: sortKey === 'depthKm' }">{{ sortIcon('depthKm') }}</span>
               </th>
-              <th @click="toggleSort('eventTime')">
+              <th role="columnheader" tabindex="0" aria-sort="none" @click="toggleSort('eventTime')" @keydown.enter.prevent="toggleSort('eventTime')" @keydown.space.prevent="toggleSort('eventTime')">
                 Time
                 <span class="sort-indicator" :class="{ active: sortKey === 'eventTime' }">{{ sortIcon('eventTime') }}</span>
               </th>
@@ -70,7 +72,11 @@
               v-for="quake in sortedEarthquakes"
               :key="quake.id"
               :class="{ 'row-selected': selectedQuakeId === quake.usgsId }"
+              tabindex="0"
+              role="row"
               @click="onQuakeSelected(quake.usgsId)"
+              @keydown.enter.prevent="onQuakeSelected(quake.usgsId)"
+              @keydown.space.prevent="onQuakeSelected(quake.usgsId)"
             >
               <td>
                 <span class="magnitude-badge" :class="getMagnitudeClass(quake.magnitude)">M{{ quake.magnitude }}</span>
@@ -342,5 +348,16 @@ onMounted(() => {
 
 .td-nowrap {
   white-space: nowrap;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 </style>
