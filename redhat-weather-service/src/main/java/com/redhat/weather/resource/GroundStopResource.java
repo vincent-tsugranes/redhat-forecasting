@@ -9,6 +9,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.faulttolerance.Bulkhead;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/api/weather/ground-stops")
@@ -32,6 +34,7 @@ public class GroundStopResource {
     @GET
     @Path("/active")
     @Operation(summary = "Get active ground stops", description = "Retrieve all currently active ground stops and GDPs")
+    @APIResponse(responseCode = "200", description = "List of active ground stops and GDPs")
     public Response getActiveGroundStops() {
         return Response.ok(groundStopService.getActiveGroundStops())
             .cacheControl(cacheControl(60)).build();
@@ -40,7 +43,9 @@ public class GroundStopResource {
     @GET
     @Path("/airport/{code}")
     @Operation(summary = "Get by airport", description = "Filter ground stops by airport code")
-    public Response getByAirport(@PathParam("code") String code) {
+    @APIResponse(responseCode = "200", description = "Ground stops for the specified airport")
+    public Response getByAirport(
+            @PathParam("code") @Parameter(description = "Airport code (e.g., KJFK)") String code) {
         return Response.ok(groundStopService.getByAirport(code))
             .cacheControl(cacheControl(60)).build();
     }
@@ -49,6 +54,7 @@ public class GroundStopResource {
     @Path("/refresh")
     @Bulkhead(value = 1, waitingTaskQueue = 1)
     @Operation(summary = "Refresh ground stops", description = "Manually trigger ground stop data refresh")
+    @APIResponse(responseCode = "202", description = "Refresh triggered")
     public Response refreshGroundStops() {
         try {
             meterRegistry.counter("weather_api_refresh_total", "type", "ground-stop").increment();

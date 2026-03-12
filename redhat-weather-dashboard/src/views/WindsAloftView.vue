@@ -27,6 +27,7 @@
     <TableSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
+    <ErrorBoundary>
     <div v-if="filteredWinds.length > 0" class="card">
       <div class="table-controls">
         <span class="table-meta">{{ filteredWinds.length }} forecast entries ({{ stationCount }} stations)</span>
@@ -78,6 +79,8 @@
       </div>
     </div>
 
+    </ErrorBoundary>
+
     <div v-if="!loading && windsAloft.length === 0" class="card">
       <p>{{ $t('windsAloft.noData') }}</p>
       <p>{{ $t('windsAloft.autoFetch') }}</p>
@@ -92,6 +95,7 @@ import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
 import { formatRelativeTime } from '../utils/dateUtils'
 import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
+import ErrorBoundary from '../components/ErrorBoundary.vue'
 
 const store = useWeatherStore()
 const toast = useToast()

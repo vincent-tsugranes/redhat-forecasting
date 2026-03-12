@@ -9,6 +9,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.faulttolerance.Bulkhead;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/api/weather/sigmets")
@@ -32,6 +34,7 @@ public class SigmetResource {
     @GET
     @Path("/active")
     @Operation(summary = "Get active SIGMETs/AIRMETs", description = "Retrieve all currently active SIGMETs and AIRMETs")
+    @APIResponse(responseCode = "200", description = "List of active SIGMETs and AIRMETs")
     public Response getActiveSigmets() {
         return Response.ok(sigmetService.getActiveSigmets())
             .cacheControl(cacheControl(120)).build();
@@ -40,7 +43,9 @@ public class SigmetResource {
     @GET
     @Path("/type/{type}")
     @Operation(summary = "Get by type", description = "Filter by SIGMET or AIRMET type")
-    public Response getSigmetsByType(@PathParam("type") String type) {
+    @APIResponse(responseCode = "200", description = "Filtered SIGMETs/AIRMETs by type")
+    public Response getSigmetsByType(
+            @PathParam("type") @Parameter(description = "Advisory type (SIGMET or AIRMET)") String type) {
         return Response.ok(sigmetService.getSigmetsByType(type))
             .cacheControl(cacheControl(120)).build();
     }
@@ -48,7 +53,9 @@ public class SigmetResource {
     @GET
     @Path("/scope/{scope}")
     @Operation(summary = "Get by scope", description = "Filter by scope: DOMESTIC or INTERNATIONAL")
-    public Response getSigmetsByScope(@PathParam("scope") String scope) {
+    @APIResponse(responseCode = "200", description = "Filtered SIGMETs/AIRMETs by scope")
+    public Response getSigmetsByScope(
+            @PathParam("scope") @Parameter(description = "Scope (DOMESTIC or INTERNATIONAL)") String scope) {
         return Response.ok(sigmetService.getSigmetsByScope(scope))
             .cacheControl(cacheControl(120)).build();
     }
@@ -56,7 +63,9 @@ public class SigmetResource {
     @GET
     @Path("/hazard/{hazard}")
     @Operation(summary = "Get by hazard", description = "Filter by hazard type (ICE, TURB, IFR, CONVECTIVE, etc.)")
-    public Response getSigmetsByHazard(@PathParam("hazard") String hazard) {
+    @APIResponse(responseCode = "200", description = "Filtered SIGMETs/AIRMETs by hazard type")
+    public Response getSigmetsByHazard(
+            @PathParam("hazard") @Parameter(description = "Hazard type (ICE, TURB, IFR, CONVECTIVE, etc.)") String hazard) {
         return Response.ok(sigmetService.getSigmetsByHazard(hazard))
             .cacheControl(cacheControl(120)).build();
     }
@@ -65,6 +74,7 @@ public class SigmetResource {
     @Path("/refresh")
     @Bulkhead(value = 1, waitingTaskQueue = 1)
     @Operation(summary = "Refresh SIGMETs", description = "Manually trigger SIGMET/AIRMET data refresh")
+    @APIResponse(responseCode = "202", description = "Refresh triggered")
     public Response refreshSigmets() {
         try {
             meterRegistry.counter("weather_api_refresh_total", "type", "sigmet").increment();

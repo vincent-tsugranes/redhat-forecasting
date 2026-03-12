@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.faulttolerance.Bulkhead;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/api/weather/lightning")
@@ -32,6 +33,7 @@ public class LightningResource {
     @GET
     @Path("/recent")
     @Operation(summary = "Get recent lightning strikes", description = "Retrieve lightning strikes from the past hour")
+    @APIResponse(responseCode = "200", description = "List of recent lightning strikes")
     public Response getRecentStrikes() {
         return Response.ok(lightningService.getRecentStrikes())
             .cacheControl(cacheControl(30)).build();
@@ -40,6 +42,7 @@ public class LightningResource {
     @GET
     @Path("/count")
     @Operation(summary = "Get recent strike count", description = "Count of lightning strikes in the past hour")
+    @APIResponse(responseCode = "200", description = "Strike count")
     public Response getRecentCount() {
         return Response.ok(lightningService.getRecentCount())
             .cacheControl(cacheControl(30)).build();
@@ -49,6 +52,7 @@ public class LightningResource {
     @Path("/refresh")
     @Bulkhead(value = 1, waitingTaskQueue = 1)
     @Operation(summary = "Refresh lightning data", description = "Manually trigger lightning data refresh")
+    @APIResponse(responseCode = "202", description = "Refresh triggered")
     public Response refreshLightning() {
         try {
             meterRegistry.counter("weather_api_refresh_total", "type", "lightning").increment();

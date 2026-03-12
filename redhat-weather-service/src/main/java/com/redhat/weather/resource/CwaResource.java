@@ -9,6 +9,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.faulttolerance.Bulkhead;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/api/weather/cwas")
@@ -32,6 +34,7 @@ public class CwaResource {
     @GET
     @Path("/active")
     @Operation(summary = "Get active CWAs", description = "Retrieve all currently active Center Weather Advisories")
+    @APIResponse(responseCode = "200", description = "List of active CWAs")
     public Response getActiveCwas() {
         return Response.ok(cwaService.getActiveCwas())
             .cacheControl(cacheControl(120)).build();
@@ -40,7 +43,9 @@ public class CwaResource {
     @GET
     @Path("/artcc/{artcc}")
     @Operation(summary = "Get by ARTCC", description = "Filter CWAs by Air Route Traffic Control Center")
-    public Response getCwasByArtcc(@PathParam("artcc") String artcc) {
+    @APIResponse(responseCode = "200", description = "Filtered CWAs by ARTCC")
+    public Response getCwasByArtcc(
+            @PathParam("artcc") @Parameter(description = "ARTCC identifier (e.g., ZNY)") String artcc) {
         return Response.ok(cwaService.getCwasByArtcc(artcc))
             .cacheControl(cacheControl(120)).build();
     }
@@ -48,7 +53,9 @@ public class CwaResource {
     @GET
     @Path("/hazard/{hazard}")
     @Operation(summary = "Get by hazard", description = "Filter CWAs by hazard type")
-    public Response getCwasByHazard(@PathParam("hazard") String hazard) {
+    @APIResponse(responseCode = "200", description = "Filtered CWAs by hazard type")
+    public Response getCwasByHazard(
+            @PathParam("hazard") @Parameter(description = "Hazard type (TURB, ICE, IFR, CONVECTIVE)") String hazard) {
         return Response.ok(cwaService.getCwasByHazard(hazard))
             .cacheControl(cacheControl(120)).build();
     }
@@ -57,6 +64,7 @@ public class CwaResource {
     @Path("/refresh")
     @Bulkhead(value = 1, waitingTaskQueue = 1)
     @Operation(summary = "Refresh CWAs", description = "Manually trigger CWA data refresh")
+    @APIResponse(responseCode = "202", description = "Refresh triggered")
     public Response refreshCwas() {
         try {
             meterRegistry.counter("weather_api_refresh_total", "type", "cwa").increment();

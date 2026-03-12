@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.faulttolerance.Bulkhead;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/api/weather/volcanic-ash")
@@ -32,6 +33,7 @@ public class VolcanicAshResource {
     @GET
     @Path("/active")
     @Operation(summary = "Get active advisories", description = "Retrieve all currently active volcanic ash advisories")
+    @APIResponse(responseCode = "200", description = "List of active volcanic ash advisories")
     public Response getActiveAdvisories() {
         return Response.ok(volcanicAshService.getActiveAdvisories())
             .cacheControl(cacheControl(120)).build();
@@ -41,6 +43,7 @@ public class VolcanicAshResource {
     @Path("/refresh")
     @Bulkhead(value = 1, waitingTaskQueue = 1)
     @Operation(summary = "Refresh volcanic ash advisories", description = "Manually trigger volcanic ash advisory refresh")
+    @APIResponse(responseCode = "202", description = "Refresh triggered")
     public Response refreshAdvisories() {
         try {
             meterRegistry.counter("weather_api_refresh_total", "type", "volcanic-ash").increment();

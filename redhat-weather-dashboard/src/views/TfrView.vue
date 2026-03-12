@@ -39,6 +39,7 @@
       </span>
     </div>
 
+    <ErrorBoundary>
     <div v-if="filteredTfrs.length > 0" class="card">
       <div class="table-controls">
         <span class="table-meta">{{ filteredTfrs.length }} restrictions</span>
@@ -72,6 +73,8 @@
       </div>
     </div>
 
+    </ErrorBoundary>
+
     <div v-if="!loading && tfrs.length === 0" class="card">
       <p>{{ $t('tfr.noActive') }}</p>
       <p>{{ $t('tfr.autoFetch') }}</p>
@@ -85,6 +88,7 @@ import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
 import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
+import ErrorBoundary from '../components/ErrorBoundary.vue'
 
 const store = useWeatherStore()
 const toast = useToast()
@@ -217,13 +221,4 @@ onMounted(() => {
   background: #e8f5e9;
 }
 
-@media (max-width: 768px) {
-  .stats-row {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .stat-tile {
-    min-width: 80px;
-  }
-}
 </style>

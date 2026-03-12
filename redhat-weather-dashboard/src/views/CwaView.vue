@@ -27,6 +27,7 @@
     <TableSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
+    <ErrorBoundary>
     <div v-if="filteredCwas.length > 0" class="card">
       <div class="table-controls">
         <span class="table-meta">{{ filteredCwas.length }} active advisories</span>
@@ -77,6 +78,8 @@
       </div>
     </div>
 
+    </ErrorBoundary>
+
     <div v-if="!loading && cwas.length === 0" class="card">
       <p>{{ $t('cwa.noActive') }}</p>
       <p>{{ $t('cwa.autoFetch') }}</p>
@@ -91,6 +94,7 @@ import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
 import { formatDate } from '../utils/dateUtils'
 import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
+import ErrorBoundary from '../components/ErrorBoundary.vue'
 
 const store = useWeatherStore()
 const toast = useToast()

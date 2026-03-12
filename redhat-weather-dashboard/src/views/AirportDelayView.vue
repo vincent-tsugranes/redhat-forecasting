@@ -25,6 +25,7 @@
       </span>
     </div>
 
+    <ErrorBoundary>
     <div v-if="delays.length > 0" class="card">
       <div class="table-wrapper">
         <table class="data-table" aria-label="Airport delays">
@@ -60,6 +61,8 @@
       </div>
     </div>
 
+    </ErrorBoundary>
+
     <div v-else-if="!loading" class="card">
       <p><span aria-hidden="true">✅</span> {{ $t('delay.noDelays') }}</p>
       <p>{{ $t('delay.autoFetch') }}</p>
@@ -73,6 +76,7 @@ import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
 import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
+import ErrorBoundary from '../components/ErrorBoundary.vue'
 
 const store = useWeatherStore()
 const toast = useToast()

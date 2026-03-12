@@ -9,6 +9,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.faulttolerance.Bulkhead;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/api/weather/winds-aloft")
@@ -32,6 +34,7 @@ public class WindsAloftResource {
     @GET
     @Path("/latest")
     @Operation(summary = "Get latest winds aloft", description = "Retrieve the most recent winds/temps aloft forecasts")
+    @APIResponse(responseCode = "200", description = "List of latest winds aloft forecasts")
     public Response getLatestWinds() {
         return Response.ok(windsAloftService.getLatestWinds())
             .cacheControl(cacheControl(300)).build();
@@ -40,7 +43,9 @@ public class WindsAloftResource {
     @GET
     @Path("/station/{stationId}")
     @Operation(summary = "Get by station", description = "Get winds aloft forecasts for a specific station")
-    public Response getWindsByStation(@PathParam("stationId") String stationId) {
+    @APIResponse(responseCode = "200", description = "Winds aloft for the specified station")
+    public Response getWindsByStation(
+            @PathParam("stationId") @Parameter(description = "Station identifier (e.g., KJFK)") String stationId) {
         return Response.ok(windsAloftService.getWindsByStation(stationId))
             .cacheControl(cacheControl(300)).build();
     }
@@ -48,7 +53,9 @@ public class WindsAloftResource {
     @GET
     @Path("/altitude/{altitudeFt}")
     @Operation(summary = "Get by altitude", description = "Get winds aloft at a specific flight level (e.g., 3000, 6000, 9000)")
-    public Response getWindsByAltitude(@PathParam("altitudeFt") int altitudeFt) {
+    @APIResponse(responseCode = "200", description = "Winds aloft at the specified altitude")
+    public Response getWindsByAltitude(
+            @PathParam("altitudeFt") @Parameter(description = "Altitude in feet (e.g., 3000, 6000, 9000)") int altitudeFt) {
         return Response.ok(windsAloftService.getWindsByAltitude(altitudeFt))
             .cacheControl(cacheControl(300)).build();
     }
@@ -57,6 +64,7 @@ public class WindsAloftResource {
     @Path("/refresh")
     @Bulkhead(value = 1, waitingTaskQueue = 1)
     @Operation(summary = "Refresh winds aloft", description = "Manually trigger winds aloft data refresh")
+    @APIResponse(responseCode = "202", description = "Refresh triggered")
     public Response refreshWindsAloft() {
         try {
             meterRegistry.counter("weather_api_refresh_total", "type", "winds-aloft").increment();

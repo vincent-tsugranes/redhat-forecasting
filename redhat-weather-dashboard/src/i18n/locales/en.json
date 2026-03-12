@@ -259,21 +259,44 @@
     "activePrograms": "Active Programs",
     "refreshData": "Refresh Data",
     "noActive": "No active ground stops or ground delay programs at this time.",
-    "autoFetch": "Ground stop data is automatically fetched from the FAA every 5 minutes."
+    "autoFetch": "Ground stop data is automatically fetched from the FAA every 5 minutes.",
+    "active": "Active",
+    "gdps": "GDPs",
+    "groundStops": "Ground Stops",
+    "airport": "Airport",
+    "name": "Name",
+    "program": "Program",
+    "reason": "Reason",
+    "avgDelay": "Avg Delay",
+    "maxDelay": "Max Delay",
+    "filterPlaceholder": "Filter by airport..."
   },
   "volcanicAsh": {
     "title": "Volcanic Ash Advisories",
     "activeAdvisories": "Active Advisories",
     "refreshData": "Refresh Data",
     "noActive": "No active volcanic ash advisories at this time.",
-    "autoFetch": "Volcanic ash data is automatically fetched from international SIGMETs every 15 minutes."
+    "autoFetch": "Volcanic ash data is automatically fetched from international SIGMETs every 15 minutes.",
+    "active": "Active",
+    "fir": "FIR:",
+    "hazard": "Hazard:",
+    "severity": "Severity:",
+    "altitude": "Altitude:",
+    "valid": "Valid:",
+    "filterPlaceholder": "Filter by volcano or FIR..."
   },
   "lightning": {
     "title": "Lightning Activity",
     "recentActivity": "Recent Strikes",
     "refreshData": "Refresh Data",
     "noRecent": "No lightning strikes detected in the last hour.",
-    "autoFetch": "Lightning data is fetched every 5 minutes when enabled."
+    "autoFetch": "Lightning data is fetched every 5 minutes when enabled.",
+    "strikes": "Strikes (1h)",
+    "time": "Time",
+    "location": "Location",
+    "amplitude": "Amplitude",
+    "type": "Type",
+    "page": "Page"
   },
   "search": {
     "placeholder": "Search airports, earthquakes, storms...",

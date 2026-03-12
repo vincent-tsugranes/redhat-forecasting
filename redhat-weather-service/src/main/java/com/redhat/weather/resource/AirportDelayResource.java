@@ -9,6 +9,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.faulttolerance.Bulkhead;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/api/weather/delays")
@@ -32,6 +34,7 @@ public class AirportDelayResource {
     @GET
     @Path("/active")
     @Operation(summary = "Get active delays", description = "Retrieve airports with active delays")
+    @APIResponse(responseCode = "200", description = "List of airports with active delays")
     public Response getActiveDelays() {
         return Response.ok(airportDelayService.getActiveDelays())
             .cacheControl(cacheControl(60)).build();
@@ -40,7 +43,9 @@ public class AirportDelayResource {
     @GET
     @Path("/airport/{code}")
     @Operation(summary = "Get delays by airport", description = "Retrieve delay status for a specific airport")
-    public Response getDelaysByAirport(@PathParam("code") String code) {
+    @APIResponse(responseCode = "200", description = "Delay status for the specified airport")
+    public Response getDelaysByAirport(
+            @PathParam("code") @Parameter(description = "Airport code (e.g., KJFK)") String code) {
         return Response.ok(airportDelayService.getDelaysByAirport(code))
             .cacheControl(cacheControl(60)).build();
     }
@@ -49,6 +54,7 @@ public class AirportDelayResource {
     @Path("/refresh")
     @Bulkhead(value = 1, waitingTaskQueue = 1)
     @Operation(summary = "Refresh delays", description = "Manually trigger airport delay data refresh")
+    @APIResponse(responseCode = "202", description = "Refresh triggered")
     public Response refreshDelays() {
         try {
             meterRegistry.counter("weather_api_refresh_total", "type", "delay").increment();

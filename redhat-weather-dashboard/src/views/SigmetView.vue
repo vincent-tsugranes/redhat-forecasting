@@ -34,6 +34,7 @@
     <TableSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
+    <ErrorBoundary>
     <div v-if="filteredSigmets.length > 0" class="card">
       <div class="table-controls">
         <span class="table-meta">{{ filteredSigmets.length }} active advisories</span>
@@ -90,6 +91,8 @@
       </div>
     </div>
 
+    </ErrorBoundary>
+
     <div v-if="!loading && sigmets.length === 0" class="card">
       <p>{{ $t('sigmet.noActive') }}</p>
       <p>{{ $t('sigmet.autoFetch') }}</p>
@@ -104,6 +107,7 @@ import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
 import { formatDate } from '../utils/dateUtils'
 import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
+import ErrorBoundary from '../components/ErrorBoundary.vue'
 const store = useWeatherStore()
 const toast = useToast()
 const { sigmets, sigmetsLoading: loading, sigmetsError: error } = storeToRefs(store)
