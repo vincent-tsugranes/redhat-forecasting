@@ -8,10 +8,10 @@
     ></div>
     <div class="magnitude-legend">
       <div class="legend-title">Magnitude</div>
-      <div class="legend-item"><span class="legend-dot" style="background: #4caf50"></span> 2.5 - 4.0</div>
-      <div class="legend-item"><span class="legend-dot" style="background: #ff9800"></span> 4.0 - 5.0</div>
-      <div class="legend-item"><span class="legend-dot" style="background: #f44336"></span> 5.0 - 7.0</div>
-      <div class="legend-item"><span class="legend-dot" style="background: #9c27b0"></span> 7.0+</div>
+      <div class="legend-item"><span class="legend-dot dot-light"></span> 2.5 - 4.0</div>
+      <div class="legend-item"><span class="legend-dot dot-moderate"></span> 4.0 - 5.0</div>
+      <div class="legend-item"><span class="legend-dot dot-strong"></span> 5.0 - 7.0</div>
+      <div class="legend-item"><span class="legend-dot dot-major"></span> 7.0+</div>
     </div>
   </div>
 </template>
@@ -159,6 +159,11 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(0, 0, 0, 0.2);
 }
 
+.dot-light { background: var(--severity-light); }
+.dot-moderate { background: var(--severity-moderate); }
+.dot-strong { background: var(--severity-strong); }
+.dot-major { background: var(--severity-major); }
+
 :deep(.quake-popup) {
   padding: 4px;
 }
@@ -171,7 +176,7 @@ onBeforeUnmount(() => {
 
 :deep(.popup-detail) {
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary, #666);
   margin: 2px 0;
 }
 

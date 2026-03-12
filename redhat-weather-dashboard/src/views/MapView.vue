@@ -29,7 +29,7 @@ import ErrorBoundary from '../components/ErrorBoundary.vue'
 
 .map-header h1 {
   margin: 0;
-  color: #ee0000;
+  color: var(--accent);
   font-size: 1.5rem;
 }
 

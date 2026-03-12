@@ -121,12 +121,12 @@ onUnmounted(() => {
 }
 
 .severity-severe {
-  background: #e65100;
+  background: var(--aging-color);
   color: white;
 }
 
 .severity-moderate {
-  background: #f57f17;
+  background: var(--lightning-border);
   color: #333;
 }
 

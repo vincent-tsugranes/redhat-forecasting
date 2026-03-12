@@ -187,7 +187,7 @@ watch(
 .fwc-temp {
   font-weight: 700;
   font-size: 20px;
-  color: #ee0000;
+  color: var(--accent);
   margin-bottom: 4px;
 }
 

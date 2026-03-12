@@ -285,10 +285,10 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.mag-light { background: #4caf50; }
-.mag-moderate { background: #ff9800; }
-.mag-strong { background: #f44336; }
-.mag-major { background: #9c27b0; }
+.mag-light { background: var(--severity-light); }
+.mag-moderate { background: var(--severity-moderate); }
+.mag-strong { background: var(--severity-strong); }
+.mag-major { background: var(--severity-major); }
 
 .quake-info {
   display: grid;
@@ -304,7 +304,7 @@ onMounted(() => {
 }
 
 .tsunami-warning {
-  color: #f44336;
+  color: var(--severity-strong);
   font-weight: bold;
 }
 
@@ -322,10 +322,10 @@ onMounted(() => {
   font-size: 12px;
 }
 
-.alert-green { background: #4caf50; }
-.alert-yellow { background: #ffc107; color: #333; }
-.alert-orange { background: #ff9800; }
-.alert-red { background: #f44336; }
+.alert-green { background: var(--severity-light); }
+.alert-yellow { background: var(--storm-cat1); color: var(--storm-cat1-text); }
+.alert-orange { background: var(--severity-moderate); }
+.alert-red { background: var(--severity-strong); }
 
 .quake-location,
 .quake-time {
@@ -335,7 +335,7 @@ onMounted(() => {
 }
 
 .card-selected {
-  border: 2px solid #ee0000;
+  border: 2px solid var(--accent);
   box-shadow: 0 0 12px rgba(238, 0, 0, 0.2);
 }
 

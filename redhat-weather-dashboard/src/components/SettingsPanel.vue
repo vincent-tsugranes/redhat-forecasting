@@ -160,7 +160,7 @@ onUnmounted(() => {
 }
 
 .setting-group select:focus {
-  border-color: #ee0000;
+  border-color: var(--accent);
   outline: none;
 }
 </style>

@@ -198,12 +198,12 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.type-security { background: #f44336; }
-.type-vip { background: #9c27b0; }
-.type-hazard { background: #ff9800; }
-.type-space { background: #2196f3; }
-.type-special { background: #607d8b; }
-.type-other { background: #795548; }
+.type-security { background: var(--severity-strong); }
+.type-vip { background: var(--severity-major); }
+.type-hazard { background: var(--severity-moderate); }
+.type-space { background: var(--color-info); }
+.type-special { background: var(--flight-unknown); }
+.type-other { background: var(--volcanic-ash); }
 
 .new-badge {
   display: inline-block;
@@ -212,7 +212,7 @@ onMounted(() => {
   font-size: 9px;
   font-weight: bold;
   color: white;
-  background: #4caf50;
+  background: var(--severity-light);
   margin-left: 4px;
   vertical-align: middle;
 }

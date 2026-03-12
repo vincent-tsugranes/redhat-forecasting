@@ -247,7 +247,7 @@ onBeforeUnmount(() => {
 
 :deep(.track-popup .popup-header) {
   font-size: 15px;
-  color: #333;
+  color: var(--text-primary, #333);
   margin-bottom: 6px;
 }
 
@@ -274,22 +274,22 @@ onBeforeUnmount(() => {
 }
 
 :deep(.track-popup .popup-label) {
-  color: #666;
+  color: var(--text-secondary, #666);
   font-weight: 500;
 }
 
 :deep(.track-popup .popup-value) {
-  color: #333;
+  color: var(--text-primary, #333);
   font-weight: 600;
   text-align: right;
 }
 
 :deep(.track-popup .popup-time) {
   font-size: 11px;
-  color: #999;
+  color: var(--text-muted, #999);
   margin-top: 6px;
   padding-top: 6px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-light, #eee);
   text-align: center;
 }
 

@@ -299,7 +299,7 @@ onUnmounted(() => {
 }
 
 .search-input:focus {
-  border-color: #ee0000;
+  border-color: var(--accent);
 }
 
 .search-results {
@@ -339,7 +339,7 @@ onUnmounted(() => {
 .result-code {
   font-weight: 700;
   font-size: 14px;
-  color: #ee0000;
+  color: var(--accent);
 }
 
 .result-name {
@@ -393,19 +393,19 @@ onUnmounted(() => {
 }
 
 .category-VFR {
-  background: #28a745;
+  background: var(--flight-vfr);
 }
 
 .category-MVFR {
-  background: #007bff;
+  background: var(--flight-mvfr);
 }
 
 .category-IFR {
-  background: #ffc107;
+  background: var(--flight-ifr);
   color: #333;
 }
 
 .category-LIFR {
-  background: #dc3545;
+  background: var(--flight-lifr);
 }
 </style>

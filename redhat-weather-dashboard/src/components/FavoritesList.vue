@@ -61,7 +61,7 @@ const { favorites, removeFavorite } = useFavorites()
 }
 
 .chip-link:hover {
-  color: #ee0000;
+  color: var(--accent);
 }
 
 .chip-state {

@@ -168,7 +168,7 @@ onMounted(() => {
   border-radius: 4px;
   font-weight: bold;
   color: white;
-  background: #795548;
+  background: var(--volcanic-ash);
   font-size: 12px;
 }
 

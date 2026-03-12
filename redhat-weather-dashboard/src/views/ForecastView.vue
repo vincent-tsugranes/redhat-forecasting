@@ -334,7 +334,7 @@ onMounted(async () => {
 }
 
 .search-input:focus {
-  border-color: #ee0000;
+  border-color: var(--accent);
 }
 
 .search-results {

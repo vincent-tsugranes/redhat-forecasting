@@ -229,9 +229,9 @@ const chartOptions = computed(() => ({
 }
 
 .period-toggles button.active {
-  background: #ee0000;
+  background: var(--accent);
   color: white;
-  border-color: #ee0000;
+  border-color: var(--accent);
 }
 
 .historical-chart-container {

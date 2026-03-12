@@ -87,12 +87,12 @@ const tooltipText = computed(() => {
 }
 
 .freshness-aging {
-  background: #fff3e0;
-  color: #e65100;
+  background: var(--aging-bg);
+  color: var(--aging-color);
 }
 
 .freshness-stale {
-  background: #ffebee;
-  color: #c62828;
+  background: var(--error-bg);
+  color: var(--stale-color);
 }
 </style>

@@ -470,22 +470,22 @@ onBeforeUnmount(() => {
   width: 100%;
   padding: 12px 20px;
   font-size: 16px;
-  border: 2px solid #ddd;
+  border: 2px solid var(--border-color, #ddd);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   outline: none;
   transition: border-color 0.3s;
-  background: white;
+  background: var(--bg-card, white);
 }
 
 .search-input:focus {
-  border-color: #ee0000;
+  border-color: var(--accent);
 }
 
 .search-results {
   margin-top: 8px;
-  background: white;
-  border: 1px solid #ddd;
+  background: var(--bg-card, white);
+  border: 1px solid var(--border-color, #ddd);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   max-height: 400px;
@@ -497,7 +497,7 @@ onBeforeUnmount(() => {
   gap: 12px;
   padding: 12px 16px;
   cursor: pointer;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-light, #eee);
   transition: background-color 0.2s;
 }
 
@@ -506,12 +506,12 @@ onBeforeUnmount(() => {
 }
 
 .search-result-item:hover {
-  background-color: #f5f5f5;
+  background-color: var(--bg-code, #f5f5f5);
 }
 
 .airport-code {
   font-weight: bold;
-  color: #ee0000;
+  color: var(--accent);
   min-width: 50px;
   font-size: 14px;
 }
@@ -528,7 +528,7 @@ onBeforeUnmount(() => {
 
 .airport-location {
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary, #666);
 }
 
 .map-container {
@@ -578,7 +578,7 @@ onBeforeUnmount(() => {
 
 :deep(.popup-header) {
   font-size: 16px;
-  color: #ee0000;
+  color: var(--accent);
   margin-bottom: 4px;
 }
 
@@ -590,13 +590,13 @@ onBeforeUnmount(() => {
 
 :deep(.popup-location) {
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary, #666);
   margin-bottom: 4px;
 }
 
 :deep(.popup-coords) {
   font-size: 11px;
-  color: #999;
+  color: var(--text-muted, #999);
   font-family: monospace;
 }
 
@@ -606,13 +606,13 @@ onBeforeUnmount(() => {
 
 :deep(.weather-divider) {
   height: 1px;
-  background: #e0e0e0;
+  background: var(--border-light, #e0e0e0);
   margin: 8px 0;
 }
 
 :deep(.weather-loading) {
   font-size: 12px;
-  color: #666;
+  color: var(--text-secondary, #666);
   text-align: center;
   padding: 8px 0;
 }
@@ -627,7 +627,7 @@ onBeforeUnmount(() => {
 :deep(.weather-title) {
   font-size: 13px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary, #333);
   margin-bottom: 6px;
 }
 
@@ -645,22 +645,22 @@ onBeforeUnmount(() => {
 }
 
 :deep(.weather-label) {
-  color: #666;
+  color: var(--text-secondary, #666);
   font-weight: 500;
 }
 
 :deep(.weather-value) {
-  color: #333;
+  color: var(--text-primary, #333);
   font-weight: 600;
   text-align: right;
 }
 
 :deep(.weather-time) {
   font-size: 11px;
-  color: #999;
+  color: var(--text-muted, #999);
   margin-top: 8px;
   padding-top: 6px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-light, #eee);
   text-align: center;
 }
 
@@ -676,10 +676,10 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   padding: 10px;
-  background: #f5f5f5;
+  background: var(--bg-code, #f5f5f5);
   border-radius: 6px;
   font-size: 13px;
-  color: #666;
+  color: var(--text-secondary, #666);
 }
 
 :deep(.info-icon) {
@@ -712,7 +712,7 @@ onBeforeUnmount(() => {
 
 :deep(.weather-hint) {
   font-size: 12px;
-  color: #999;
+  color: var(--text-muted, #999);
   text-align: center;
   font-style: italic;
 }
@@ -723,11 +723,11 @@ onBeforeUnmount(() => {
 }
 
 :deep(.marker-cluster) {
-  background-color: rgba(238, 0, 0, 0.6);
+  background-color: color-mix(in srgb, var(--accent) 60%, transparent);
 }
 
 :deep(.marker-cluster div) {
-  background-color: rgba(238, 0, 0, 0.8);
+  background-color: color-mix(in srgb, var(--accent) 80%, transparent);
   color: white;
   font-weight: bold;
 }
@@ -745,9 +745,9 @@ onBeforeUnmount(() => {
 .radar-toggle-btn {
   padding: 8px 14px;
   font-size: 13px;
-  border: 2px solid #ddd;
+  border: 2px solid var(--border-color, #ddd);
   border-radius: 8px;
-  background: white;
+  background: var(--bg-card, white);
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   white-space: nowrap;
@@ -755,14 +755,14 @@ onBeforeUnmount(() => {
 }
 
 .radar-toggle-btn:hover {
-  border-color: #ee0000;
+  border-color: var(--accent);
 }
 
 .radar-opacity {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: white;
+  background: var(--bg-card, white);
   padding: 6px 10px;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
@@ -770,7 +770,7 @@ onBeforeUnmount(() => {
 }
 
 .radar-opacity label {
-  color: #666;
+  color: var(--text-secondary, #666);
   white-space: nowrap;
 }
 

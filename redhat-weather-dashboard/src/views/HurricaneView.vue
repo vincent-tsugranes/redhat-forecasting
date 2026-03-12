@@ -144,13 +144,13 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
-  border-bottom: 2px solid #ee0000;
+  border-bottom: 2px solid var(--accent);
   padding-bottom: 10px;
 }
 
 .storm-header h2 {
   margin: 0;
-  color: #ee0000;
+  color: var(--accent);
 }
 
 .storm-id {
@@ -183,28 +183,28 @@ onMounted(() => {
 }
 
 .cat-0 {
-  background: #007bff;
+  background: var(--storm-ts);
 }
 
 .cat-1 {
-  background: #ffc107;
-  color: #333;
+  background: var(--storm-cat1);
+  color: var(--storm-cat1-text);
 }
 
 .cat-2 {
-  background: #ff9800;
+  background: var(--storm-cat2);
 }
 
 .cat-3 {
-  background: #ff5722;
+  background: var(--storm-cat3);
 }
 
 .cat-4 {
-  background: #f44336;
+  background: var(--storm-cat4);
 }
 
 .cat-5 {
-  background: #9c27b0;
+  background: var(--storm-cat5);
 }
 
 .storm-location,
@@ -214,7 +214,7 @@ onMounted(() => {
 }
 
 .card-selected {
-  border: 2px solid #ee0000;
+  border: 2px solid var(--accent);
   box-shadow: 0 0 12px rgba(238, 0, 0, 0.2);
 }
 </style>

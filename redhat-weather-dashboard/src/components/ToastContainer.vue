@@ -56,15 +56,15 @@ function getIcon(type: string): string {
 }
 
 .toast-success {
-  background: #2e7d32;
+  background: var(--color-success);
 }
 
 .toast-error {
-  background: #c62828;
+  background: var(--color-error);
 }
 
 .toast-info {
-  background: #1565c0;
+  background: var(--color-info);
 }
 
 .toast-icon {

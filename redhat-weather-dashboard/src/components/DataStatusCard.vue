@@ -372,7 +372,7 @@ h3 {
 }
 
 .error {
-  color: #d32f2f;
+  color: var(--color-error);
 }
 
 .status-content {
@@ -408,7 +408,7 @@ h3 {
 }
 
 .value.complete {
-  color: #4caf50;
+  color: var(--fresh-color);
 }
 
 .progress-bar {
@@ -423,7 +423,7 @@ h3 {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  background: linear-gradient(90deg, var(--fresh-color), #8bc34a);
   transition: width 0.3s ease;
 }
 
@@ -451,8 +451,8 @@ h3 {
 }
 
 .status-badge.warning {
-  background: #fff3e0;
-  color: #e65100;
+  background: var(--aging-bg);
+  color: var(--aging-color);
 }
 
 .data-counts-grid {
@@ -525,13 +525,13 @@ h3 {
 }
 
 .freshness-aging {
-  background: #fff3e0;
-  color: #e65100;
+  background: var(--aging-bg);
+  color: var(--aging-color);
 }
 
 .freshness-stale {
-  background: #ffebee;
-  color: #c62828;
+  background: var(--stale-bg, #ffebee);
+  color: var(--stale-color);
 }
 
 .scheduler-section {
@@ -590,8 +590,8 @@ h3 {
 }
 
 .scheduler-due {
-  background: #fff3e0;
-  color: #e65100;
+  background: var(--aging-bg);
+  color: var(--aging-color);
 }
 
 .scheduler-pending {
@@ -613,15 +613,15 @@ h3 {
 }
 
 .progress-ok {
-  background: #4caf50;
+  background: var(--fresh-color);
 }
 
 .progress-soon {
-  background: #ff9800;
+  background: var(--aging-color);
 }
 
 .progress-overdue {
-  background: #f44336;
+  background: var(--stale-color);
 }
 
 @media (max-width: 480px) {

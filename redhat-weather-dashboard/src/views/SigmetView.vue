@@ -191,8 +191,8 @@ onMounted(() => {
   color: white;
 }
 
-.type-sigmet { background: #f44336; }
-.type-airmet { background: #ff9800; }
+.type-sigmet { background: var(--sigmet-color); }
+.type-airmet { background: var(--severity-moderate); }
 
 .severity-label {
   font-size: 12px;
@@ -233,7 +233,7 @@ onMounted(() => {
   font-size: 9px;
   font-weight: bold;
   color: white;
-  background: #7b1fa2;
+  background: var(--scope-intl);
   margin-left: 4px;
   vertical-align: middle;
 }
@@ -244,6 +244,6 @@ onMounted(() => {
 }
 
 .row-expired-soon {
-  background: #fff8e1;
+  background: var(--alert-bg-warn);
 }
 </style>

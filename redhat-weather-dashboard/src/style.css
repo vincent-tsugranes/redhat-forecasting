@@ -1,5 +1,6 @@
 /* CSS Custom Properties */
 :root {
+  /* --- Layout --- */
   --bg-primary: #f5f5f5;
   --bg-card: #ffffff;
   --bg-input: #ffffff;
@@ -17,6 +18,83 @@
   --error-bg: #fee;
   --error-text: #c00;
   --btn-disabled-bg: #ccc;
+  --skeleton-base: #e0e0e0;
+  --skeleton-shine: #f5f5f5;
+
+  /* --- Brand --- */
+  --accent: #ee0000;
+  --accent-hover: #cc0000;
+  --accent-subtle: rgba(238, 0, 0, 0.05);
+
+  /* --- Semantic status --- */
+  --color-success: #4caf50;
+  --color-warning: #ff9800;
+  --color-error: #f44336;
+  --color-info: #2196f3;
+
+  /* --- Severity scale (earthquakes, turbulence, wind) --- */
+  --severity-light: #4caf50;
+  --severity-moderate: #ff9800;
+  --severity-strong: #f44336;
+  --severity-major: #9c27b0;
+  --severity-extreme: #880e4f;
+
+  /* --- Flight categories --- */
+  --flight-vfr: #4caf50;
+  --flight-mvfr: #2196f3;
+  --flight-ifr: #ff9800;
+  --flight-lifr: #f44336;
+  --flight-unknown: #9e9e9e;
+
+  /* --- Hurricane categories --- */
+  --storm-ts: #007bff;
+  --storm-cat1: #e6a800;
+  --storm-cat1-text: #1a1a1a;
+  --storm-cat2: #ff9800;
+  --storm-cat3: #ff5722;
+  --storm-cat4: #f44336;
+  --storm-cat5: #9c27b0;
+
+  /* --- Data freshness --- */
+  --fresh-color: #4caf50;
+  --aging-color: #e65100;
+  --aging-bg: #fff3e0;
+  --stale-color: #f44336;
+
+  /* --- Temperature --- */
+  --temp-hot: #f44336;
+  --temp-cold: #42a5f5;
+  --temp-cold-dark: #1565c0;
+
+  /* --- Map / specialty --- */
+  --lightning-fill: #ffeb3b;
+  --lightning-border: #f57f17;
+  --tfr-color: #d32f2f;
+  --volcanic-ash: #795548;
+  --cwa-color: #ff9800;
+  --sigmet-color: #f44336;
+
+  /* --- Alert chip --- */
+  --alert-bg: #fff3e0;
+  --alert-text: #e65100;
+
+  /* --- Spacing scale --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* --- Typography scale --- */
+  --text-xs: 0.6875rem;  /* 11px */
+  --text-sm: 0.8125rem;  /* 13px */
+  --text-base: 0.875rem; /* 14px */
+  --text-lg: 1rem;       /* 16px */
+  --text-xl: 1.125rem;   /* 18px */
+  --text-2xl: 1.25rem;   /* 20px */
+  --text-3xl: 1.5rem;    /* 24px */
 }
 
 [data-theme='dark'] {
@@ -38,6 +116,53 @@
   --btn-disabled-bg: #444;
   --skeleton-base: #2a2a4a;
   --skeleton-shine: #3a3a5a;
+
+  /* --- Semantic overrides for dark mode --- */
+  --accent-subtle: rgba(238, 100, 100, 0.1);
+
+  --color-success: #66bb6a;
+  --color-warning: #ffa726;
+  --color-error: #ef5350;
+  --color-info: #42a5f5;
+
+  --severity-light: #66bb6a;
+  --severity-moderate: #ffa726;
+  --severity-strong: #ef5350;
+  --severity-major: #ba68c8;
+  --severity-extreme: #f06292;
+
+  --flight-vfr: #66bb6a;
+  --flight-mvfr: #42a5f5;
+  --flight-ifr: #ffa726;
+  --flight-lifr: #ef5350;
+  --flight-unknown: #bdbdbd;
+
+  --storm-ts: #42a5f5;
+  --storm-cat1: #ffd54f;
+  --storm-cat1-text: #1a1a1a;
+  --storm-cat2: #ffa726;
+  --storm-cat3: #ff7043;
+  --storm-cat4: #ef5350;
+  --storm-cat5: #ba68c8;
+
+  --fresh-color: #66bb6a;
+  --aging-color: #ffa726;
+  --aging-bg: rgba(255, 167, 38, 0.15);
+  --stale-color: #ef5350;
+
+  --temp-hot: #ef5350;
+  --temp-cold: #64b5f6;
+  --temp-cold-dark: #42a5f5;
+
+  --lightning-fill: #fff176;
+  --lightning-border: #fbc02d;
+  --tfr-color: #ef5350;
+  --volcanic-ash: #a1887f;
+  --cwa-color: #ffa726;
+  --sigmet-color: #ef5350;
+
+  --alert-bg: rgba(255, 167, 38, 0.15);
+  --alert-text: #ffa726;
 }
 
 * {
@@ -71,7 +196,7 @@ h1,
 h2,
 h3 {
   margin-bottom: 1rem;
-  color: #ee0000; /* Red Hat red */
+  color: var(--accent);
 }
 
 .card {
@@ -103,19 +228,19 @@ h3 {
 }
 
 button {
-  background-color: #ee0000;
+  background-color: var(--accent);
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: var(--space-3) var(--space-5);
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 500;
   transition: background-color 0.2s, box-shadow 0.2s;
 }
 
 button:hover {
-  background-color: #cc0000;
+  background-color: var(--accent-hover);
 }
 
 button:disabled {
@@ -140,12 +265,12 @@ button:disabled {
 
 .btn-outline {
   background-color: transparent;
-  color: #ee0000;
-  border: 1px solid #ee0000;
+  color: var(--accent);
+  border: 1px solid var(--accent);
 }
 
 .btn-outline:hover {
-  background-color: #ee0000;
+  background-color: var(--accent);
   color: white;
 }
 
@@ -174,7 +299,7 @@ button:focus-visible,
 a:focus-visible,
 select:focus-visible,
 input:focus-visible {
-  outline: 2px solid #ee0000;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -213,7 +338,7 @@ input:focus-visible {
 }
 
 .data-table th:hover {
-  color: #ee0000;
+  color: var(--accent);
 }
 
 .data-table th .sort-indicator {
@@ -224,7 +349,7 @@ input:focus-visible {
 
 .data-table th .sort-indicator.active {
   opacity: 1;
-  color: #ee0000;
+  color: var(--accent);
 }
 
 .data-table td {
@@ -242,8 +367,8 @@ input:focus-visible {
 }
 
 .data-table tbody tr.row-selected {
-  background-color: rgba(238, 0, 0, 0.05);
-  box-shadow: inset 3px 0 0 #ee0000;
+  background-color: var(--accent-subtle);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .table-controls {
@@ -266,7 +391,7 @@ input:focus-visible {
 }
 
 .table-filter:focus {
-  border-color: #ee0000;
+  border-color: var(--accent);
   outline: none;
 }
 

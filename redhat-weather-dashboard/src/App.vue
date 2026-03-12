@@ -350,7 +350,7 @@ nav > a.router-link-active {
 }
 
 .nav-dropdown a.router-link-active {
-  color: #ee0000;
+  color: var(--accent);
   font-weight: 600;
 }
 
@@ -416,7 +416,7 @@ main {
   position: absolute;
   top: -40px;
   left: 0;
-  background: #ee0000;
+  background: var(--accent);
   color: white;
   padding: 8px 16px;
   z-index: 10000;

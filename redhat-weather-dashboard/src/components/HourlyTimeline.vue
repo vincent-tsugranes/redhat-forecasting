@@ -129,7 +129,7 @@ const hourlySlots = computed<HourlySlot[]>(() => {
 .slot-temp {
   font-weight: 600;
   font-size: 15px;
-  color: #ee0000;
+  color: var(--accent);
   margin-bottom: 4px;
 }
 

@@ -146,7 +146,7 @@ watch(
 
 .daylight-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ff9800, #ffc107);
+  background: linear-gradient(90deg, var(--aging-color), var(--storm-cat1));
   border-radius: 5px;
   transition: width 0.5s ease;
 }

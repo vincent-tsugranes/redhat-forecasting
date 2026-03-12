@@ -1067,7 +1067,7 @@ onBeforeUnmount(() => {
 }
 
 .map-search-bar .search-input:focus {
-  border-color: #ee0000;
+  border-color: var(--accent);
 }
 
 .search-results {
@@ -1166,7 +1166,7 @@ onBeforeUnmount(() => {
 }
 
 .layer-toggle input[type="checkbox"] {
-  accent-color: #ee0000;
+  accent-color: var(--accent);
 }
 
 .radar-controls {
@@ -1199,7 +1199,7 @@ onBeforeUnmount(() => {
 .opacity-slider {
   width: 60px;
   height: 4px;
-  accent-color: #ee0000;
+  accent-color: var(--accent);
   cursor: pointer;
 }
 
@@ -1324,7 +1324,7 @@ onBeforeUnmount(() => {
 
 :deep(.popup-header) {
   font-size: 14px;
-  color: #ee0000;
+  color: var(--accent);
   font-weight: 600;
   margin-bottom: 2px;
 }

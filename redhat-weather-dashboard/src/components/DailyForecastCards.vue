@@ -181,7 +181,7 @@ const dailyForecasts = computed<DailyForecast[]>(() => {
 
 .temp-high {
   font-weight: 600;
-  color: #ee0000;
+  color: var(--accent);
   font-size: 16px;
 }
 

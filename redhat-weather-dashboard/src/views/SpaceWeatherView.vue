@@ -155,11 +155,11 @@ onUnmounted(() => {
   letter-spacing: 0.5px;
 }
 
-.level-quiet { color: #4caf50; }
-.level-unsettled { color: #ff9800; }
-.level-storm { color: #f44336; }
-.level-strong-storm { color: #9c27b0; }
-.level-extreme { color: #880e4f; }
+.level-quiet { color: var(--severity-light); }
+.level-unsettled { color: var(--severity-moderate); }
+.level-storm { color: var(--severity-strong); }
+.level-strong-storm { color: var(--severity-major); }
+.level-extreme { color: var(--severity-extreme); }
 
 .metric-value {
   font-size: 28px;
@@ -173,9 +173,9 @@ onUnmounted(() => {
   color: var(--text-secondary, #666);
 }
 
-.storm-quiet { color: #4caf50; }
-.storm-moderate { color: #ff9800; }
-.storm-extreme { color: #f44336; }
+.storm-quiet { color: var(--severity-light); }
+.storm-moderate { color: var(--severity-moderate); }
+.storm-extreme { color: var(--severity-strong); }
 
 .space-alert {
   border: 1px solid var(--border-light, #eee);

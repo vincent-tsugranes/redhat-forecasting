@@ -230,8 +230,8 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.type-stop { background: #f44336; }
-.type-gdp { background: #ff9800; }
+.type-stop { background: var(--severity-strong); }
+.type-gdp { background: var(--severity-moderate); }
 
 .sort-indicator {
   font-size: 11px;

@@ -208,14 +208,14 @@ onMounted(() => {
   transition: transform 0.2s;
 }
 
-.wind-light { color: #4caf50; }
-.wind-moderate { color: #ff9800; font-weight: 600; }
-.wind-strong { color: #f44336; font-weight: 700; }
-.wind-extreme { color: #9c27b0; font-weight: 700; }
+.wind-light { color: var(--severity-light); }
+.wind-moderate { color: var(--severity-moderate); font-weight: 600; }
+.wind-strong { color: var(--severity-strong); font-weight: 700; }
+.wind-extreme { color: var(--severity-major); font-weight: 700; }
 
-.temp-extreme-cold { color: #1565c0; font-weight: 700; }
-.temp-cold { color: #42a5f5; }
-.temp-hot { color: #f44336; }
+.temp-extreme-cold { color: var(--temp-cold-dark); font-weight: 700; }
+.temp-cold { color: var(--temp-cold); }
+.temp-hot { color: var(--severity-strong); }
 
 .pagination {
   display: flex;

@@ -202,9 +202,9 @@ onMounted(() => {
   color: white;
 }
 
-.turb-NEG, .ice-NEG { background: #4caf50; }
+.turb-NEG, .ice-NEG { background: var(--severity-light); }
 .turb-LGT, .ice-TRC, .ice-LGT { background: #8bc34a; }
-.turb-MOD, .ice-MOD { background: #ff9800; }
-.turb-SEV, .ice-SEV { background: #f44336; }
-.turb-EXTRM { background: #9c27b0; }
+.turb-MOD, .ice-MOD { background: var(--severity-moderate); }
+.turb-SEV, .ice-SEV { background: var(--severity-strong); }
+.turb-EXTRM { background: var(--severity-major); }
 </style>

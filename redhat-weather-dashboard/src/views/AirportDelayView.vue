@@ -137,7 +137,7 @@ onMounted(() => {
 }
 
 .row-delayed {
-  background: #fff3e0;
+  background: var(--alert-bg);
 }
 
 .status-dot {
@@ -148,8 +148,8 @@ onMounted(() => {
   margin-right: 4px;
 }
 
-.status-delayed { background: #f44336; }
-.status-ok { background: #4caf50; }
+.status-delayed { background: var(--severity-strong); }
+.status-ok { background: var(--severity-light); }
 
 .trend-badge {
   display: inline-block;
@@ -159,7 +159,7 @@ onMounted(() => {
   font-weight: 600;
 }
 
-.trend-increasing { background: #ffebee; color: #c62828; }
-.trend-decreasing { background: #e8f5e9; color: #2e7d32; }
-.trend-stable { background: #e3f2fd; color: #1565c0; }
+.trend-increasing { background: var(--error-bg); color: var(--stale-color); }
+.trend-decreasing { background: var(--aging-bg); color: var(--fresh-color); }
+.trend-stable { background: var(--accent-subtle); color: var(--temp-cold-dark); }
 </style>

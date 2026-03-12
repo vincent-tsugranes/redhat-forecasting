@@ -126,15 +126,15 @@ watch(
 }
 
 .departure-hot {
-  color: #f44336;
+  color: var(--temp-hot);
 }
 
 .departure-cold {
-  color: #2196f3;
+  color: var(--color-info);
 }
 
 .departure-normal {
-  color: #4caf50;
+  color: var(--color-success);
 }
 
 .sample-info {

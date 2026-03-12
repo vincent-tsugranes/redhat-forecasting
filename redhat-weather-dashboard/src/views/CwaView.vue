@@ -178,7 +178,7 @@ onMounted(() => {
   font-weight: bold;
   font-size: 11px;
   color: white;
-  background: #1976d2;
+  background: var(--cwa-color);
 }
 
 .severity-label {
@@ -214,6 +214,6 @@ onMounted(() => {
 }
 
 .row-expired-soon {
-  background: #fff8e1;
+  background: var(--alert-bg-warn);
 }
 </style>
