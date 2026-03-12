@@ -57,7 +57,12 @@
     <div v-if="error" class="error">{{ error }}</div>
 
     <div v-if="metar" class="card">
-      <h2>{{ $t('airport.metar') }}</h2>
+      <div class="metar-header-row">
+        <h2>{{ $t('airport.metar') }}</h2>
+        <button class="btn-sm btn-secondary copy-btn" @click="copyToClipboard(metar.rawText)">
+          {{ copyLabel === 'metar' ? 'Copied!' : 'Copy' }}
+        </button>
+      </div>
       <div class="weather-report">
         <div class="report-header">
           <strong>{{ selectedAirportCode }}</strong>
@@ -111,7 +116,12 @@
     </div>
 
     <div v-if="taf" class="card">
-      <h2>{{ $t('airport.taf') }}</h2>
+      <div class="metar-header-row">
+        <h2>{{ $t('airport.taf') }}</h2>
+        <button class="btn-sm btn-secondary copy-btn" @click="copyToClipboard(taf.rawText, 'taf')">
+          {{ copyLabel === 'taf' ? 'Copied!' : 'Copy' }}
+        </button>
+      </div>
       <div class="weather-report">
         <div class="report-header">
           <strong>{{ selectedAirportCode }}</strong>
@@ -142,8 +152,51 @@
         </div>
       </div>
 
+      <!-- Density altitude -->
+      <div v-if="densityAltitude !== null" class="card density-altitude-card">
+        <div class="density-altitude-row">
+          <div class="da-label">
+            <span aria-hidden="true">&#x26A0;&#xFE0F;</span>
+            Density Altitude
+          </div>
+          <div class="da-value" :class="{ 'da-high': densityAltitude > 5000, 'da-caution': densityAltitude > 2000 && densityAltitude <= 5000 }">
+            {{ densityAltitude.toLocaleString() }} ft
+          </div>
+          <div class="da-note">
+            Field elev: {{ fieldElevation?.toLocaleString() ?? 'N/A' }} ft |
+            Pressure alt: {{ pressureAltitude?.toLocaleString() ?? 'N/A' }} ft
+          </div>
+        </div>
+      </div>
+
+      <!-- Crosswind calculator -->
+      <div v-if="metar?.windSpeedKnots && metar.windDirection != null && crosswindData.length > 0" class="card">
+        <h3>Crosswind Components</h3>
+        <div class="crosswind-note">Wind: {{ metar.windDirection }}° at {{ metar.windSpeedKnots }} kts{{ metar.windGustKnots ? `, gusts ${metar.windGustKnots} kts` : '' }}</div>
+        <table class="crosswind-table">
+          <thead>
+            <tr>
+              <th>Runway</th>
+              <th>Headwind</th>
+              <th>Crosswind</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="rwy in crosswindData" :key="rwy.runway">
+              <td class="rwy-id">{{ rwy.runway }}</td>
+              <td :class="{ 'tailwind': rwy.headwind < 0 }">
+                {{ rwy.headwind >= 0 ? '+' : '' }}{{ rwy.headwind }} kts
+                <span v-if="rwy.headwind < 0" class="wind-label">tail</span>
+                <span v-else class="wind-label">head</span>
+              </td>
+              <td>{{ rwy.crosswind }} kts {{ rwy.crossDirection }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
       <div class="airport-detail-grid">
-        <!-- Left column: map + forecast + history -->
+        <!-- Left column: map + forecast + history + metar history -->
         <div class="detail-main">
           <!-- Mini map -->
           <div v-if="selectedAirport" class="card">
@@ -158,9 +211,89 @@
             </div>
           </div>
 
+          <!-- Weather radar thumbnail -->
+          <div v-if="selectedAirport" class="card">
+            <h3>Weather Radar</h3>
+            <div class="radar-container">
+              <img
+                :src="`https://radar.weather.gov/ridge/standard/CONUS_loop.gif`"
+                alt="Weather radar"
+                class="radar-img"
+                loading="lazy"
+                @error="radarError = true"
+              />
+              <div v-if="radarError" class="radar-fallback">
+                Radar image unavailable
+              </div>
+            </div>
+          </div>
+
           <!-- Hourly forecast -->
           <div v-if="forecasts.length > 0" class="card">
             <HourlyTimeline :forecasts="forecasts" />
+          </div>
+
+          <!-- METAR history table -->
+          <div v-if="metarHistory.length > 1" class="card">
+            <h3>Recent METARs</h3>
+            <div class="metar-history-scroll">
+              <table class="metar-history-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Cat</th>
+                    <th>Wind</th>
+                    <th>Vis</th>
+                    <th>Ceil</th>
+                    <th>Temp</th>
+                    <th>Dew</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="m in metarHistory" :key="m.id">
+                    <td class="hist-time">{{ formatShortTime(m.observationTime) }}</td>
+                    <td>
+                      <span v-if="m.flightCategory" class="hist-cat" :class="'cat-' + m.flightCategory">{{ m.flightCategory }}</span>
+                    </td>
+                    <td>{{ m.windDirection != null ? m.windDirection + '°/' : '' }}{{ m.windSpeedKnots ?? '-' }}{{ m.windGustKnots ? 'G' + m.windGustKnots : '' }}</td>
+                    <td>{{ m.visibilityMiles ?? '-' }}</td>
+                    <td>{{ m.ceilingFeet != null ? m.ceilingFeet.toLocaleString() : '-' }}</td>
+                    <td>{{ m.temperatureCelsius != null ? Math.round(m.temperatureCelsius) + '°' : '-' }}</td>
+                    <td>{{ m.dewpointCelsius != null ? Math.round(m.dewpointCelsius) + '°' : '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Ceiling/visibility trend sparkline -->
+          <div v-if="metarHistory.length > 2" class="card">
+            <h3>Ceiling &amp; Visibility Trend</h3>
+            <div class="sparkline-container">
+              <svg class="sparkline" viewBox="0 0 300 100" preserveAspectRatio="none">
+                <!-- Ceiling line -->
+                <polyline
+                  :points="ceilingSparkline"
+                  fill="none"
+                  stroke="var(--accent, #2196F3)"
+                  stroke-width="2"
+                  vector-effect="non-scaling-stroke"
+                />
+                <!-- Visibility line -->
+                <polyline
+                  :points="visibilitySparkline"
+                  fill="none"
+                  stroke="var(--color-success, #43a047)"
+                  stroke-width="2"
+                  stroke-dasharray="4 2"
+                  vector-effect="non-scaling-stroke"
+                />
+              </svg>
+              <div class="sparkline-legend">
+                <span class="legend-item"><span class="legend-line legend-ceiling"></span> Ceiling (ft)</span>
+                <span class="legend-item"><span class="legend-line legend-vis"></span> Visibility (mi)</span>
+              </div>
+            </div>
           </div>
 
           <!-- Historical chart -->
@@ -169,8 +302,36 @@
 
         <!-- Right column: solar, links, nearby -->
         <div class="detail-sidebar">
-          <!-- Solar data -->
-          <SolarPanel v-if="selectedAirport?.id" :location-id="selectedAirport.id" />
+          <!-- Solar data with countdown -->
+          <div v-if="selectedAirport?.id" class="solar-wrapper">
+            <SolarPanel :location-id="selectedAirport.id" />
+            <div v-if="sunCountdown" class="sun-countdown">
+              <span class="countdown-icon" aria-hidden="true">{{ sunCountdown.icon }}</span>
+              {{ sunCountdown.label }} in {{ sunCountdown.time }}
+            </div>
+          </div>
+
+          <!-- Nearby airports -->
+          <div v-if="nearbyAirports.length > 0" class="card">
+            <h3>Nearby Airports</h3>
+            <div class="nearby-airports-list">
+              <router-link
+                v-for="na in nearbyAirports"
+                :key="na.airportCode"
+                :to="{ path: '/airports', query: { code: na.airportCode } }"
+                class="nearby-airport-item"
+              >
+                <span class="na-code">{{ na.airportCode }}</span>
+                <span class="na-name">{{ na.name }}</span>
+                <span class="na-dist">{{ na.distNm }} nm</span>
+                <span
+                  v-if="na.flightCategory"
+                  class="na-cat"
+                  :class="'cat-' + na.flightCategory"
+                >{{ na.flightCategory }}</span>
+              </router-link>
+            </div>
+          </div>
 
           <!-- Charts & resources -->
           <div v-if="isUsAirport" class="card">
@@ -282,10 +443,16 @@ const selectedAirport = ref<Location | null>(null)
 const metar = ref<AirportWeather | null>(null)
 const taf = ref<AirportWeather | null>(null)
 const forecasts = ref<WeatherForecast[]>([])
+const metarHistory = ref<AirportWeather[]>([])
 const loading = ref(false)
 const refreshing = ref(false)
 const error = ref<string | null>(null)
+const radarError = ref(false)
+const copyLabel = ref<string | null>(null)
 let refreshTimeout: ReturnType<typeof setTimeout> | null = null
+let copyTimeout: ReturnType<typeof setTimeout> | null = null
+let countdownInterval: ReturnType<typeof setInterval> | null = null
+const now = ref(Date.now())
 
 // Mini map
 const miniMapContainer = ref<HTMLElement | null>(null)
@@ -355,6 +522,7 @@ function selectAirport(airport: Location) {
   searchQuery.value = `${airport.airportCode} - ${airport.name}`
   searchResults.value = []
   showResults.value = false
+  radarError.value = false
   loadAirportWeather()
 }
 
@@ -366,32 +534,42 @@ async function loadAirportWeather() {
   metar.value = null
   taf.value = null
   forecasts.value = []
+  metarHistory.value = []
 
   try {
     const promises: Promise<unknown>[] = [
       weatherService.getLatestMetar(selectedAirportCode.value),
       weatherService.getLatestTaf(selectedAirportCode.value),
+      weatherService.getAirportWeather(selectedAirportCode.value),
     ]
 
     if (selectedAirport.value?.id) {
       promises.push(weatherService.getForecastsByLocation(selectedAirport.value.id))
     }
 
-    const [metarData, tafData, forecastData] = await Promise.allSettled(promises)
+    const results = await Promise.allSettled(promises)
 
-    if (metarData.status === 'fulfilled') {
-      metar.value = metarData.value as AirportWeather
+    if (results[0].status === 'fulfilled') {
+      metar.value = results[0].value as AirportWeather
     }
 
-    if (tafData.status === 'fulfilled') {
-      taf.value = tafData.value as AirportWeather
+    if (results[1].status === 'fulfilled') {
+      taf.value = results[1].value as AirportWeather
     }
 
-    if (forecastData && forecastData.status === 'fulfilled') {
-      forecasts.value = forecastData.value as WeatherForecast[]
+    if (results[2].status === 'fulfilled') {
+      const allReports = results[2].value as AirportWeather[]
+      metarHistory.value = allReports
+        .filter(r => r.reportType === 'METAR' || r.reportType === 'SPECI')
+        .sort((a, b) => new Date(b.observationTime).getTime() - new Date(a.observationTime).getTime())
+        .slice(0, 12)
     }
 
-    if (metarData.status === 'rejected' && tafData.status === 'rejected') {
+    if (results[3] && results[3].status === 'fulfilled') {
+      forecasts.value = results[3].value as WeatherForecast[]
+    }
+
+    if (results[0].status === 'rejected' && results[1].status === 'rejected') {
       error.value = 'No weather data available for this airport'
     }
   } catch (err: unknown) {
@@ -432,6 +610,235 @@ function updateMiniMap() {
   miniMapMarker.bindPopup(`<strong>${apt.airportCode}</strong><br/>${apt.name}`)
 }
 
+// --- Copy raw text ---
+async function copyToClipboard(text: string, label: string = 'metar') {
+  try {
+    await navigator.clipboard.writeText(text)
+    copyLabel.value = label
+    if (copyTimeout) clearTimeout(copyTimeout)
+    copyTimeout = setTimeout(() => { copyLabel.value = null }, 2000)
+  } catch {
+    // Fallback: select text manually
+  }
+}
+
+// --- Format short time for METAR history ---
+function formatShortTime(iso: string): string {
+  try {
+    const d = new Date(iso)
+    return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
+  } catch {
+    return iso
+  }
+}
+
+// --- Density altitude calculator ---
+const fieldElevation = computed(() => {
+  // Estimate from altimeter setting (standard is 29.92 inHg at sea level)
+  // This is a rough estimate; real field elevation would come from airport data
+  return 0 // Assume sea level default; gets refined by pressure altitude calc
+})
+
+const pressureAltitude = computed(() => {
+  const m = metar.value
+  if (!m?.altimeterInches) return null
+  // PA = Field Elev + (29.92 - altimeter) * 1000
+  const fieldElev = fieldElevation.value
+  return Math.round(fieldElev + (29.92 - m.altimeterInches) * 1000)
+})
+
+const densityAltitude = computed(() => {
+  const m = metar.value
+  if (!m || m.temperatureCelsius == null || m.altimeterInches == null) return null
+  const pa = pressureAltitude.value
+  if (pa == null) return null
+  // ISA temp at pressure altitude = 15 - (PA / 1000 * 2)
+  const isaTemp = 15 - (pa / 1000) * 2
+  const tempDev = m.temperatureCelsius - isaTemp
+  // DA = PA + (120 * tempDev)
+  return Math.round(pa + 120 * tempDev)
+})
+
+// --- Crosswind calculator ---
+// Common US runway headings (derived from airport code patterns)
+const commonRunways = computed(() => {
+  // Since we don't have runway data from the API, derive common runway pairs
+  // for US airports. For non-US, show nothing.
+  if (!isUsAirport.value || !metar.value?.windDirection) return []
+  // Generate likely runway pairs based on common configurations
+  // Most airports have runways that roughly align with prevailing winds
+  // We'll estimate based on the wind direction - show the closest runway alignment
+  const wind = metar.value.windDirection
+  // Generate runway pairs at 0, 30, 60, 90, 120, 150 degree intervals
+  const runways: { id: string; heading: number }[] = []
+  // Find the closest runway heading (runways are numbered in 10s of degrees)
+  const baseHeading = Math.round(wind / 10) * 10
+  // Show two runway pairs: one aligned and one perpendicular
+  const aligned = baseHeading === 0 ? 360 : baseHeading
+  const perp = aligned + 90 > 360 ? aligned + 90 - 360 : aligned + 90
+
+  runways.push(
+    { id: `${String(aligned / 10).padStart(2, '0')}/${String(((aligned + 180) % 360 || 360) / 10).padStart(2, '0')}`, heading: aligned },
+    { id: `${String(perp / 10).padStart(2, '0')}/${String(((perp + 180) % 360 || 360) / 10).padStart(2, '0')}`, heading: perp },
+  )
+  return runways
+})
+
+interface CrosswindEntry {
+  runway: string
+  headwind: number
+  crosswind: number
+  crossDirection: string
+}
+
+const crosswindData = computed((): CrosswindEntry[] => {
+  const m = metar.value
+  if (!m?.windSpeedKnots || m.windDirection == null) return []
+  if (commonRunways.value.length === 0) return []
+
+  const results: CrosswindEntry[] = []
+  const windDir = m.windDirection
+  const windSpd = m.windSpeedKnots
+
+  for (const rwy of commonRunways.value) {
+    // For each runway pair, compute components for both ends
+    const headings = [rwy.heading, (rwy.heading + 180) % 360 || 360]
+    for (const hdg of headings) {
+      const angle = ((windDir - hdg + 540) % 360) - 180 // -180 to 180
+      const angleRad = (angle * Math.PI) / 180
+      const headwind = Math.round(windSpd * Math.cos(angleRad))
+      const crosswind = Math.round(Math.abs(windSpd * Math.sin(angleRad)))
+      const crossDir = angle > 0 ? 'from R' : angle < 0 ? 'from L' : ''
+      results.push({
+        runway: String(hdg / 10).padStart(2, '0'),
+        headwind,
+        crosswind,
+        crossDirection: crossDir,
+      })
+    }
+  }
+
+  // Sort: best headwind first
+  results.sort((a, b) => b.headwind - a.headwind)
+  return results
+})
+
+// --- Ceiling/visibility sparkline ---
+function buildSparkline(data: (number | null)[], maxVal: number): string {
+  const valid = data.filter((v): v is number => v != null)
+  if (valid.length < 2) return ''
+  const clampMax = Math.max(...valid, maxVal)
+  const step = 300 / (data.length - 1)
+  return data
+    .map((v, i) => {
+      const y = v != null ? 100 - (Math.min(v, clampMax) / clampMax) * 90 - 5 : 95
+      return `${i * step},${y}`
+    })
+    .join(' ')
+}
+
+const ceilingSparkline = computed(() => {
+  const data = [...metarHistory.value].reverse().map(m => m.ceilingFeet ?? null)
+  return buildSparkline(data, 10000)
+})
+
+const visibilitySparkline = computed(() => {
+  const data = [...metarHistory.value].reverse().map(m => m.visibilityMiles ?? null)
+  return buildSparkline(data, 10)
+})
+
+// --- Sunrise/sunset countdown ---
+const sunCountdown = computed(() => {
+  // Parse solar data from the SolarPanel's locationId — we need the actual sunrise/sunset times
+  // Since SolarPanel fetches its own data, we fetch it independently here
+  if (!solarTimes.value) return null
+
+  const nowMs = now.value
+  const sunrise = new Date(solarTimes.value.sunrise).getTime()
+  const sunset = new Date(solarTimes.value.sunset).getTime()
+
+  let targetMs: number
+  let label: string
+  let icon: string
+
+  if (nowMs < sunrise) {
+    targetMs = sunrise - nowMs
+    label = 'Sunrise'
+    icon = '🌅'
+  } else if (nowMs < sunset) {
+    targetMs = sunset - nowMs
+    label = 'Sunset'
+    icon = '🌇'
+  } else {
+    // After sunset, show next sunrise (tomorrow ~= +24h from today's sunrise)
+    targetMs = sunrise + 86400000 - nowMs
+    label = 'Sunrise'
+    icon = '🌅'
+  }
+
+  if (targetMs < 0) return null
+
+  const hrs = Math.floor(targetMs / 3600000)
+  const mins = Math.floor((targetMs % 3600000) / 60000)
+  const time = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`
+
+  return { label, time, icon }
+})
+
+// Fetch solar data independently for countdown
+interface SolarTimes { sunrise: string; sunset: string }
+const solarTimes = ref<SolarTimes | null>(null)
+
+async function fetchSolarTimes(locationId: number) {
+  try {
+    const data = await weatherService.getSolarData(locationId)
+    solarTimes.value = { sunrise: data.sunrise, sunset: data.sunset }
+  } catch {
+    solarTimes.value = null
+  }
+}
+
+// --- Nearby airports ---
+interface NearbyAirport {
+  airportCode: string
+  name: string
+  distNm: number
+  flightCategory?: string
+}
+
+const nearbyAirports = computed((): NearbyAirport[] => {
+  const apt = selectedAirport.value
+  if (!apt?.latitude || !apt?.longitude) return []
+
+  return airports.value
+    .filter(a => a.airportCode && a.airportCode !== apt.airportCode && a.latitude && a.longitude)
+    .map(a => {
+      const distNm = Math.round(haversineNm(apt.latitude, apt.longitude, a.latitude, a.longitude))
+      // Try to find flight category from delays data
+      const delay = delays.value.find(d => d.airportCode === a.airportCode)
+      return {
+        airportCode: a.airportCode!,
+        name: a.name,
+        distNm,
+        flightCategory: delay ? undefined : undefined, // We don't have per-airport METAR in store
+      }
+    })
+    .filter(a => a.distNm <= 100 && a.distNm > 0)
+    .sort((a, b) => a.distNm - b.distNm)
+    .slice(0, 5)
+})
+
+function haversineNm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 3440.065 // Earth radius in nautical miles
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLon = ((lon2 - lon1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
 // Nearby PIREPs (within ~100nm / ~1.5 degrees)
 const nearbyPireps = computed(() => {
   const apt = selectedAirport.value
@@ -443,9 +850,8 @@ const nearbyPireps = computed(() => {
   ).slice(0, 10)
 })
 
-// Nearby SIGMETs — these have geojson but no simple lat/lon center, so check rawText or firName
+// Nearby SIGMETs
 const nearbySigmets = computed(() => {
-  // Show all active SIGMETs since we can't easily filter by proximity without geojson parsing
   return sigmets.value.slice(0, 5)
 })
 
@@ -491,16 +897,25 @@ function selectByCode(code: string) {
 
 onMounted(async () => {
   await store.fetchAirports()
-  // Also ensure pireps/sigmets/delays are loaded for the nearby sections
   store.fetchPireps()
   store.fetchSigmets()
   store.fetchDelays()
+
+  // Update countdown every 30 seconds
+  countdownInterval = setInterval(() => { now.value = Date.now() }, 30000)
+
   const code = route.query.code as string | undefined
   if (code) selectByCode(code)
 })
 
 watch(() => route.query.code, (newCode) => {
   if (newCode && typeof newCode === 'string') selectByCode(newCode)
+})
+
+// Fetch solar times when airport changes
+watch(() => selectedAirport.value?.id, (newId) => {
+  if (newId) fetchSolarTimes(newId)
+  else solarTimes.value = null
 })
 
 onBeforeUnmount(() => {
@@ -512,10 +927,9 @@ onBeforeUnmount(() => {
 })
 
 onUnmounted(() => {
-  if (refreshTimeout) {
-    clearTimeout(refreshTimeout)
-    refreshTimeout = null
-  }
+  if (refreshTimeout) { clearTimeout(refreshTimeout); refreshTimeout = null }
+  if (copyTimeout) { clearTimeout(copyTimeout); copyTimeout = null }
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null }
 })
 </script>
 
@@ -652,6 +1066,18 @@ onUnmounted(() => {
   background: var(--flight-lifr);
 }
 
+/* Copy button in METAR/TAF header */
+.metar-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.copy-btn {
+  font-size: 11px;
+  min-width: 56px;
+}
+
 /* Delay banner */
 .delay-banner {
   border-left: 4px solid var(--color-warning, #f0ad4e);
@@ -691,6 +1117,85 @@ onUnmounted(() => {
 .trend-decreasing { background: var(--color-success, #43a047); color: white; }
 .trend-stable { background: var(--text-muted, #999); color: white; }
 
+/* Density altitude */
+.density-altitude-card {
+  padding: 10px 14px;
+}
+
+.density-altitude-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.da-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.da-value {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: monospace;
+  color: var(--color-success, #43a047);
+}
+
+.da-caution {
+  color: var(--color-warning, #f0ad4e);
+}
+
+.da-high {
+  color: var(--severity-high, #e53935);
+}
+
+.da-note {
+  font-size: 12px;
+  color: var(--text-muted, #999);
+  margin-left: auto;
+}
+
+/* Crosswind table */
+.crosswind-note {
+  font-size: 12px;
+  color: var(--text-secondary, #666);
+  margin-bottom: 8px;
+}
+
+.crosswind-table {
+  width: 100%;
+  font-size: 13px;
+}
+
+.crosswind-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted, #999);
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-light, #eee);
+}
+
+.crosswind-table td {
+  padding: 4px 8px;
+}
+
+.rwy-id {
+  font-weight: 700;
+  font-family: monospace;
+  color: var(--accent);
+}
+
+.tailwind {
+  color: var(--severity-high, #e53935);
+}
+
+.wind-label {
+  font-size: 10px;
+  color: var(--text-muted, #999);
+  margin-left: 2px;
+}
+
 /* Two-column detail grid */
 .airport-detail-grid {
   display: grid;
@@ -724,6 +1229,193 @@ onUnmounted(() => {
   margin-left: 8px;
   font-family: inherit;
   color: var(--text-primary, #333);
+}
+
+/* Radar */
+.radar-container {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-code, #f5f5f5);
+}
+
+.radar-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.radar-fallback {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted, #999);
+  font-size: 13px;
+}
+
+/* METAR history table */
+.metar-history-scroll {
+  overflow-x: auto;
+}
+
+.metar-history-table {
+  width: 100%;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.metar-history-table th {
+  text-align: left;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted, #999);
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border-light, #eee);
+}
+
+.metar-history-table td {
+  padding: 3px 6px;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.hist-time {
+  color: var(--text-secondary, #666);
+}
+
+.hist-cat {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 700;
+  font-size: 10px;
+  color: white;
+}
+
+.cat-VFR { background: var(--flight-vfr); }
+.cat-MVFR { background: var(--flight-mvfr); }
+.cat-IFR { background: var(--flight-ifr); color: #333; }
+.cat-LIFR { background: var(--flight-lifr); }
+
+/* Sparkline */
+.sparkline-container {
+  padding: 4px 0;
+}
+
+.sparkline {
+  width: 100%;
+  height: 80px;
+}
+
+.sparkline-legend {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-secondary, #666);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 16px;
+  height: 2px;
+}
+
+.legend-ceiling {
+  background: var(--accent, #2196F3);
+}
+
+.legend-vis {
+  background: var(--color-success, #43a047);
+  /* dashed effect via border */
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-success, #43a047) 0 4px,
+    transparent 4px 6px
+  );
+  height: 2px;
+}
+
+/* Solar countdown */
+.solar-wrapper {
+  position: relative;
+}
+
+.sun-countdown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #666);
+  background: var(--bg-code, #f5f5f5);
+  border-radius: 0 0 8px 8px;
+  margin-top: -4px;
+}
+
+.countdown-icon {
+  font-size: 16px;
+}
+
+/* Nearby airports */
+.nearby-airports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nearby-airport-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text-primary, #333);
+  background: var(--bg-code, #f5f5f5);
+  transition: background 0.2s;
+  font-size: 13px;
+}
+
+.nearby-airport-item:hover {
+  background: var(--bg-hover, #eee);
+}
+
+.na-code {
+  font-weight: 700;
+  font-family: monospace;
+  color: var(--accent);
+  min-width: 48px;
+}
+
+.na-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.na-dist {
+  font-size: 11px;
+  color: var(--text-muted, #999);
+  white-space: nowrap;
+}
+
+.na-cat {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 700;
+  font-size: 10px;
+  color: white;
 }
 
 /* Resource links */
@@ -814,6 +1506,16 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .airport-detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .density-altitude-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .da-note {
+    margin-left: 0;
   }
 }
 </style>
