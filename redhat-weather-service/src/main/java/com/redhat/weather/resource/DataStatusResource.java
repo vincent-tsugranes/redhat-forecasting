@@ -13,6 +13,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import java.time.Duration;
@@ -67,6 +68,7 @@ public class DataStatusResource {
     @Path("/data")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Get data loading status", description = "Returns the current status of data loading including airport counts")
+    @APIResponse(responseCode = "200", description = "Data loading status including counts, freshness, and scheduler info")
     public Map<String, Object> getDataStatus() {
         Map<String, Object> status = new HashMap<>();
 

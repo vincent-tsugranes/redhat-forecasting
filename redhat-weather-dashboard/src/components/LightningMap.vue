@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, onMounted, watch } from 'vue'
+import { ref, shallowRef, onMounted, onBeforeUnmount, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { LightningStrike } from '../services/weatherService'
@@ -52,6 +52,14 @@ onMounted(() => {
 })
 
 watch(() => props.strikes, placeMarkers, { deep: true })
+
+onBeforeUnmount(() => {
+  if (map.value) {
+    map.value.remove()
+    map.value = null
+  }
+  markerLayer.value = null
+})
 </script>
 
 <style scoped>

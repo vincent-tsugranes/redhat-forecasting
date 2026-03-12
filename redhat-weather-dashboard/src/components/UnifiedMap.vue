@@ -99,63 +99,63 @@
     <div class="map-legend">
       <div v-if="showAirports" class="legend-section">
         <div class="legend-title">Flight Category</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #4caf50"></span> VFR</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #2196f3"></span> MVFR</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #ff9800"></span> IFR</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #f44336"></span> LIFR</div>
+        <div class="legend-item"><span class="legend-dot dot-vfr"></span> VFR</div>
+        <div class="legend-item"><span class="legend-dot dot-mvfr"></span> MVFR</div>
+        <div class="legend-item"><span class="legend-dot dot-ifr"></span> IFR</div>
+        <div class="legend-item"><span class="legend-dot dot-lifr"></span> LIFR</div>
       </div>
       <div v-if="showEarthquakes" class="legend-section">
         <div class="legend-title">Magnitude</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #4caf50"></span> 2.5-4</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #ff9800"></span> 4-5</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #f44336"></span> 5-7</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #9c27b0"></span> 7+</div>
+        <div class="legend-item"><span class="legend-dot dot-mag-low"></span> 2.5-4</div>
+        <div class="legend-item"><span class="legend-dot dot-mag-med"></span> 4-5</div>
+        <div class="legend-item"><span class="legend-dot dot-mag-high"></span> 5-7</div>
+        <div class="legend-item"><span class="legend-dot dot-mag-major"></span> 7+</div>
       </div>
       <div v-if="showHurricanes" class="legend-section">
         <div class="legend-title">Storm Category</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #007bff"></span> TS</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #ffc107"></span> Cat 1-2</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #f44336"></span> Cat 3-4</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #9c27b0"></span> Cat 5</div>
+        <div class="legend-item"><span class="legend-dot dot-storm-ts"></span> TS</div>
+        <div class="legend-item"><span class="legend-dot dot-storm-cat12"></span> Cat 1-2</div>
+        <div class="legend-item"><span class="legend-dot dot-storm-cat34"></span> Cat 3-4</div>
+        <div class="legend-item"><span class="legend-dot dot-storm-cat5"></span> Cat 5</div>
       </div>
       <div v-if="showPireps" class="legend-section">
         <div class="legend-title">PIREP Severity</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #4caf50"></span> None/Light</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #ff9800"></span> Moderate</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #f44336"></span> Severe</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #9c27b0"></span> Extreme</div>
+        <div class="legend-item"><span class="legend-dot dot-pirep-light"></span> None/Light</div>
+        <div class="legend-item"><span class="legend-dot dot-pirep-mod"></span> Moderate</div>
+        <div class="legend-item"><span class="legend-dot dot-pirep-sev"></span> Severe</div>
+        <div class="legend-item"><span class="legend-dot dot-pirep-ext"></span> Extreme</div>
       </div>
       <div v-if="showSigmets" class="legend-section">
         <div class="legend-title">SIGMETs</div>
-        <div class="legend-item"><span class="legend-swatch" style="background: rgba(244,67,54,0.25); border: 2px solid #f44336"></span> Active Area</div>
+        <div class="legend-item"><span class="legend-swatch swatch-sigmet"></span> Active Area</div>
       </div>
       <div v-if="showCwas" class="legend-section">
         <div class="legend-title">CWAs</div>
-        <div class="legend-item"><span class="legend-swatch" style="background: rgba(255,152,0,0.25); border: 2px solid #ff9800"></span> Active Area</div>
+        <div class="legend-item"><span class="legend-swatch swatch-cwa"></span> Active Area</div>
       </div>
       <div v-if="showTfrs" class="legend-section">
         <div class="legend-title">TFRs</div>
-        <div class="legend-item"><span class="legend-swatch" style="background: rgba(211,47,47,0.2); border: 2px solid #d32f2f"></span> Restricted Area</div>
+        <div class="legend-item"><span class="legend-swatch swatch-tfr"></span> Restricted Area</div>
       </div>
       <div v-if="showGroundStops" class="legend-section">
         <div class="legend-title">Ground Stops</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #d32f2f"></span> Ground Stop</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #ff9800"></span> Ground Delay</div>
+        <div class="legend-item"><span class="legend-dot dot-gs-stop"></span> Ground Stop</div>
+        <div class="legend-item"><span class="legend-dot dot-gs-delay"></span> Ground Delay</div>
       </div>
       <div v-if="showVolcanicAsh" class="legend-section">
         <div class="legend-title">Volcanic Ash</div>
-        <div class="legend-item"><span class="legend-swatch" style="background: rgba(121,85,72,0.25); border: 2px solid #795548"></span> Ash Cloud</div>
+        <div class="legend-item"><span class="legend-swatch swatch-ash"></span> Ash Cloud</div>
       </div>
       <div v-if="showLightning" class="legend-section">
         <div class="legend-title">Lightning</div>
-        <div class="legend-item"><span class="legend-dot" style="background: #ffeb3b"></span> Recent Strike</div>
+        <div class="legend-item"><span class="legend-dot dot-lightning"></span> Recent Strike</div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, watch, onMounted } from 'vue'
+import { ref, shallowRef, watch, onMounted, onBeforeUnmount } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { storeToRefs } from 'pinia'
@@ -1003,6 +1003,24 @@ onMounted(() => {
   store.fetchHurricanes()
   initMap()
 })
+
+onBeforeUnmount(() => {
+  if (map.value) {
+    map.value.remove()
+    map.value = null
+  }
+  airportLayer.value = null
+  earthquakeLayer.value = null
+  hurricaneLayer.value = null
+  pirepLayer.value = null
+  sigmetLayer.value = null
+  cwaLayer.value = null
+  tfrLayer.value = null
+  groundStopLayer.value = null
+  volcanicAshLayer.value = null
+  lightningLayer.value = null
+  radarLayer.value = null
+})
 </script>
 
 <style scoped>
@@ -1234,6 +1252,43 @@ onMounted(() => {
   border-radius: 2px;
   flex-shrink: 0;
 }
+
+/* Flight category dots */
+.dot-vfr { background: #4caf50; }
+.dot-mvfr { background: #2196f3; }
+.dot-ifr { background: #ff9800; }
+.dot-lifr { background: #f44336; }
+
+/* Magnitude dots */
+.dot-mag-low { background: #4caf50; }
+.dot-mag-med { background: #ff9800; }
+.dot-mag-high { background: #f44336; }
+.dot-mag-major { background: #9c27b0; }
+
+/* Storm category dots */
+.dot-storm-ts { background: #007bff; }
+.dot-storm-cat12 { background: #ffc107; }
+.dot-storm-cat34 { background: #f44336; }
+.dot-storm-cat5 { background: #9c27b0; }
+
+/* PIREP severity dots */
+.dot-pirep-light { background: #4caf50; }
+.dot-pirep-mod { background: #ff9800; }
+.dot-pirep-sev { background: #f44336; }
+.dot-pirep-ext { background: #9c27b0; }
+
+/* Ground stop dots */
+.dot-gs-stop { background: #d32f2f; }
+.dot-gs-delay { background: #ff9800; }
+
+/* Lightning dot */
+.dot-lightning { background: #ffeb3b; }
+
+/* Area swatches */
+.swatch-sigmet { background: rgba(244, 67, 54, 0.25); border: 2px solid #f44336; }
+.swatch-cwa { background: rgba(255, 152, 0, 0.25); border: 2px solid #ff9800; }
+.swatch-tfr { background: rgba(211, 47, 47, 0.2); border: 2px solid #d32f2f; }
+.swatch-ash { background: rgba(121, 85, 72, 0.25); border: 2px solid #795548; }
 
 :deep(.storm-marker-unified) {
   background: none !important;

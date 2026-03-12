@@ -23,7 +23,7 @@
               <kbd class="search-shortcut">ESC</kbd>
             </div>
 
-            <div v-if="query.length >= 2" class="search-results" role="listbox" :aria-label="$t('search.ariaLabel')">
+            <div v-if="debouncedQuery.length >= 2" class="search-results" role="listbox" :aria-label="$t('search.ariaLabel')">
               <div v-if="results.length === 0" class="no-results">
                 {{ $t('search.noResults') }}
               </div>
@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWeatherStore } from '../stores/weatherStore'
 import { storeToRefs } from 'pinia'
@@ -79,14 +79,23 @@ const { airports, earthquakes, hurricanes, groundStops, volcanicAsh } = storeToR
 
 const isOpen = ref(false)
 const query = ref('')
+const debouncedQuery = ref('')
 const highlightedIndex = ref(-1)
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(query, (val) => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    debouncedQuery.value = val
+  }, 200)
+})
 const searchInputRef = ref<HTMLInputElement | null>(null)
 const modalRef = ref<HTMLElement | null>(null)
 const triggerRef = ref<HTMLElement | null>(null)
 
 const results = computed<SearchResult[]>(() => {
-  if (query.value.length < 2) return []
-  const q = query.value.toLowerCase()
+  if (debouncedQuery.value.length < 2) return []
+  const q = debouncedQuery.value.toLowerCase()
   const items: SearchResult[] = []
 
   for (const apt of airports.value) {
@@ -197,6 +206,7 @@ function openSearch() {
 function closeSearch() {
   isOpen.value = false
   query.value = ''
+  debouncedQuery.value = ''
   nextTick(() => triggerRef.value?.focus())
 }
 
@@ -267,6 +277,7 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('keydown', onGlobalKeydown)
   document.removeEventListener('keydown', trapFocus)
+  if (debounceTimer) clearTimeout(debounceTimer)
 })
 </script>
 

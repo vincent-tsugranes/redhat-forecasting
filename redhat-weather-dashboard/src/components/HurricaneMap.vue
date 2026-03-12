@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, onMounted, watch } from 'vue'
+import { ref, shallowRef, onMounted, onBeforeUnmount, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import weatherService, { type Hurricane } from '../services/weatherService'
@@ -183,6 +183,13 @@ onMounted(() => {
   initializeMap()
   if (props.storms.length > 0) {
     placeStormMarkers()
+  }
+})
+
+onBeforeUnmount(() => {
+  if (map.value) {
+    map.value.remove()
+    map.value = null
   }
 })
 </script>

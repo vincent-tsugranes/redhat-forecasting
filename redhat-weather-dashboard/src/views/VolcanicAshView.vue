@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
@@ -110,9 +110,7 @@ async function refreshData() {
   }
 }
 
-onMounted(() => {
-  store.fetchVolcanicAsh()
-})
+
 </script>
 
 <style scoped>
