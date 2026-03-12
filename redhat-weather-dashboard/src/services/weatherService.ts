@@ -159,6 +159,9 @@ export interface Sigmet {
   id: number
   sigmetId: string
   sigmetType: string
+  scope?: string
+  firId?: string
+  firName?: string
   hazard?: string
   severity?: string
   validTimeFrom: string
@@ -167,6 +170,37 @@ export interface Sigmet {
   altitudeHighFt?: number
   rawText?: string
   geojson?: object
+  fetchedAt?: string
+}
+
+export interface Cwa {
+  id: number
+  cwaId: string
+  artcc: string
+  hazard?: string
+  severity?: string
+  validTimeFrom: string
+  validTimeTo: string
+  altitudeLowFt?: number
+  altitudeHighFt?: number
+  rawText?: string
+  geojson?: object
+  fetchedAt?: string
+}
+
+export interface WindsAloft {
+  id: number
+  forecastId: string
+  stationId: string
+  latitude?: number
+  longitude?: number
+  elevationFt?: number
+  validTime: string
+  forecastHour?: number
+  altitudeFt: number
+  windDirection?: number
+  windSpeedKnots?: number
+  temperatureCelsius?: number
   fetchedAt?: string
 }
 
@@ -363,6 +397,26 @@ export const weatherService = {
 
   async refreshSigmets(): Promise<void> {
     await weatherApi.post('/sigmets/refresh')
+  },
+
+  // CWAs
+  async getActiveCwas(): Promise<Cwa[]> {
+    const response = await weatherApi.get('/cwas/active')
+    return response.data
+  },
+
+  async refreshCwas(): Promise<void> {
+    await weatherApi.post('/cwas/refresh')
+  },
+
+  // Winds Aloft
+  async getLatestWindsAloft(): Promise<WindsAloft[]> {
+    const response = await weatherApi.get('/winds-aloft/latest')
+    return response.data
+  },
+
+  async refreshWindsAloft(): Promise<void> {
+    await weatherApi.post('/winds-aloft/refresh')
   },
 
   // Airport Delays

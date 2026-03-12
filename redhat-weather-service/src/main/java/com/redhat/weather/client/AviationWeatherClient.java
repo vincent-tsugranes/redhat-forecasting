@@ -133,4 +133,73 @@ public interface AviationWeatherClient {
         public Double lat;
         public Double lon;
     }
+
+    @GET
+    @Path("/cwa")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Retry(maxRetries = 2, delay = 2000, jitter = 500,
+           retryOn = {WebApplicationException.class, IOException.class})
+    @CircuitBreaker(requestVolumeThreshold = 15, failureRatio = 0.5,
+                    delay = 60000, successThreshold = 3)
+    List<CwaResponse> getCWAs(@QueryParam("format") String format);
+
+    @GET
+    @Path("/isigmet")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Retry(maxRetries = 2, delay = 2000, jitter = 500,
+           retryOn = {WebApplicationException.class, IOException.class})
+    @CircuitBreaker(requestVolumeThreshold = 15, failureRatio = 0.5,
+                    delay = 60000, successThreshold = 3)
+    List<IntlSigmetResponse> getInternationalSigmets(@QueryParam("format") String format);
+
+    @GET
+    @Path("/windtemp")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Retry(maxRetries = 2, delay = 2000, jitter = 500,
+           retryOn = {WebApplicationException.class, IOException.class})
+    @CircuitBreaker(requestVolumeThreshold = 15, failureRatio = 0.5,
+                    delay = 60000, successThreshold = 3)
+    List<WindTempResponse> getWindsAloft(@QueryParam("format") String format);
+
+    class CwaResponse {
+        public String cwsu;
+        public String hazard;
+        public String qualifier;
+        public String validTimeFrom;
+        public String validTimeTo;
+        public Integer base;
+        public Integer top;
+        public String cwaText;
+        public java.util.List<CoordPair> coords;
+    }
+
+    class IntlSigmetResponse {
+        public String isigmetId;
+        public String firId;
+        public String firName;
+        public String hazard;
+        public String qualifier;
+        public String validTimeFrom;
+        public String validTimeTo;
+        public Integer altitudeLow;
+        public Integer altitudeHi;
+        public String rawSigmet;
+        public java.util.List<CoordPair> coords;
+    }
+
+    class WindTempResponse {
+        public String stationId;
+        public Double lat;
+        public Double lon;
+        public Integer elev;
+        public String validTime;
+        public Integer fcstHr;
+        public java.util.Map<String, WindTempForecast> fcsts;
+    }
+
+    class WindTempForecast {
+        public Integer wdir;
+        public Integer wspd;
+        public Double temp;
+    }
 }

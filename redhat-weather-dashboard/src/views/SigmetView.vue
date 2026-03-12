@@ -6,6 +6,11 @@
       <div class="card-header-row">
         <h2>{{ $t('sigmet.activeAdvisories') }}</h2>
         <div class="header-actions">
+          <select v-model="filterScope" class="filter-select" aria-label="Filter by scope">
+            <option value="all">All Scopes</option>
+            <option value="DOMESTIC">Domestic</option>
+            <option value="INTERNATIONAL">International</option>
+          </select>
           <select v-model="filterType" class="filter-select" aria-label="Filter by advisory type">
             <option value="all">All</option>
             <option value="SIGMET">SIGMETs</option>
@@ -51,8 +56,9 @@
                 <span class="type-badge" :class="sigmet.sigmetType === 'SIGMET' ? 'type-sigmet' : 'type-airmet'">
                   {{ sigmet.sigmetType }}
                 </span>
+                <span v-if="sigmet.scope === 'INTERNATIONAL'" class="scope-badge">INTL</span>
               </td>
-              <td>{{ sigmet.hazard || '-' }}</td>
+              <td>{{ sigmet.hazard || '-' }}<span v-if="sigmet.firName" class="fir-label"> ({{ sigmet.firName }})</span></td>
               <td>{{ sigmet.severity || '-' }}</td>
               <td class="td-nowrap">
                 <template v-if="sigmet.altitudeLowFt || sigmet.altitudeHighFt">
@@ -102,11 +108,15 @@ const toast = useToast()
 const { sigmets, sigmetsLoading: loading, sigmetsError: error } = storeToRefs(store)
 
 const refreshing = ref(false)
+const filterScope = ref('all')
 const filterType = ref('all')
 const filterHazard = ref('all')
 
 const filteredSigmets = computed(() => {
   let result = sigmets.value
+  if (filterScope.value !== 'all') {
+    result = result.filter(s => s.scope === filterScope.value)
+  }
   if (filterType.value !== 'all') {
     result = result.filter(s => s.sigmetType === filterType.value)
   }
@@ -208,6 +218,23 @@ onMounted(() => {
 
 .sigmet-validity {
   font-size: 12px;
+  color: var(--text-secondary, #666);
+}
+
+.scope-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: bold;
+  color: white;
+  background: #7b1fa2;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.fir-label {
+  font-size: 11px;
   color: var(--text-secondary, #666);
 }
 

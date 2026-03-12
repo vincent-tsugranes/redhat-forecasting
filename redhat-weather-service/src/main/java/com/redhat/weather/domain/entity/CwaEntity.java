@@ -9,13 +9,13 @@ import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "sigmets", indexes = {
-    @Index(name = "idx_sigmet_id", columnList = "sigmet_id"),
-    @Index(name = "idx_sigmet_type", columnList = "sigmet_type"),
-    @Index(name = "idx_sigmet_hazard", columnList = "hazard"),
-    @Index(name = "idx_sigmet_valid_to", columnList = "valid_time_to")
+@Table(name = "cwas", indexes = {
+    @Index(name = "idx_cwa_id", columnList = "cwa_id"),
+    @Index(name = "idx_cwa_artcc", columnList = "artcc"),
+    @Index(name = "idx_cwa_hazard", columnList = "hazard"),
+    @Index(name = "idx_cwa_valid_to", columnList = "valid_time_to")
 })
-public class SigmetEntity extends PanacheEntityBase {
+public class CwaEntity extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,13 +23,13 @@ public class SigmetEntity extends PanacheEntityBase {
 
     @NotBlank
     @Size(max = 100)
-    @Column(name = "sigmet_id", nullable = false, length = 100, unique = true)
-    public String sigmetId;
+    @Column(name = "cwa_id", nullable = false, length = 100, unique = true)
+    public String cwaId;
 
     @NotBlank
-    @Size(max = 20)
-    @Column(name = "sigmet_type", nullable = false, length = 20)
-    public String sigmetType;
+    @Size(max = 10)
+    @Column(name = "artcc", nullable = false, length = 10)
+    public String artcc;
 
     @Size(max = 50)
     @Column(name = "hazard", length = 50)
@@ -53,18 +53,6 @@ public class SigmetEntity extends PanacheEntityBase {
     @Column(name = "altitude_high_ft")
     public Integer altitudeHighFt;
 
-    @Size(max = 20)
-    @Column(name = "scope", length = 20)
-    public String scope = "DOMESTIC";
-
-    @Size(max = 10)
-    @Column(name = "fir_id", length = 10)
-    public String firId;
-
-    @Size(max = 100)
-    @Column(name = "fir_name", length = 100)
-    public String firName;
-
     @Column(name = "raw_text", columnDefinition = "TEXT")
     public String rawText;
 
@@ -73,8 +61,8 @@ public class SigmetEntity extends PanacheEntityBase {
     public String geojson;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "sigmet_data", columnDefinition = "jsonb", nullable = false)
-    public String sigmetData;
+    @Column(name = "cwa_data", columnDefinition = "jsonb", nullable = false)
+    public String cwaData;
 
     @Column(name = "fetched_at", nullable = false)
     public LocalDateTime fetchedAt;

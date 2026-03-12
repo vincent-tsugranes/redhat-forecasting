@@ -41,6 +41,10 @@ public class SigmetService {
         return sigmetRepository.findByHazard(hazard.toUpperCase());
     }
 
+    public List<SigmetEntity> getSigmetsByScope(String scope) {
+        return sigmetRepository.findByScope(scope.toUpperCase());
+    }
+
     @Transactional
     public void fetchAndStoreSigmets() {
         try {
@@ -88,6 +92,65 @@ public class SigmetService {
         } catch (Exception e) {
             LOG.error("Error fetching SIGMETs from AWC", e);
         }
+    }
+
+    @Transactional
+    public void fetchAndStoreInternationalSigmets() {
+        try {
+            List<AviationWeatherClient.IntlSigmetResponse> responses = aviationClient.getInternationalSigmets("json");
+
+            if (responses == null || responses.isEmpty()) {
+                LOG.info("No international SIGMETs returned from AWC");
+                return;
+            }
+
+            List<SigmetEntity> sigmets = new ArrayList<>();
+
+            for (AviationWeatherClient.IntlSigmetResponse resp : responses) {
+                try {
+                    String sigmetId = generateIntlSigmetId(resp);
+                    if (sigmetRepository.existsBySigmetId(sigmetId)) continue;
+
+                    SigmetEntity entity = new SigmetEntity();
+                    entity.sigmetId = sigmetId;
+                    entity.sigmetType = "SIGMET";
+                    entity.scope = "INTERNATIONAL";
+                    entity.firId = resp.firId;
+                    entity.firName = resp.firName;
+                    entity.hazard = resp.hazard;
+                    entity.severity = resp.qualifier;
+                    entity.validTimeFrom = parseTime(resp.validTimeFrom);
+                    entity.validTimeTo = parseTime(resp.validTimeTo);
+                    entity.altitudeLowFt = resp.altitudeLow != null ? resp.altitudeLow * 100 : null;
+                    entity.altitudeHighFt = resp.altitudeHi != null ? resp.altitudeHi * 100 : null;
+                    entity.rawText = resp.rawSigmet;
+                    entity.geojson = buildGeoJson(resp.coords);
+                    entity.sigmetData = objectMapper.writeValueAsString(resp);
+                    entity.fetchedAt = LocalDateTime.now();
+
+                    sigmets.add(entity);
+                } catch (Exception e) {
+                    LOG.warn("Error parsing international SIGMET: " + e.getMessage());
+                }
+            }
+
+            if (!sigmets.isEmpty()) {
+                sigmetRepository.persist(sigmets);
+                LOG.info("Stored " + sigmets.size() + " new international SIGMETs");
+            } else {
+                LOG.info("No new international SIGMETs to store");
+            }
+
+        } catch (Exception e) {
+            LOG.error("Error fetching international SIGMETs from AWC", e);
+        }
+    }
+
+    private String generateIntlSigmetId(AviationWeatherClient.IntlSigmetResponse resp) {
+        String id = resp.isigmetId != null ? resp.isigmetId : "";
+        String fir = resp.firId != null ? resp.firId : "";
+        String from = resp.validTimeFrom != null ? resp.validTimeFrom : "";
+        return "intl-" + (id + fir + from).hashCode();
     }
 
     @Transactional

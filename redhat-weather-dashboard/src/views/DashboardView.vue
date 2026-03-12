@@ -64,6 +64,20 @@
         </div>
       </div>
       <div class="stat-tile">
+        <span class="stat-icon" aria-hidden="true">📡</span>
+        <div class="stat-body">
+          <span class="stat-value">{{ cwas.length }}</span>
+          <span class="stat-label">CWAs</span>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-icon" aria-hidden="true">💨</span>
+        <div class="stat-body">
+          <span class="stat-value">{{ windsAloftStations }}</span>
+          <span class="stat-label">Wind Stns</span>
+        </div>
+      </div>
+      <div class="stat-tile">
         <span class="stat-icon" aria-hidden="true">⏱️</span>
         <div class="stat-body">
           <span class="stat-value">{{ delayedAirports }}</span>
@@ -206,6 +220,8 @@ const {
   alerts,
   pireps,
   sigmets,
+  cwas,
+  windsAloft,
   delays,
   locationsLoading: loading,
   locationsError: error,
@@ -213,6 +229,7 @@ const {
 const toast = useToast()
 
 const delayedAirports = computed(() => delays.value.filter(d => d.isDelayed).length)
+const windsAloftStations = computed(() => new Set(windsAloft.value.map(w => w.stationId)).size)
 const locationCount = computed(() => locations.value.length)
 const animatedLocationCount = useAnimatedNumber(locationCount)
 
@@ -241,6 +258,8 @@ onMounted(() => {
     store.fetchHurricanes(),
     store.fetchPireps(),
     store.fetchSigmets(),
+    store.fetchCwas(),
+    store.fetchWindsAloft(),
     store.fetchDelays(),
   ])
 })

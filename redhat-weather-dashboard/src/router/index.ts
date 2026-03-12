@@ -50,6 +50,16 @@ const router = createRouter({
       component: () => import('../views/AirportDelayView.vue'),
     },
     {
+      path: '/cwas',
+      name: 'cwas',
+      component: () => import('../views/CwaView.vue'),
+    },
+    {
+      path: '/winds-aloft',
+      name: 'winds-aloft',
+      component: () => import('../views/WindsAloftView.vue'),
+    },
+    {
       path: '/map',
       name: 'map',
       component: () => import('../views/MapView.vue'),
@@ -78,6 +88,12 @@ router.beforeEach((to) => {
       break
     case 'delays':
       store.fetchDelays()
+      break
+    case 'cwas':
+      store.fetchCwas()
+      break
+    case 'winds-aloft':
+      store.fetchWindsAloft()
       break
     case 'forecasts':
       store.fetchLocations()

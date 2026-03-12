@@ -1,6 +1,6 @@
 package com.redhat.weather.domain.repository;
 
-import com.redhat.weather.domain.entity.SigmetEntity;
+import com.redhat.weather.domain.entity.CwaEntity;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -9,33 +9,27 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @ApplicationScoped
-public class SigmetRepository implements PanacheRepositoryBase<SigmetEntity, Long> {
+public class CwaRepository implements PanacheRepositoryBase<CwaEntity, Long> {
 
-    public List<SigmetEntity> findActive() {
+    public List<CwaEntity> findActive() {
         LocalDateTime now = LocalDateTime.now();
         return list("isActive = true AND validTimeTo > ?1 ORDER BY validTimeFrom DESC", now);
     }
 
-    public List<SigmetEntity> findByType(String sigmetType) {
+    public List<CwaEntity> findByArtcc(String artcc) {
         LocalDateTime now = LocalDateTime.now();
-        return list("isActive = true AND sigmetType = ?1 AND validTimeTo > ?2 ORDER BY validTimeFrom DESC",
-                     sigmetType, now);
+        return list("isActive = true AND artcc = ?1 AND validTimeTo > ?2 ORDER BY validTimeFrom DESC",
+                     artcc, now);
     }
 
-    public List<SigmetEntity> findByHazard(String hazard) {
+    public List<CwaEntity> findByHazard(String hazard) {
         LocalDateTime now = LocalDateTime.now();
         return list("isActive = true AND hazard = ?1 AND validTimeTo > ?2 ORDER BY validTimeFrom DESC",
                      hazard, now);
     }
 
-    public List<SigmetEntity> findByScope(String scope) {
-        LocalDateTime now = LocalDateTime.now();
-        return list("isActive = true AND scope = ?1 AND validTimeTo > ?2 ORDER BY validTimeFrom DESC",
-                     scope, now);
-    }
-
-    public boolean existsBySigmetId(String sigmetId) {
-        return count("sigmetId = ?1", sigmetId) > 0;
+    public boolean existsByCwaId(String cwaId) {
+        return count("cwaId = ?1", cwaId) > 0;
     }
 
     @Transactional

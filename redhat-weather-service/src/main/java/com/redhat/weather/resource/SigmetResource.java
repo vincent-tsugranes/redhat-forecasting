@@ -46,6 +46,14 @@ public class SigmetResource {
     }
 
     @GET
+    @Path("/scope/{scope}")
+    @Operation(summary = "Get by scope", description = "Filter by scope: DOMESTIC or INTERNATIONAL")
+    public Response getSigmetsByScope(@PathParam("scope") String scope) {
+        return Response.ok(sigmetService.getSigmetsByScope(scope))
+            .cacheControl(cacheControl(120)).build();
+    }
+
+    @GET
     @Path("/hazard/{hazard}")
     @Operation(summary = "Get by hazard", description = "Filter by hazard type (ICE, TURB, IFR, CONVECTIVE, etc.)")
     public Response getSigmetsByHazard(@PathParam("hazard") String hazard) {

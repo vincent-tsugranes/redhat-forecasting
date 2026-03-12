@@ -8,6 +8,8 @@ import weatherService, {
   type WeatherAlert,
   type Pirep,
   type Sigmet,
+  type Cwa,
+  type WindsAloft,
   type AirportDelay,
 } from '../services/weatherService'
 
@@ -19,6 +21,8 @@ const CACHE_TTLS: Record<string, number> = {
   earthquakes: 10 * 60_000,
   pireps: 5 * 60_000,
   sigmets: 5 * 60_000,
+  cwas: 5 * 60_000,
+  windsAloft: 30 * 60_000,
   delays: 2 * 60_000,
 }
 const DEFAULT_CACHE_TTL = 60_000 // 1 min fallback (forecasts, history, etc.)
@@ -210,6 +214,40 @@ export const useWeatherStore = defineStore('weather', () => {
     }
   }
 
+  // --- CWAs ---
+  const cwas = ref<Cwa[]>([])
+  const cwasLoading = ref(false)
+  const cwasError = ref<string | null>(null)
+
+  async function fetchCwas() {
+    cwasLoading.value = true
+    cwasError.value = null
+    try {
+      cwas.value = await deduplicatedFetch('cwas', () => weatherService.getActiveCwas())
+    } catch (err: unknown) {
+      cwasError.value = err instanceof Error ? err.message : 'Failed to load CWAs'
+    } finally {
+      cwasLoading.value = false
+    }
+  }
+
+  // --- Winds Aloft ---
+  const windsAloft = ref<WindsAloft[]>([])
+  const windsAloftLoading = ref(false)
+  const windsAloftError = ref<string | null>(null)
+
+  async function fetchWindsAloft() {
+    windsAloftLoading.value = true
+    windsAloftError.value = null
+    try {
+      windsAloft.value = await deduplicatedFetch('windsAloft', () => weatherService.getLatestWindsAloft())
+    } catch (err: unknown) {
+      windsAloftError.value = err instanceof Error ? err.message : 'Failed to load winds aloft'
+    } finally {
+      windsAloftLoading.value = false
+    }
+  }
+
   // --- Airport Delays ---
   const delays = ref<AirportDelay[]>([])
   const delaysLoading = ref(false)
@@ -280,6 +318,20 @@ export const useWeatherStore = defineStore('weather', () => {
     await fetchSigmets()
   }
 
+  async function refreshCwas() {
+    clearCache('cwas')
+    await weatherService.refreshCwas()
+    await new Promise((r) => setTimeout(r, 2000))
+    await fetchCwas()
+  }
+
+  async function refreshWindsAloft() {
+    clearCache('windsAloft')
+    await weatherService.refreshWindsAloft()
+    await new Promise((r) => setTimeout(r, 2000))
+    await fetchWindsAloft()
+  }
+
   async function refreshDelays() {
     clearCache('delays')
     await weatherService.refreshDelays()
@@ -333,6 +385,18 @@ export const useWeatherStore = defineStore('weather', () => {
     sigmetsError,
     fetchSigmets,
     refreshSigmets,
+    // CWAs
+    cwas,
+    cwasLoading,
+    cwasError,
+    fetchCwas,
+    refreshCwas,
+    // Winds Aloft
+    windsAloft,
+    windsAloftLoading,
+    windsAloftError,
+    fetchWindsAloft,
+    refreshWindsAloft,
     // Delays
     delays,
     delaysLoading,

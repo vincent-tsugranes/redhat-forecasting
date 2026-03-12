@@ -14,6 +14,8 @@
     "pireps": "PIREPs",
     "sigmets": "SIGMETs",
     "delays": "Delays",
+    "cwas": "CWAs",
+    "windsAloft": "Winds",
     "spaceWeather": "Space",
     "map": "Map"
   },
@@ -207,6 +209,20 @@
     "refreshData": "Refresh Data",
     "noActive": "No active SIGMETs or AIRMETs at this time.",
     "autoFetch": "SIGMETs and AIRMETs are automatically fetched every 15 minutes."
+  },
+  "cwa": {
+    "title": "Center Weather Advisories",
+    "activeAdvisories": "Active CWAs",
+    "refreshData": "Refresh Data",
+    "noActive": "No active Center Weather Advisories at this time.",
+    "autoFetch": "CWAs are automatically fetched from the Aviation Weather Center every 10 minutes."
+  },
+  "windsAloft": {
+    "title": "Winds & Temps Aloft",
+    "currentForecasts": "Current Forecasts",
+    "refreshData": "Refresh Data",
+    "noData": "No winds aloft data available.",
+    "autoFetch": "Winds and temperatures aloft are automatically fetched every 6 hours from the Aviation Weather Center."
   },
   "delay": {
     "title": "Airport Delays",

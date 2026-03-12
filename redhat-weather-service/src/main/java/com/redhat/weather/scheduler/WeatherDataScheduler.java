@@ -4,6 +4,7 @@ import com.redhat.weather.domain.entity.LocationEntity;
 import com.redhat.weather.domain.repository.LocationRepository;
 import com.redhat.weather.service.AirportDelayService;
 import com.redhat.weather.service.AirportWeatherService;
+import com.redhat.weather.service.CwaService;
 import com.redhat.weather.service.DataFreshnessService;
 import com.redhat.weather.service.EarthquakeService;
 import com.redhat.weather.service.HurricaneService;
@@ -11,6 +12,7 @@ import com.redhat.weather.service.PirepService;
 import com.redhat.weather.service.SigmetService;
 import com.redhat.weather.service.WeatherAlertService;
 import com.redhat.weather.service.WeatherForecastService;
+import com.redhat.weather.service.WindsAloftService;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.runtime.Startup;
 import io.quarkus.scheduler.Scheduled;
@@ -58,6 +60,12 @@ public class WeatherDataScheduler {
     AirportDelayService airportDelayService;
 
     @Inject
+    CwaService cwaService;
+
+    @Inject
+    WindsAloftService windsAloftService;
+
+    @Inject
     LocationRepository locationRepository;
 
     @Inject
@@ -92,6 +100,12 @@ public class WeatherDataScheduler {
 
     @ConfigProperty(name = "weather.scheduler.delays.enabled", defaultValue = "true")
     boolean delaysEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.cwas.enabled", defaultValue = "true")
+    boolean cwasEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.winds-aloft.enabled", defaultValue = "true")
+    boolean windsAloftEnabled;
 
     @ConfigProperty(name = "weather.scheduler.airport.batch-size", defaultValue = "500")
     int airportBatchSize;
@@ -176,6 +190,18 @@ public class WeatherDataScheduler {
                     initialFetches.add(CompletableFuture.runAsync(() -> {
                         LOG.info("Initial fetch: Airport delays");
                         fetchAirportDelays();
+                    }));
+                }
+                if (cwasEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: CWAs");
+                        fetchCwas();
+                    }));
+                }
+                if (windsAloftEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: Winds aloft");
+                        fetchWindsAloft();
                     }));
                 }
 
@@ -476,13 +502,14 @@ public class WeatherDataScheduler {
             return;
         }
 
-        LOG.info("Starting SIGMET/AIRMET data fetch");
+        LOG.info("Starting SIGMET/AIRMET data fetch (domestic + international)");
         try {
             sigmetService.deactivateExpired();
             sigmetService.fetchAndStoreSigmets();
+            sigmetService.fetchAndStoreInternationalSigmets();
             dataFreshnessService.recordSuccess("awc-sigmets");
             meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-sigmets", "result", "success").increment();
-            LOG.info("SIGMET/AIRMET data fetch completed");
+            LOG.info("SIGMET/AIRMET data fetch completed (domestic + international)");
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-sigmets", "result", "failure").increment();
             LOG.error("Error in SIGMET scheduler", e);
@@ -508,6 +535,51 @@ public class WeatherDataScheduler {
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "faa-delays", "result", "failure").increment();
             LOG.error("Error in airport delay scheduler", e);
+        }
+    }
+
+    /**
+     * Fetch CWAs every 10 minutes (short-lived advisories)
+     */
+    @Scheduled(cron = "0 */10 * * * ?", identity = "cwa-fetch")
+    public void fetchCwas() {
+        if (!cwasEnabled) {
+            LOG.debug("CWA scheduler is disabled");
+            return;
+        }
+
+        LOG.info("Starting CWA data fetch");
+        try {
+            cwaService.deactivateExpired();
+            cwaService.fetchAndStoreCwas();
+            dataFreshnessService.recordSuccess("awc-cwas");
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-cwas", "result", "success").increment();
+            LOG.info("CWA data fetch completed");
+        } catch (Exception e) {
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-cwas", "result", "failure").increment();
+            LOG.error("Error in CWA scheduler", e);
+        }
+    }
+
+    /**
+     * Fetch winds/temps aloft every 6 hours (forecast product, updated 4x daily)
+     */
+    @Scheduled(cron = "0 0 */6 * * ?", identity = "winds-aloft-fetch")
+    public void fetchWindsAloft() {
+        if (!windsAloftEnabled) {
+            LOG.debug("Winds aloft scheduler is disabled");
+            return;
+        }
+
+        LOG.info("Starting winds aloft data fetch");
+        try {
+            windsAloftService.fetchAndStoreWinds();
+            dataFreshnessService.recordSuccess("awc-winds-aloft");
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-winds-aloft", "result", "success").increment();
+            LOG.info("Winds aloft data fetch completed");
+        } catch (Exception e) {
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-winds-aloft", "result", "failure").increment();
+            LOG.error("Error in winds aloft scheduler", e);
         }
     }
 
@@ -549,6 +621,9 @@ public class WeatherDataScheduler {
             sigmetService.deactivateExpired();
             sigmetService.deactivateOldEntries(sevenDaysAgo);
             airportDelayService.deactivateOldDelays(sevenDaysAgo);
+            cwaService.deactivateExpired();
+            cwaService.deactivateOldEntries(sevenDaysAgo);
+            windsAloftService.deactivateOldForecasts(sevenDaysAgo);
 
             LOG.info("Old data cleanup completed");
 

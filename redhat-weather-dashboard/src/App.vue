@@ -26,6 +26,8 @@
             <router-link to="/pireps">{{ $t('nav.pireps') }}</router-link>
             <router-link to="/sigmets">{{ $t('nav.sigmets') }}</router-link>
             <router-link to="/delays">{{ $t('nav.delays') }}</router-link>
+            <router-link to="/cwas">{{ $t('nav.cwas') }}</router-link>
+            <router-link to="/winds-aloft">{{ $t('nav.windsAloft') }}</router-link>
             <router-link to="/space-weather">{{ $t('nav.spaceWeather') }}</router-link>
             <router-link to="/map">{{ $t('nav.map') }}</router-link>
           </nav>
