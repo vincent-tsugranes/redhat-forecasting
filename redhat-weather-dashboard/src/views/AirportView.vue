@@ -1,6 +1,13 @@
 <template>
   <div class="container">
-    <h1>{{ $t('airport.title') }}</h1>
+    <div class="page-title-row">
+      <h1>{{ $t('airport.title') }}</h1>
+      <FavoriteButton
+        v-if="selectedAirport?.id"
+        :active="isFavorite(selectedAirport.id)"
+        @toggle="toggleFavorite"
+      />
+    </div>
 
     <div class="card search-card">
       <h2>{{ $t('airport.selectAirport') }}</h2>
@@ -110,6 +117,14 @@
             <div v-if="metar.weatherConditions">
               <span aria-hidden="true">🌧️</span> {{ metar.weatherConditions }}
             </div>
+            <div v-if="relativeHumidity !== null">
+              <span aria-hidden="true">💦</span> RH: {{ relativeHumidity }}%
+            </div>
+            <div v-if="tempDewSpread !== null">
+              <span aria-hidden="true" :class="{ 'spread-warn': tempDewSpread <= 3 }">🌫️</span>
+              Spread: {{ tempDewSpread }}°C
+              <span v-if="tempDewSpread <= 3" class="spread-alert">Fog risk</span>
+            </div>
           </div>
         </DecodedWeather>
       </div>
@@ -139,6 +154,19 @@
     <!-- Airport detail panels (only when an airport is selected and loaded) -->
     <template v-if="!loading && selectedAirportCode && (metar || taf)">
 
+      <!-- Ground stop banner -->
+      <div v-if="airportGroundStop" class="card ground-stop-banner">
+        <div class="delay-header">
+          <span class="delay-icon" aria-hidden="true">&#x1F6D1;</span>
+          <strong>{{ airportGroundStop.airportCode }} — Ground Stop</strong>
+        </div>
+        <div class="delay-details">
+          <span>{{ airportGroundStop.programType }}</span>
+          <span v-if="airportGroundStop.reason">Reason: {{ airportGroundStop.reason }}</span>
+          <span v-if="airportGroundStop.endTime">Until: {{ formatDate(airportGroundStop.endTime) }}</span>
+        </div>
+      </div>
+
       <!-- Delay status banner -->
       <div v-if="airportDelay && airportDelay.isDelayed" class="card delay-banner">
         <div class="delay-header">
@@ -165,6 +193,52 @@
           <div class="da-note">
             Field elev: {{ fieldElevation?.toLocaleString() ?? 'N/A' }} ft |
             Pressure alt: {{ pressureAltitude?.toLocaleString() ?? 'N/A' }} ft
+          </div>
+        </div>
+      </div>
+
+      <!-- Wind compass rose -->
+      <div v-if="metar?.windSpeedKnots != null && metar.windDirection != null" class="card wind-compass-card">
+        <h3>Wind</h3>
+        <div class="compass-layout">
+          <svg class="compass-svg" viewBox="0 0 120 120">
+            <!-- Compass circle -->
+            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--border-color, #ddd)" stroke-width="1" />
+            <circle cx="60" cy="60" r="35" fill="none" stroke="var(--border-light, #eee)" stroke-width="0.5" />
+            <!-- Cardinal points -->
+            <text x="60" y="12" text-anchor="middle" font-size="10" fill="var(--text-secondary)">N</text>
+            <text x="110" y="64" text-anchor="middle" font-size="10" fill="var(--text-secondary)">E</text>
+            <text x="60" y="116" text-anchor="middle" font-size="10" fill="var(--text-secondary)">S</text>
+            <text x="10" y="64" text-anchor="middle" font-size="10" fill="var(--text-secondary)">W</text>
+            <!-- Tick marks -->
+            <line v-for="tick in 36" :key="tick"
+              :x1="60 + 46 * Math.sin((tick * 10) * Math.PI / 180)"
+              :y1="60 - 46 * Math.cos((tick * 10) * Math.PI / 180)"
+              :x2="60 + (tick % 9 === 0 ? 40 : 44) * Math.sin((tick * 10) * Math.PI / 180)"
+              :y2="60 - (tick % 9 === 0 ? 40 : 44) * Math.cos((tick * 10) * Math.PI / 180)"
+              stroke="var(--text-muted, #999)"
+              :stroke-width="tick % 9 === 0 ? 1.5 : 0.5"
+            />
+            <!-- Wind arrow -->
+            <line
+              :x1="60 + 38 * Math.sin(metar.windDirection * Math.PI / 180)"
+              :y1="60 - 38 * Math.cos(metar.windDirection * Math.PI / 180)"
+              x2="60" y2="60"
+              stroke="var(--accent, #2196F3)" stroke-width="2.5" stroke-linecap="round"
+              :marker-end="'url(#wind-arrow)'"
+            />
+            <defs>
+              <marker id="wind-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                <path d="M0,0 L6,3 L0,6 Z" fill="var(--accent, #2196F3)" />
+              </marker>
+            </defs>
+            <!-- Center dot -->
+            <circle cx="60" cy="60" r="3" fill="var(--accent, #2196F3)" />
+          </svg>
+          <div class="compass-info">
+            <div class="compass-speed">{{ metar.windSpeedKnots }} <span class="compass-unit">kts</span></div>
+            <div class="compass-dir">{{ metar.windDirection }}°</div>
+            <div v-if="metar.windGustKnots" class="compass-gust">G{{ metar.windGustKnots }} kts</div>
           </div>
         </div>
       </div>
@@ -233,6 +307,24 @@
             <HourlyTimeline :forecasts="forecasts" />
           </div>
 
+          <!-- Flight category history dots -->
+          <div v-if="metarHistory.length > 1" class="card">
+            <h3>Flight Category Trend</h3>
+            <div class="cat-dots-row">
+              <div
+                v-for="m in [...metarHistory].reverse()"
+                :key="'dot-' + m.id"
+                class="cat-dot"
+                :class="'dot-' + (m.flightCategory || 'UNK')"
+                :title="formatShortTime(m.observationTime) + ' — ' + (m.flightCategory || '?')"
+              ></div>
+            </div>
+            <div class="cat-dots-labels">
+              <span>Oldest</span>
+              <span>Latest</span>
+            </div>
+          </div>
+
           <!-- METAR history table -->
           <div v-if="metarHistory.length > 1" class="card">
             <h3>Recent METARs</h3>
@@ -294,6 +386,32 @@
                 <span class="legend-item"><span class="legend-line legend-vis"></span> Visibility (mi)</span>
               </div>
             </div>
+          </div>
+
+          <!-- Winds aloft profile -->
+          <div v-if="nearbyWindsAloft.length > 0" class="card">
+            <h3>Winds Aloft</h3>
+            <div class="winds-aloft-scroll">
+              <table class="winds-aloft-table">
+                <thead>
+                  <tr>
+                    <th>Altitude</th>
+                    <th>Wind Dir</th>
+                    <th>Speed</th>
+                    <th>Temp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="w in nearbyWindsAloft" :key="w.id">
+                    <td class="wa-alt">{{ w.altitudeFt.toLocaleString() }} ft</td>
+                    <td>{{ w.windDirection != null ? w.windDirection + '°' : '-' }}</td>
+                    <td>{{ w.windSpeedKnots != null ? w.windSpeedKnots + ' kts' : '-' }}</td>
+                    <td>{{ w.temperatureCelsius != null ? w.temperatureCelsius + '°C' : '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="winds-aloft-station">Station: {{ nearbyWindsAloft[0].stationId }}</div>
           </div>
 
           <!-- Historical chart -->
@@ -407,6 +525,39 @@
               </div>
             </div>
           </div>
+
+          <!-- Nearby TFRs -->
+          <div v-if="nearbyTfrs.length > 0" class="card">
+            <h3>Nearby TFRs</h3>
+            <div class="nearby-list">
+              <div v-for="t in nearbyTfrs" :key="t.id" class="nearby-item tfr-item">
+                <div class="nearby-header">
+                  <span class="nearby-type tfr-type">{{ t.tfrType }}</span>
+                  <span class="nearby-time">{{ t.notamId }}</span>
+                </div>
+                <div v-if="t.description" class="nearby-detail tfr-desc">{{ t.description }}</div>
+                <div class="nearby-detail">
+                  {{ t.effectiveDate ? formatDate(t.effectiveDate) : '' }}
+                  {{ t.expireDate ? '- ' + formatDate(t.expireDate) : '' }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active CWAs -->
+          <div v-if="nearbyCwas.length > 0" class="card">
+            <h3>Center Weather Advisories</h3>
+            <div class="nearby-list">
+              <div v-for="c in nearbyCwas" :key="c.id" class="nearby-item">
+                <div class="nearby-header">
+                  <span class="nearby-type">{{ c.artcc }}</span>
+                  <span v-if="c.hazard" class="nearby-hazard">{{ c.hazard }}</span>
+                </div>
+                <div class="nearby-detail">Valid: {{ formatDate(c.validTimeFrom) }} - {{ formatDate(c.validTimeTo) }}</div>
+                <div v-if="c.severity" class="nearby-detail">Severity: {{ c.severity }}</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </template>
@@ -427,7 +578,9 @@ import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import weatherService, { type AirportWeather, type WeatherForecast, type Location } from '../services/weatherService'
 import { formatDate } from '../utils/dateUtils'
+import { useFavorites } from '../composables/useFavorites'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
+import FavoriteButton from '../components/FavoriteButton.vue'
 import DecodedWeather from '../components/DecodedWeather.vue'
 import HourlyTimeline from '../components/HourlyTimeline.vue'
 import HistoricalChart from '../components/HistoricalChart.vue'
@@ -436,7 +589,8 @@ import AirportSkeleton from '../components/skeletons/AirportSkeleton.vue'
 
 const route = useRoute()
 const store = useWeatherStore()
-const { airports, pireps, sigmets, delays } = storeToRefs(store)
+const { airports, pireps, sigmets, delays, windsAloft, tfrs, cwas, groundStops } = storeToRefs(store)
+const { isFavorite, addFavorite, removeFavorite } = useFavorites()
 
 const selectedAirportCode = ref<string>('')
 const selectedAirport = ref<Location | null>(null)
@@ -861,6 +1015,81 @@ const airportDelay = computed(() => {
   return delays.value.find(d => d.airportCode === selectedAirportCode.value) || null
 })
 
+// Ground stop for this airport
+const airportGroundStop = computed(() => {
+  if (!selectedAirportCode.value) return null
+  return groundStops.value.find(g => g.airportCode === selectedAirportCode.value) || null
+})
+
+// Relative humidity and temp/dew spread
+const relativeHumidity = computed(() => {
+  const m = metar.value
+  if (m?.temperatureCelsius == null || m?.dewpointCelsius == null) return null
+  // Magnus formula approximation
+  const t = m.temperatureCelsius
+  const td = m.dewpointCelsius
+  const rh = 100 * Math.exp((17.625 * td) / (243.04 + td)) / Math.exp((17.625 * t) / (243.04 + t))
+  return Math.round(Math.min(100, Math.max(0, rh)))
+})
+
+const tempDewSpread = computed(() => {
+  const m = metar.value
+  if (m?.temperatureCelsius == null || m?.dewpointCelsius == null) return null
+  return Math.round((m.temperatureCelsius - m.dewpointCelsius) * 10) / 10
+})
+
+// Favorite toggle
+function toggleFavorite() {
+  const apt = selectedAirport.value
+  if (!apt?.id) return
+  if (isFavorite(apt.id)) {
+    removeFavorite(apt.id)
+  } else {
+    addFavorite({ id: apt.id, name: apt.name, state: apt.state })
+  }
+}
+
+// Nearby winds aloft (closest station)
+const nearbyWindsAloft = computed(() => {
+  const apt = selectedAirport.value
+  if (!apt?.latitude || !apt?.longitude) return []
+  if (windsAloft.value.length === 0) return []
+
+  // Find the closest station
+  const withDist = windsAloft.value
+    .filter(w => w.latitude != null && w.longitude != null)
+    .map(w => ({
+      ...w,
+      dist: Math.abs(w.latitude! - apt.latitude) + Math.abs(w.longitude! - apt.longitude),
+    }))
+
+  if (withDist.length === 0) return []
+
+  const closestStation = withDist.sort((a, b) => a.dist - b.dist)[0].stationId
+
+  return windsAloft.value
+    .filter(w => w.stationId === closestStation)
+    .sort((a, b) => a.altitudeFt - b.altitudeFt)
+})
+
+// Nearby TFRs
+const nearbyTfrs = computed(() => {
+  const apt = selectedAirport.value
+  if (!apt?.latitude || !apt?.longitude) return []
+  const range = 2.0 // ~120nm
+  return tfrs.value
+    .filter(t => t.latitude != null && t.longitude != null &&
+      Math.abs(t.latitude! - apt.latitude) < range &&
+      Math.abs(t.longitude! - apt.longitude) < range
+    )
+    .slice(0, 5)
+})
+
+// Nearby CWAs
+const nearbyCwas = computed(() => {
+  return cwas.value.slice(0, 5)
+})
+
 // FAA chart links (US airports starting with K)
 const isUsAirport = computed(() => selectedAirportCode.value.startsWith('K') && selectedAirportCode.value.length === 4)
 const faaCode = computed(() => isUsAirport.value ? selectedAirportCode.value.substring(1) : '')
@@ -900,6 +1129,10 @@ onMounted(async () => {
   store.fetchPireps()
   store.fetchSigmets()
   store.fetchDelays()
+  store.fetchWindsAloft()
+  store.fetchTfrs()
+  store.fetchCwas()
+  store.fetchGroundStops()
 
   // Update countdown every 30 seconds
   countdownInterval = setInterval(() => { now.value = Date.now() }, 30000)
@@ -1501,6 +1734,160 @@ onUnmounted(() => {
 .nearby-hazard {
   color: var(--severity-high, #e53935);
   font-weight: 600;
+}
+
+/* Page title with favorite button */
+.page-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Ground stop banner */
+.ground-stop-banner {
+  border-left: 4px solid var(--severity-high, #e53935);
+  background: var(--bg-warning, #fff8e1);
+}
+
+/* Humidity/spread */
+.spread-alert {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--color-warning, #f0ad4e);
+  color: #333;
+  margin-left: 4px;
+}
+
+/* Wind compass */
+.wind-compass-card {
+  padding: 10px 14px;
+}
+
+.compass-layout {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.compass-svg {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+.compass-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.compass-speed {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: monospace;
+  line-height: 1;
+  color: var(--text-primary, #333);
+}
+
+.compass-unit {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-muted, #999);
+}
+
+.compass-dir {
+  font-size: 14px;
+  color: var(--text-secondary, #666);
+  font-family: monospace;
+}
+
+.compass-gust {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--severity-high, #e53935);
+}
+
+/* Flight category dots */
+.cat-dots-row {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.cat-dot {
+  flex: 1;
+  height: 10px;
+  border-radius: 2px;
+  min-width: 8px;
+  cursor: default;
+}
+
+.dot-VFR { background: var(--flight-vfr); }
+.dot-MVFR { background: var(--flight-mvfr); }
+.dot-IFR { background: var(--flight-ifr); }
+.dot-LIFR { background: var(--flight-lifr); }
+.dot-UNK { background: var(--text-muted, #ccc); }
+
+.cat-dots-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-muted, #999);
+  margin-top: 2px;
+}
+
+/* Winds aloft table */
+.winds-aloft-scroll {
+  overflow-x: auto;
+}
+
+.winds-aloft-table {
+  width: 100%;
+  font-size: 12px;
+}
+
+.winds-aloft-table th {
+  text-align: left;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted, #999);
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border-light, #eee);
+}
+
+.winds-aloft-table td {
+  padding: 3px 6px;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.wa-alt {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.winds-aloft-station {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted, #999);
+}
+
+/* TFR items */
+.tfr-item {
+  border-left: 3px solid var(--severity-high, #e53935);
+}
+
+.tfr-type {
+  color: var(--severity-high, #e53935) !important;
+}
+
+.tfr-desc {
+  font-size: 11px;
+  line-height: 1.3;
 }
 
 @media (max-width: 768px) {
