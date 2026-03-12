@@ -21,27 +21,22 @@
       </div>
     </div>
 
-    <div v-if="loading" class="card"><p>Loading TFRs...</p></div>
+    <TableSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
-    <!-- Summary stats -->
-    <div v-if="!loading && tfrs.length > 0" class="stats-row">
-      <div class="stat-tile">
-        <span class="stat-value">{{ filteredTfrs.length }}</span>
-        <span class="stat-label">Active TFRs</span>
-      </div>
-      <div class="stat-tile">
-        <span class="stat-value">{{ newCount }}</span>
-        <span class="stat-label">New (24h)</span>
-      </div>
-      <div class="stat-tile">
-        <span class="stat-value">{{ securityCount }}</span>
-        <span class="stat-label">Security</span>
-      </div>
-      <div class="stat-tile">
-        <span class="stat-value">{{ hazardCount }}</span>
-        <span class="stat-label">Hazards</span>
-      </div>
+    <div v-if="!loading && tfrs.length > 0" class="stats-bar">
+      <span class="stat-chip">
+        <span aria-hidden="true">🚫</span> {{ filteredTfrs.length }} Active TFRs
+      </span>
+      <span v-if="newCount > 0" class="stat-chip stat-alert">
+        <span aria-hidden="true">🆕</span> {{ newCount }} New (24h)
+      </span>
+      <span v-if="securityCount > 0" class="stat-chip stat-alert">
+        <span aria-hidden="true">🔒</span> {{ securityCount }} Security
+      </span>
+      <span v-if="hazardCount > 0" class="stat-chip">
+        <span aria-hidden="true">⚠️</span> {{ hazardCount }} Hazards
+      </span>
     </div>
 
     <div v-if="filteredTfrs.length > 0" class="card">
@@ -89,6 +84,7 @@ import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
+import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
 
 const store = useWeatherStore()
 const toast = useToast()
@@ -177,32 +173,11 @@ onMounted(() => {
   color: var(--text-primary, #333);
 }
 
-.stats-row {
+.stats-bar {
   display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.stat-tile {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: var(--bg-card, white);
-  border-radius: 8px;
-  padding: 14px 16px;
-  box-shadow: 0 2px 4px var(--shadow, rgba(0, 0, 0, 0.1));
-}
-
-.stat-value {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--text-primary, #333);
-}
-
-.stat-label {
-  font-size: 12px;
-  color: var(--text-secondary, #666);
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
 }
 
 .table-controls { margin-bottom: 8px; }

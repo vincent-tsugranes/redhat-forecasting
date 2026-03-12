@@ -65,6 +65,21 @@ const router = createRouter({
       component: () => import('../views/WindsAloftView.vue'),
     },
     {
+      path: '/ground-stops',
+      name: 'ground-stops',
+      component: () => import('../views/GroundStopView.vue'),
+    },
+    {
+      path: '/volcanic-ash',
+      name: 'volcanic-ash',
+      component: () => import('../views/VolcanicAshView.vue'),
+    },
+    {
+      path: '/lightning',
+      name: 'lightning',
+      component: () => import('../views/LightningView.vue'),
+    },
+    {
       path: '/map',
       name: 'map',
       component: () => import('../views/MapView.vue'),
@@ -102,6 +117,15 @@ router.beforeEach((to) => {
       break
     case 'winds-aloft':
       store.fetchWindsAloft()
+      break
+    case 'ground-stops':
+      store.fetchGroundStops()
+      break
+    case 'volcanic-ash':
+      store.fetchVolcanicAsh()
+      break
+    case 'lightning':
+      store.fetchLightning()
       break
     case 'forecasts':
       store.fetchAirports()

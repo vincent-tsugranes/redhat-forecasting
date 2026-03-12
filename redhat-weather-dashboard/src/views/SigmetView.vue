@@ -31,7 +31,7 @@
       </div>
     </div>
 
-    <div v-if="loading" class="card"><p>Loading SIGMETs/AIRMETs...</p></div>
+    <TableSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
     <div v-if="filteredSigmets.length > 0" class="card">
@@ -103,6 +103,7 @@ import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
 import { formatDate } from '../utils/dateUtils'
+import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
 const store = useWeatherStore()
 const toast = useToast()
 const { sigmets, sigmetsLoading: loading, sigmetsError: error } = storeToRefs(store)

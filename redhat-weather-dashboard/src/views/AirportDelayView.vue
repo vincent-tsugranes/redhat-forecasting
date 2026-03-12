@@ -13,25 +13,16 @@
       </div>
     </div>
 
-    <div v-if="loading" class="card"><p>Loading airport delays...</p></div>
+    <TableSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
-    <!-- Summary tiles -->
-    <div v-if="!loading" class="stats-row">
-      <div class="stat-tile">
-        <span class="stat-icon" aria-hidden="true">🔴</span>
-        <div class="stat-body">
-          <span class="stat-value">{{ delayedCount }}</span>
-          <span class="stat-label">Airports Delayed</span>
-        </div>
-      </div>
-      <div class="stat-tile">
-        <span class="stat-icon" aria-hidden="true">⏱️</span>
-        <div class="stat-body">
-          <span class="stat-value">{{ avgDelay ? avgDelay + ' min' : '-' }}</span>
-          <span class="stat-label">Avg Delay</span>
-        </div>
-      </div>
+    <div v-if="!loading" class="stats-bar">
+      <span class="stat-chip" :class="delayedCount > 0 ? 'stat-alert' : ''">
+        <span aria-hidden="true">🔴</span> {{ delayedCount }} Airports Delayed
+      </span>
+      <span class="stat-chip">
+        <span aria-hidden="true">⏱️</span> Avg {{ avgDelay ? avgDelay + ' min' : '-' }}
+      </span>
     </div>
 
     <div v-if="delays.length > 0" class="card">
@@ -81,6 +72,7 @@ import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
+import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
 
 const store = useWeatherStore()
 const toast = useToast()
@@ -128,39 +120,11 @@ onMounted(() => {
   align-items: center;
 }
 
-.stats-row {
+.stats-bar {
   display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.stat-tile {
-  flex: 1;
-  min-width: 120px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--bg-card, white);
-  border-radius: 8px;
-  padding: 14px 16px;
-  box-shadow: 0 2px 4px var(--shadow, rgba(0, 0, 0, 0.1));
-}
-
-.stat-icon { font-size: 24px; flex-shrink: 0; }
-
-.stat-body { display: flex; flex-direction: column; }
-
-.stat-value {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--text-primary, #333);
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: var(--text-secondary, #666);
-  margin-top: 2px;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
 }
 
 .td-truncate {

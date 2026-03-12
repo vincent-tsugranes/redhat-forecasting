@@ -22,7 +22,7 @@
       <PirepMap v-if="filteredPireps.length > 0" :pireps="filteredPireps" />
     </ErrorBoundary>
 
-    <div v-if="loading" class="card"><p>Loading PIREPs...</p></div>
+    <TableSkeleton v-if="loading" />
     <div v-if="error" class="error">{{ error }}</div>
 
     <div v-if="filteredPireps.length > 0" class="card">
@@ -84,6 +84,7 @@ import { useToast } from '../composables/useToast'
 import { formatDate } from '../utils/dateUtils'
 import PirepMap from '../components/PirepMap.vue'
 import ErrorBoundary from '../components/ErrorBoundary.vue'
+import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
 
 const store = useWeatherStore()
 const toast = useToast()

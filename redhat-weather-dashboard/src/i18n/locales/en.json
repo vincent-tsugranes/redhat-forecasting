@@ -254,12 +254,37 @@
     "time12h": "12-hour (AM/PM)",
     "time24h": "24-hour"
   },
+  "groundStop": {
+    "title": "Ground Stops & GDPs",
+    "activePrograms": "Active Programs",
+    "refreshData": "Refresh Data",
+    "noActive": "No active ground stops or ground delay programs at this time.",
+    "autoFetch": "Ground stop data is automatically fetched from the FAA every 5 minutes."
+  },
+  "volcanicAsh": {
+    "title": "Volcanic Ash Advisories",
+    "activeAdvisories": "Active Advisories",
+    "refreshData": "Refresh Data",
+    "noActive": "No active volcanic ash advisories at this time.",
+    "autoFetch": "Volcanic ash data is automatically fetched from international SIGMETs every 15 minutes."
+  },
+  "lightning": {
+    "title": "Lightning Activity",
+    "recentActivity": "Recent Strikes",
+    "refreshData": "Refresh Data",
+    "noRecent": "No lightning strikes detected in the last hour.",
+    "autoFetch": "Lightning data is fetched every 5 minutes when enabled."
+  },
   "search": {
-    "placeholder": "Search airports, earthquakes...",
+    "placeholder": "Search airports, earthquakes, storms...",
     "ariaLabel": "Global search",
     "noResults": "No results found",
     "airports": "Airports",
-    "earthquakes": "Earthquakes"
+    "earthquakes": "Earthquakes",
+    "hurricanes": "Hurricanes",
+    "groundStops": "Ground Stops",
+    "volcanicAsh": "Volcanic Ash",
+    "lightning": "Lightning"
   },
   "map": {
     "title": "Unified Map",

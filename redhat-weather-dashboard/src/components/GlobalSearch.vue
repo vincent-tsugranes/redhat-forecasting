@@ -69,13 +69,13 @@ interface SearchResult {
   name: string
   detail?: string
   icon: string
-  category: 'airports' | 'earthquakes'
+  category: 'airports' | 'earthquakes' | 'hurricanes' | 'groundStops' | 'volcanicAsh' | 'lightning'
   route: { name: string; query?: Record<string, string> }
 }
 
 const router = useRouter()
 const store = useWeatherStore()
-const { airports, earthquakes } = storeToRefs(store)
+const { airports, earthquakes, hurricanes, groundStops, volcanicAsh } = storeToRefs(store)
 
 const isOpen = ref(false)
 const query = ref('')
@@ -105,7 +105,7 @@ const results = computed<SearchResult[]>(() => {
   }
 
   for (const eq of earthquakes.value) {
-    if (items.length >= 25) break
+    if (items.length >= 40) break
     if (eq.place?.toLowerCase().includes(q)) {
       items.push({
         id: `eq-${eq.id}`,
@@ -118,12 +118,55 @@ const results = computed<SearchResult[]>(() => {
     }
   }
 
+  for (const h of hurricanes.value) {
+    if (items.length >= 45) break
+    if (h.stormName?.toLowerCase().includes(q) || h.stormId?.toLowerCase().includes(q)) {
+      items.push({
+        id: `hur-${h.id}`,
+        name: h.stormName || h.stormId,
+        detail: h.category != null ? `Category ${h.category}` : undefined,
+        icon: '🌀',
+        category: 'hurricanes',
+        route: { name: 'hurricanes' },
+      })
+    }
+  }
+
+  for (const gs of groundStops.value) {
+    if (items.length >= 50) break
+    if (gs.airportCode?.toLowerCase().includes(q) || gs.airportName?.toLowerCase().includes(q)) {
+      items.push({
+        id: `gs-${gs.id}`,
+        name: `${gs.airportCode} - ${gs.programType}`,
+        detail: gs.reason || undefined,
+        icon: '🛑',
+        category: 'groundStops',
+        route: { name: 'ground-stops' },
+      })
+    }
+  }
+
+  for (const va of volcanicAsh.value) {
+    if (items.length >= 55) break
+    const name = va.volcanoName || va.firName || ''
+    if (name.toLowerCase().includes(q) || va.hazard?.toLowerCase().includes(q)) {
+      items.push({
+        id: `va-${va.id}`,
+        name: name || 'Volcanic Ash Advisory',
+        detail: va.firName || undefined,
+        icon: '🌋',
+        category: 'volcanicAsh',
+        route: { name: 'volcanic-ash' },
+      })
+    }
+  }
+
   return items
 })
 
 const groupedResults = computed(() => {
   const groups: { category: string; items: SearchResult[] }[] = []
-  const categories = ['airports', 'earthquakes'] as const
+  const categories = ['airports', 'earthquakes', 'hurricanes', 'groundStops', 'volcanicAsh', 'lightning'] as const
 
   for (const cat of categories) {
     const items = results.value.filter((r) => r.category === cat)

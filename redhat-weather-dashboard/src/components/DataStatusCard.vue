@@ -151,6 +151,15 @@ const SOURCE_LABELS: Record<string, string> = {
   earthquakes: 'Earthquakes',
   'swpc-space-weather': 'Space Weather',
   alerts: 'Weather Alerts',
+  pireps: 'PIREPs',
+  sigmets: 'SIGMETs',
+  cwas: 'CWAs',
+  tfrs: 'TFRs',
+  'winds-aloft': 'Winds Aloft',
+  delays: 'Airport Delays',
+  'ground-stops': 'Ground Stops',
+  'volcanic-ash': 'Volcanic Ash',
+  lightning: 'Lightning',
 }
 
 // Map freshness source names to scheduler source keys
@@ -161,6 +170,15 @@ const FRESHNESS_TO_SCHEDULER: Record<string, string> = {
   earthquakes: 'usgs-earthquake',
   'swpc-space-weather': 'swpc-space-weather',
   alerts: 'noaa-alerts',
+  pireps: 'awc-pirep',
+  sigmets: 'awc-sigmet',
+  cwas: 'awc-cwa',
+  tfrs: 'faa-tfr',
+  'winds-aloft': 'awc-winds-aloft',
+  delays: 'faa-delay',
+  'ground-stops': 'faa-ground-stop',
+  'volcanic-ash': 'awc-volcanic-ash',
+  lightning: 'blitzortung-lightning',
 }
 
 function parseFreshness(df: Record<string, string | number>) {
@@ -226,6 +244,15 @@ const SCHEDULER_ICONS: Record<string, string> = {
   'nhc-hurricane': '🌀',
   'noaa-alerts': '⚠️',
   'swpc-space-weather': '☀️',
+  'awc-pirep': '📝',
+  'awc-sigmet': '🔶',
+  'awc-cwa': '📋',
+  'faa-tfr': '🚫',
+  'awc-winds-aloft': '💨',
+  'faa-delay': '⏱️',
+  'faa-ground-stop': '🛑',
+  'awc-volcanic-ash': '🌋',
+  'blitzortung-lightning': '⚡',
 }
 
 // Reverse map: scheduler source key -> freshness source name
