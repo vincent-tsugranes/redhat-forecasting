@@ -26,52 +26,50 @@
     </div>
 
     <ErrorBoundary>
-    <div v-if="delays.length > 0" class="card">
-      <div class="table-wrapper">
-        <table class="data-table" aria-label="Airport delays">
-          <thead>
-            <tr>
-              <th>Airport</th>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Reason</th>
-              <th>Avg Delay</th>
-              <th>Trend</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="delay in delays" :key="delay.id" :class="{ 'row-delayed': delay.isDelayed }">
-              <td><strong>{{ delay.airportCode }}</strong></td>
-              <td>{{ delay.airportName || '-' }}</td>
-              <td>{{ delay.delayType }}</td>
-              <td class="td-truncate">{{ delay.reason || '-' }}</td>
-              <td>{{ delay.avgDelayMinutes ? delay.avgDelayMinutes + ' min' : '-' }}</td>
-              <td>
-                <span v-if="delay.trend" class="trend-badge" :class="'trend-' + delay.trend">{{ delay.trend }}</span>
-                <span v-else>-</span>
-              </td>
-              <td>
-                <span class="status-dot" :class="delay.isDelayed ? 'status-delayed' : 'status-ok'"></span>
-                {{ delay.isDelayed ? 'Delayed' : 'Normal' }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-if="delays.length > 0" class="card">
+        <div class="table-wrapper">
+          <table class="data-table" aria-label="Airport delays">
+            <thead>
+              <tr>
+                <th>Airport</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Reason</th>
+                <th>Avg Delay</th>
+                <th>Trend</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="delay in delays" :key="delay.id" :class="{ 'row-delayed': delay.isDelayed }">
+                <td><strong>{{ delay.airportCode }}</strong></td>
+                <td>{{ delay.airportName || '-' }}</td>
+                <td>{{ delay.delayType }}</td>
+                <td class="td-truncate">{{ delay.reason || '-' }}</td>
+                <td>{{ delay.avgDelayMinutes ? delay.avgDelayMinutes + ' min' : '-' }}</td>
+                <td>
+                  <span v-if="delay.trend" class="trend-badge" :class="'trend-' + delay.trend">{{ delay.trend }}</span>
+                  <span v-else>-</span>
+                </td>
+                <td>
+                  <span class="status-dot" :class="delay.isDelayed ? 'status-delayed' : 'status-ok'"></span>
+                  {{ delay.isDelayed ? 'Delayed' : 'Normal' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-
+      <div v-else-if="!loading" class="card">
+        <p><span aria-hidden="true">✅</span> {{ $t('delay.noDelays') }}</p>
+        <p>{{ $t('delay.autoFetch') }}</p>
+      </div>
     </ErrorBoundary>
-
-    <div v-else-if="!loading" class="card">
-      <p><span aria-hidden="true">✅</span> {{ $t('delay.noDelays') }}</p>
-      <p>{{ $t('delay.autoFetch') }}</p>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
@@ -104,7 +102,9 @@ async function refreshData() {
   }
 }
 
-
+onMounted(() => {
+  store.fetchDelays()
+})
 </script>
 
 <style scoped>

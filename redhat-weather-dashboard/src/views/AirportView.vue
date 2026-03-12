@@ -130,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import weatherService, { type AirportWeather, type Location } from '../services/weatherService'
@@ -263,6 +263,10 @@ async function refreshWeather() {
     refreshing.value = false
   }
 }
+
+onMounted(() => {
+  store.fetchAirports()
+})
 
 onUnmounted(() => {
   if (refreshTimeout) {

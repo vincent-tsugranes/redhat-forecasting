@@ -4,11 +4,13 @@ import { createPinia, setActivePinia } from 'pinia'
 import { defineComponent, h } from 'vue'
 import i18n from '../../i18n'
 import GroundStopView from '../../views/GroundStopView.vue'
-import { useWeatherStore } from '../../stores/weatherStore'
 
 vi.mock('../../services/weatherService', () => ({
   default: {
-    getActiveGroundStops: vi.fn().mockResolvedValue([]),
+    getActiveGroundStops: vi.fn().mockResolvedValue([
+      { id: 1, groundStopId: 'GS1', airportCode: 'KJFK', airportName: 'John F Kennedy', programType: 'Ground Stop', reason: 'Weather', avgDelayMinutes: 45, maxDelayMinutes: 90, fetchedAt: new Date().toISOString() },
+      { id: 2, groundStopId: 'GDP1', airportCode: 'KEWR', airportName: 'Newark', programType: 'GDP', reason: 'Volume', avgDelayMinutes: 20, maxDelayMinutes: 40, fetchedAt: new Date().toISOString() },
+    ]),
     getAirports: vi.fn().mockResolvedValue([]),
     getRecentEarthquakes: vi.fn().mockResolvedValue([]),
     getActiveStorms: vi.fn().mockResolvedValue([]),
@@ -23,11 +25,6 @@ vi.mock('../../services/api', () => ({
   weatherApi: { get: vi.fn().mockResolvedValue({ data: [] }) },
 }))
 
-const mockGroundStops = [
-  { id: 1, groundStopId: 'GS1', airportCode: 'KJFK', airportName: 'John F Kennedy', programType: 'Ground Stop', reason: 'Weather', avgDelayMinutes: 45, maxDelayMinutes: 90, fetchedAt: new Date().toISOString() },
-  { id: 2, groundStopId: 'GDP1', airportCode: 'KEWR', airportName: 'Newark', programType: 'GDP', reason: 'Volume', avgDelayMinutes: 20, maxDelayMinutes: 40, fetchedAt: new Date().toISOString() },
-]
-
 const FreshnessBadgeStub = defineComponent({
   name: 'FreshnessBadge',
   props: ['fetchedAt', 'dataType'],
@@ -37,9 +34,6 @@ const FreshnessBadgeStub = defineComponent({
 describe('GroundStopView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    const store = useWeatherStore()
-    store.groundStops = mockGroundStops as never
-    store.groundStopsLoading = false
   })
 
   it('renders the title', async () => {

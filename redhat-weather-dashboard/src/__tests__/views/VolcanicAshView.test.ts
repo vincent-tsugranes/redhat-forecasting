@@ -4,11 +4,12 @@ import { createPinia, setActivePinia } from 'pinia'
 import { defineComponent, h } from 'vue'
 import i18n from '../../i18n'
 import VolcanicAshView from '../../views/VolcanicAshView.vue'
-import { useWeatherStore } from '../../stores/weatherStore'
 
 vi.mock('../../services/weatherService', () => ({
   default: {
-    getActiveVolcanicAsh: vi.fn().mockResolvedValue([]),
+    getActiveVolcanicAsh: vi.fn().mockResolvedValue([
+      { id: 1, advisoryId: 'VA1', firId: 'KZAK', firName: 'Oakland', volcanoName: 'Mount St Helens', hazard: 'Volcanic Ash', severity: 'MOD', validTimeFrom: '2024-01-15T10:00:00', validTimeTo: '2024-01-15T22:00:00', altitudeLowFt: 10000, altitudeHighFt: 35000, rawText: 'VA ADVISORY...', fetchedAt: new Date().toISOString() },
+    ]),
     getAirports: vi.fn().mockResolvedValue([]),
     getRecentEarthquakes: vi.fn().mockResolvedValue([]),
     getActiveStorms: vi.fn().mockResolvedValue([]),
@@ -28,10 +29,6 @@ vi.mock('../../utils/dateUtils', () => ({
   formatRelativeTime: vi.fn(() => '5m ago'),
 }))
 
-const mockVolcanicAsh = [
-  { id: 1, advisoryId: 'VA1', firId: 'KZAK', firName: 'Oakland', volcanoName: 'Mount St Helens', hazard: 'Volcanic Ash', severity: 'MOD', validTimeFrom: '2024-01-15T10:00:00', validTimeTo: '2024-01-15T22:00:00', altitudeLowFt: 10000, altitudeHighFt: 35000, rawText: 'VA ADVISORY...', fetchedAt: new Date().toISOString() },
-]
-
 const FreshnessBadgeStub = defineComponent({
   name: 'FreshnessBadge',
   props: ['fetchedAt', 'dataType'],
@@ -41,9 +38,6 @@ const FreshnessBadgeStub = defineComponent({
 describe('VolcanicAshView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    const store = useWeatherStore()
-    store.volcanicAsh = mockVolcanicAsh as never
-    store.volcanicAshLoading = false
   })
 
   it('renders the title', async () => {

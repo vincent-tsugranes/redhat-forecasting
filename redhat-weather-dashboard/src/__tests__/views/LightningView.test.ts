@@ -4,11 +4,13 @@ import { createPinia, setActivePinia } from 'pinia'
 import { defineComponent, h } from 'vue'
 import i18n from '../../i18n'
 import LightningView from '../../views/LightningView.vue'
-import { useWeatherStore } from '../../stores/weatherStore'
 
 vi.mock('../../services/weatherService', () => ({
   default: {
-    getRecentLightning: vi.fn().mockResolvedValue([]),
+    getRecentLightning: vi.fn().mockResolvedValue([
+      { id: 1, strikeId: 'LS1', latitude: 34.05, longitude: -118.25, strikeTime: '2024-01-15T10:00:00', amplitudeKa: 25.3, strikeType: 'CG', fetchedAt: new Date().toISOString() },
+      { id: 2, strikeId: 'LS2', latitude: 40.71, longitude: -74.01, strikeTime: '2024-01-15T10:05:00', amplitudeKa: 42.1, strikeType: 'IC', fetchedAt: new Date().toISOString() },
+    ]),
     getAirports: vi.fn().mockResolvedValue([]),
     getRecentEarthquakes: vi.fn().mockResolvedValue([]),
     getActiveStorms: vi.fn().mockResolvedValue([]),
@@ -28,11 +30,6 @@ vi.mock('../../utils/dateUtils', () => ({
   formatRelativeTime: vi.fn(() => '5m ago'),
 }))
 
-const mockLightning = [
-  { id: 1, strikeId: 'LS1', latitude: 34.05, longitude: -118.25, strikeTime: '2024-01-15T10:00:00', amplitudeKa: 25.3, strikeType: 'CG', fetchedAt: new Date().toISOString() },
-  { id: 2, strikeId: 'LS2', latitude: 40.71, longitude: -74.01, strikeTime: '2024-01-15T10:05:00', amplitudeKa: 42.1, strikeType: 'IC', fetchedAt: new Date().toISOString() },
-]
-
 const FreshnessBadgeStub = defineComponent({
   name: 'FreshnessBadge',
   props: ['fetchedAt', 'dataType'],
@@ -48,9 +45,6 @@ const LightningMapStub = defineComponent({
 describe('LightningView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
-    const store = useWeatherStore()
-    store.lightning = mockLightning as never
-    store.lightningLoading = false
   })
 
   it('renders the title', async () => {
