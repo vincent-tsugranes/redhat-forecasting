@@ -44,42 +44,70 @@
     <div v-if="error" class="error">{{ error }}</div>
 
     <div v-if="!loading" class="stats-bar">
-      <span class="stat-chip">
-        <span aria-hidden="true">✈️</span> <strong>{{ airports.length.toLocaleString() }}</strong> Airports
-      </span>
-      <span class="stat-chip" v-if="hurricanes.length > 0" :class="{ 'stat-alert': true }">
-        <span aria-hidden="true">🌀</span> <strong>{{ hurricanes.length }}</strong> Storms
-      </span>
-      <span class="stat-chip">
-        <span aria-hidden="true">🌍</span> <strong>{{ earthquakes.length }}</strong> Quakes
-      </span>
+      <router-link to="/airports" class="stat-chip-link">
+        <span class="stat-chip">
+          <span aria-hidden="true">✈️</span> <strong>{{ airports.length.toLocaleString() }}</strong> Airports
+        </span>
+      </router-link>
+      <router-link v-if="hurricanes.length > 0" to="/hurricanes" class="stat-chip-link">
+        <span class="stat-chip stat-alert">
+          <span aria-hidden="true">🌀</span> <strong>{{ hurricanes.length }}</strong> Storms
+        </span>
+      </router-link>
+      <router-link to="/earthquakes" class="stat-chip-link">
+        <span class="stat-chip">
+          <span aria-hidden="true">🌍</span> <strong>{{ earthquakes.length }}</strong> Quakes
+        </span>
+      </router-link>
       <span class="stat-chip" v-if="alerts.length > 0" :class="{ 'stat-alert': true }">
         <span aria-hidden="true">⚠️</span> <strong>{{ alerts.length }}</strong> Alerts
       </span>
-      <span class="stat-chip">
-        <span aria-hidden="true">📋</span> <strong>{{ pireps.length }}</strong> PIREPs
-      </span>
-      <span class="stat-chip">
-        <span aria-hidden="true">🚨</span> <strong>{{ sigmets.length }}</strong> SIGMETs
-      </span>
-      <span class="stat-chip" v-if="tfrs.length > 0">
-        <span aria-hidden="true">🚫</span> <strong>{{ tfrs.length }}</strong> TFRs
-      </span>
-      <span class="stat-chip" v-if="cwas.length > 0">
-        <span aria-hidden="true">📡</span> <strong>{{ cwas.length }}</strong> CWAs
-      </span>
-      <span class="stat-chip" v-if="groundStops.length > 0" :class="{ 'stat-alert': true }">
-        <span aria-hidden="true">🛑</span> <strong>{{ groundStops.length }}</strong> Ground Stops
-      </span>
-      <span class="stat-chip" v-if="volcanicAsh.length > 0" :class="{ 'stat-alert': true }">
-        <span aria-hidden="true">🌋</span> <strong>{{ volcanicAsh.length }}</strong> Volcanic Ash
-      </span>
-      <span class="stat-chip" v-if="lightning.length > 0">
-        <span aria-hidden="true">⚡</span> <strong>{{ lightning.length }}</strong> Lightning
-      </span>
-      <span class="stat-chip" v-if="delayedAirports > 0" :class="{ 'stat-alert': true }">
-        <span aria-hidden="true">⏱️</span> <strong>{{ delayedAirports }}</strong> Delays
-      </span>
+      <router-link to="/pireps" class="stat-chip-link">
+        <span class="stat-chip">
+          <span aria-hidden="true">📋</span> <strong>{{ pireps.length }}</strong> PIREPs
+        </span>
+      </router-link>
+      <router-link to="/sigmets" class="stat-chip-link">
+        <span class="stat-chip" :class="{ 'stat-alert': worstSigmetSeverity === 'severe' }">
+          <span aria-hidden="true">🚨</span> <strong>{{ sigmets.length }}</strong> SIGMETs
+        </span>
+      </router-link>
+      <router-link v-if="tfrs.length > 0" to="/tfrs" class="stat-chip-link">
+        <span class="stat-chip">
+          <span aria-hidden="true">🚫</span> <strong>{{ tfrs.length }}</strong> TFRs
+        </span>
+      </router-link>
+      <router-link v-if="cwas.length > 0" to="/cwas" class="stat-chip-link">
+        <span class="stat-chip">
+          <span aria-hidden="true">📡</span> <strong>{{ cwas.length }}</strong> CWAs
+        </span>
+      </router-link>
+      <router-link v-if="groundStops.length > 0" to="/ground-stops" class="stat-chip-link">
+        <span class="stat-chip stat-alert">
+          <span aria-hidden="true">🛑</span> <strong>{{ groundStops.length }}</strong> Ground Stops
+        </span>
+      </router-link>
+      <router-link v-if="volcanicAsh.length > 0" to="/volcanic-ash" class="stat-chip-link">
+        <span class="stat-chip stat-alert">
+          <span aria-hidden="true">🌋</span> <strong>{{ volcanicAsh.length }}</strong> Volcanic Ash
+        </span>
+      </router-link>
+      <router-link v-if="lightning.length > 0" to="/lightning" class="stat-chip-link">
+        <span class="stat-chip">
+          <span aria-hidden="true">⚡</span> <strong>{{ lightning.length }}</strong> Lightning
+        </span>
+      </router-link>
+      <router-link v-if="delayedAirports > 0" to="/delays" class="stat-chip-link">
+        <span class="stat-chip stat-alert">
+          <span aria-hidden="true">⏱️</span> <strong>{{ delayedAirports }}</strong> Delays
+        </span>
+      </router-link>
+    </div>
+
+    <!-- What's happening now -->
+    <div v-if="!loading && situationSummary" class="card situation-card">
+      <h2><span aria-hidden="true">📡</span> Situation Summary</h2>
+      <p class="situation-text">{{ situationSummary }}</p>
     </div>
 
     <div v-if="!loading" class="dashboard-grid">
@@ -264,6 +292,66 @@
             </div>
           </div>
         </div>
+
+        <!-- SIGMET/CWA hazard list -->
+        <div v-if="sigmets.length > 0 || cwas.length > 0" class="card">
+          <div class="card-header-row">
+            <h2>
+              <span aria-hidden="true">🚨</span> Aviation Hazards
+              <span v-if="worstSigmetSeverity === 'severe'" class="hazard-severity-dot severity-severe-dot"></span>
+              <span v-else-if="sigmets.some(s => s.sigmetType === 'CONVECTIVE')" class="hazard-severity-dot severity-convective-dot"></span>
+            </h2>
+            <router-link to="/sigmets">
+              <button class="btn-sm btn-outline">View All</button>
+            </router-link>
+          </div>
+          <div class="aviation-hazard-list">
+            <div v-for="s in sigmets.slice(0, 5)" :key="s.id" class="aviation-hazard-item" :class="{ 'hazard-convective': s.sigmetType === 'CONVECTIVE' }">
+              <span class="hazard-type-badge" :class="s.sigmetType === 'CONVECTIVE' ? 'badge-convective' : 'badge-sigmet'">{{ s.sigmetType === 'CONVECTIVE' ? 'CONV' : 'SIGMET' }}</span>
+              <span class="hazard-detail">{{ s.hazard || s.sigmetType }}</span>
+              <span v-if="s.severity" class="hazard-sev" :class="'sev-' + s.severity.toLowerCase()">{{ s.severity }}</span>
+              <span v-if="s.firName" class="hazard-fir">{{ s.firName }}</span>
+            </div>
+            <div v-for="c in cwas.slice(0, 3)" :key="c.id" class="aviation-hazard-item">
+              <span class="hazard-type-badge badge-cwa">CWA</span>
+              <span class="hazard-detail">{{ c.hazard || 'Advisory' }}</span>
+              <span class="hazard-fir">{{ c.artcc }}</span>
+            </div>
+            <div v-if="sigmets.length > 5 || cwas.length > 3" class="alerts-more">
+              +{{ Math.max(0, sigmets.length - 5) + Math.max(0, cwas.length - 3) }} more
+            </div>
+          </div>
+        </div>
+
+        <!-- Volcanic ash detail -->
+        <div v-if="volcanicAsh.length > 0" class="card">
+          <div class="card-header-row">
+            <h2><span aria-hidden="true">🌋</span> Volcanic Ash Advisories</h2>
+            <router-link to="/volcanic-ash">
+              <button class="btn-sm btn-outline">View All</button>
+            </router-link>
+          </div>
+          <div class="volcanic-ash-list">
+            <div v-for="va in volcanicAsh.slice(0, 5)" :key="va.id" class="va-item">
+              <span class="va-name">{{ va.volcanoName || 'Unknown Volcano' }}</span>
+              <span v-if="va.firName" class="va-fir">{{ va.firName }}</span>
+              <span v-if="va.severity" class="va-sev" :class="'sev-' + va.severity.toLowerCase()">{{ va.severity }}</span>
+              <span v-if="va.altitudeHighFt" class="va-alt">FL{{ Math.round(va.altitudeHighFt / 100) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent activity feed -->
+        <div v-if="activityFeed.length > 0" class="card">
+          <h2><span aria-hidden="true">🕐</span> Recent Activity</h2>
+          <div class="activity-feed">
+            <div v-for="item in activityFeed" :key="item.key" class="activity-item">
+              <span class="activity-icon" aria-hidden="true">{{ item.icon }}</span>
+              <span class="activity-text">{{ item.text }}</span>
+              <span class="activity-time">{{ item.timeAgo }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Right column: map + space weather -->
@@ -406,6 +494,149 @@ const tfrByType = computed(() => {
     counts[type] = (counts[type] || 0) + 1
   }
   return counts
+})
+
+// Worst SIGMET severity for chip color
+const worstSigmetSeverity = computed(() => {
+  for (const s of sigmets.value) {
+    if (s.severity?.toLowerCase() === 'severe') return 'severe'
+    if (s.sigmetType === 'CONVECTIVE') return 'convective'
+  }
+  return 'normal'
+})
+
+// Situation summary — auto-generated natural-language overview
+const situationSummary = computed(() => {
+  const parts: string[] = []
+
+  if (hurricanes.value.length > 0) {
+    const names = hurricanes.value.map(s => s.stormName || s.stormId).slice(0, 3).join(', ')
+    parts.push(`${hurricanes.value.length} active tropical system${hurricanes.value.length > 1 ? 's' : ''} (${names})`)
+  }
+
+  const delayed = delays.value.filter(d => d.isDelayed).length
+  if (delayed > 0) {
+    parts.push(`${delayed} airport${delayed > 1 ? 's' : ''} reporting delays`)
+  }
+
+  if (groundStops.value.length > 0) {
+    const codes = groundStops.value.map(g => g.airportCode).slice(0, 3).join(', ')
+    parts.push(`ground stops at ${codes}`)
+  }
+
+  if (alerts.value.length > 0) {
+    const extreme = alerts.value.filter(a => a.severity?.toLowerCase() === 'extreme').length
+    const severe = alerts.value.filter(a => a.severity?.toLowerCase() === 'severe').length
+    if (extreme > 0) parts.push(`${extreme} extreme weather alert${extreme > 1 ? 's' : ''}`)
+    else if (severe > 0) parts.push(`${severe} severe weather alert${severe > 1 ? 's' : ''}`)
+    else parts.push(`${alerts.value.length} active weather alert${alerts.value.length > 1 ? 's' : ''}`)
+  }
+
+  const convSigmets = sigmets.value.filter(s => s.sigmetType === 'CONVECTIVE').length
+  if (convSigmets > 0) {
+    parts.push(`${convSigmets} convective SIGMET${convSigmets > 1 ? 's' : ''}`)
+  } else if (sigmets.value.length > 0) {
+    parts.push(`${sigmets.value.length} active SIGMET${sigmets.value.length > 1 ? 's' : ''}`)
+  }
+
+  const modTurb = pireps.value.filter(p => {
+    const t = (p.turbulenceIntensity || '').toUpperCase()
+    return t === 'MOD' || t === 'SEV' || t === 'MOD-SEV' || t === 'EXTRM'
+  }).length
+  if (modTurb > 0) {
+    parts.push(`${modTurb} moderate-or-worse turbulence report${modTurb > 1 ? 's' : ''}`)
+  }
+
+  if (earthquakes.value.length > 0) {
+    const significant = earthquakes.value.filter(e => e.magnitude >= 5).length
+    if (significant > 0) parts.push(`${significant} M5+ earthquake${significant > 1 ? 's' : ''} in the last 24h`)
+    else parts.push(`${earthquakes.value.length} earthquake${earthquakes.value.length > 1 ? 's' : ''} recorded`)
+  }
+
+  if (volcanicAsh.value.length > 0) {
+    const names = volcanicAsh.value.map(v => v.volcanoName).filter(Boolean).slice(0, 2).join(', ')
+    parts.push(`volcanic ash advisories${names ? ' (' + names + ')' : ''}`)
+  }
+
+  if (parts.length === 0) return 'No significant weather or hazard activity at this time.'
+  return parts.join('. ') + '.'
+})
+
+// Recent activity feed — aggregated from fetchedAt timestamps across data sources
+const activityFeed = computed(() => {
+  const items: { key: string; icon: string; text: string; time: number; timeAgo: string }[] = []
+
+  for (const a of alerts.value.slice(0, 3)) {
+    if (a.effective) {
+      items.push({
+        key: `alert-${a.id}`,
+        icon: '⚠️',
+        text: `${a.event}${a.areaDesc ? ' - ' + a.areaDesc.substring(0, 60) : ''}`,
+        time: new Date(a.effective).getTime(),
+        timeAgo: formatRelativeTime(a.effective),
+      })
+    }
+  }
+
+  for (const s of hurricanes.value) {
+    if (s.fetchedAt) {
+      items.push({
+        key: `storm-${s.id}`,
+        icon: '🌀',
+        text: `${s.stormName || s.stormId} advisory updated`,
+        time: new Date(s.fetchedAt).getTime(),
+        timeAgo: formatRelativeTime(s.fetchedAt),
+      })
+    }
+  }
+
+  for (const gs of groundStops.value) {
+    if (gs.fetchedAt) {
+      items.push({
+        key: `gs-${gs.id}`,
+        icon: '🛑',
+        text: `Ground stop at ${gs.airportCode}${gs.reason ? ': ' + gs.reason : ''}`,
+        time: new Date(gs.fetchedAt).getTime(),
+        timeAgo: formatRelativeTime(gs.fetchedAt),
+      })
+    }
+  }
+
+  for (const eq of earthquakes.value.filter(e => e.magnitude >= 4.5).slice(0, 3)) {
+    items.push({
+      key: `eq-${eq.id}`,
+      icon: '🌍',
+      text: `M${eq.magnitude} earthquake - ${eq.place}`,
+      time: new Date(eq.eventTime).getTime(),
+      timeAgo: formatRelativeTime(eq.eventTime),
+    })
+  }
+
+  for (const s of sigmets.value.filter(s => s.sigmetType === 'CONVECTIVE').slice(0, 2)) {
+    if (s.fetchedAt) {
+      items.push({
+        key: `sigmet-${s.id}`,
+        icon: '🚨',
+        text: `Convective SIGMET${s.firName ? ' - ' + s.firName : ''}`,
+        time: new Date(s.fetchedAt).getTime(),
+        timeAgo: formatRelativeTime(s.fetchedAt),
+      })
+    }
+  }
+
+  for (const va of volcanicAsh.value.slice(0, 2)) {
+    if (va.fetchedAt) {
+      items.push({
+        key: `va-${va.id}`,
+        icon: '🌋',
+        text: `Volcanic ash advisory${va.volcanoName ? ': ' + va.volcanoName : ''}`,
+        time: new Date(va.fetchedAt).getTime(),
+        timeAgo: formatRelativeTime(va.fetchedAt),
+      })
+    }
+  }
+
+  return items.sort((a, b) => b.time - a.time).slice(0, 10)
 })
 
 // Quick airport search
@@ -1061,5 +1292,192 @@ onUnmounted(() => {
     align-items: flex-start;
     gap: 4px;
   }
+}
+
+/* Clickable stat chips */
+.stat-chip-link {
+  text-decoration: none;
+}
+
+.stat-chip-link .stat-chip {
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.1s;
+}
+
+.stat-chip-link .stat-chip:hover {
+  box-shadow: 0 2px 8px var(--shadow-md, rgba(0, 0, 0, 0.15));
+  transform: translateY(-1px);
+}
+
+/* Situation summary */
+.situation-card {
+  border-left: 4px solid var(--accent);
+}
+
+.situation-card h2 {
+  margin-bottom: 6px;
+  font-size: 1rem;
+}
+
+.situation-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary, #333);
+  margin: 0;
+}
+
+/* Aviation hazard list */
+.aviation-hazard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aviation-hazard-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--bg-secondary, #f9f9f9);
+}
+
+.aviation-hazard-item.hazard-convective {
+  background: rgba(255, 152, 0, 0.08);
+}
+
+.hazard-type-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.badge-sigmet { background: #e53935; }
+.badge-convective { background: #ff9800; }
+.badge-cwa { background: #1565c0; }
+
+.hazard-detail {
+  font-weight: 500;
+  color: var(--text-primary, #333);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hazard-sev {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: white;
+  flex-shrink: 0;
+}
+
+.hazard-fir {
+  font-size: 11px;
+  color: var(--text-muted, #999);
+  flex-shrink: 0;
+}
+
+.hazard-severity-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.severity-severe-dot { background: #e53935; }
+.severity-convective-dot { background: #ff9800; }
+
+/* Volcanic ash list */
+.volcanic-ash-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.va-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--bg-secondary, #f9f9f9);
+  font-size: 13px;
+}
+
+.va-name {
+  font-weight: 600;
+  color: var(--text-primary, #333);
+  flex: 1;
+}
+
+.va-fir {
+  font-size: 11px;
+  color: var(--text-muted, #999);
+}
+
+.va-sev {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: white;
+}
+
+.va-alt {
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--text-secondary, #666);
+  background: var(--bg-code, #f0f0f0);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* Activity feed */
+.activity-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light, #eee);
+  font-size: 13px;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.activity-text {
+  flex: 1;
+  color: var(--text-primary, #333);
+  line-height: 1.3;
+}
+
+.activity-time {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-muted, #999);
+  white-space: nowrap;
 }
 </style>
