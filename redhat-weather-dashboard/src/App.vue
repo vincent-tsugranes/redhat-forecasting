@@ -21,7 +21,7 @@
             <router-link to="/" exact>{{ $t('nav.dashboard') }}</router-link>
             <router-link to="/forecasts">{{ $t('nav.forecasts') }}</router-link>
 
-            <div class="nav-group" @mouseenter="openDropdown = 'aviation'" @mouseleave="openDropdown = null">
+            <div class="nav-group" @mouseenter="showDropdown('aviation')" @mouseleave="scheduleCloseDropdown">
               <button
                 class="nav-group-trigger"
                 :class="{ active: aviationRoutes.includes($route.path) }"
@@ -30,7 +30,7 @@
               >
                 {{ $t('nav.aviation') }} <span class="caret" aria-hidden="true">▾</span>
               </button>
-              <div v-show="openDropdown === 'aviation'" class="nav-dropdown">
+              <div v-show="openDropdown === 'aviation'" class="nav-dropdown" @mouseenter="cancelCloseDropdown" @mouseleave="scheduleCloseDropdown">
                 <router-link to="/airports" @click="openDropdown = null">{{ $t('nav.airports') }}</router-link>
                 <router-link to="/pireps" @click="openDropdown = null">{{ $t('nav.pireps') }}</router-link>
                 <router-link to="/sigmets" @click="openDropdown = null">{{ $t('nav.sigmets') }}</router-link>
@@ -42,7 +42,7 @@
               </div>
             </div>
 
-            <div class="nav-group" @mouseenter="openDropdown = 'hazards'" @mouseleave="openDropdown = null">
+            <div class="nav-group" @mouseenter="showDropdown('hazards')" @mouseleave="scheduleCloseDropdown">
               <button
                 class="nav-group-trigger"
                 :class="{ active: hazardRoutes.includes($route.path) }"
@@ -51,7 +51,7 @@
               >
                 {{ $t('nav.hazards') }} <span class="caret" aria-hidden="true">▾</span>
               </button>
-              <div v-show="openDropdown === 'hazards'" class="nav-dropdown">
+              <div v-show="openDropdown === 'hazards'" class="nav-dropdown" @mouseenter="cancelCloseDropdown" @mouseleave="scheduleCloseDropdown">
                 <router-link to="/hurricanes" @click="openDropdown = null">{{ $t('nav.hurricanes') }}</router-link>
                 <router-link to="/earthquakes" @click="openDropdown = null">{{ $t('nav.earthquakes') }}</router-link>
                 <router-link to="/volcanic-ash" @click="openDropdown = null">{{ $t('nav.volcanicAsh') }}</router-link>
@@ -137,6 +137,30 @@ const openDropdown = ref<string | null>(null)
 
 const aviationRoutes = ['/airports', '/pireps', '/sigmets', '/cwas', '/tfrs', '/winds-aloft', '/delays', '/ground-stops']
 const hazardRoutes = ['/hurricanes', '/earthquakes', '/volcanic-ash', '/lightning']
+
+let dropdownCloseTimer: ReturnType<typeof setTimeout> | null = null
+
+function showDropdown(name: string) {
+  if (dropdownCloseTimer) {
+    clearTimeout(dropdownCloseTimer)
+    dropdownCloseTimer = null
+  }
+  openDropdown.value = name
+}
+
+function scheduleCloseDropdown() {
+  dropdownCloseTimer = setTimeout(() => {
+    openDropdown.value = null
+    dropdownCloseTimer = null
+  }, 150)
+}
+
+function cancelCloseDropdown() {
+  if (dropdownCloseTimer) {
+    clearTimeout(dropdownCloseTimer)
+    dropdownCloseTimer = null
+  }
+}
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
@@ -299,7 +323,6 @@ nav > a.router-link-active {
   position: absolute;
   top: 100%;
   left: 0;
-  margin-top: 4px;
   background: var(--bg-card, white);
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
@@ -308,6 +331,16 @@ nav > a.router-link-active {
   padding: 6px 0;
   display: flex;
   flex-direction: column;
+}
+
+/* Invisible bridge so mouse can travel from trigger to dropdown */
+.nav-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 8px;
 }
 
 .nav-dropdown a {

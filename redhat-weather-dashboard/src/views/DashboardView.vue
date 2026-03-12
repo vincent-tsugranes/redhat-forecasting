@@ -187,21 +187,24 @@ async function handleRefresh() {
   }
 }
 
-onMounted(() => {
-  Promise.all([
+onMounted(async () => {
+  // Critical data first - shown directly on the dashboard
+  await Promise.all([
     store.fetchAirports(),
-    store.fetchAlerts(),
     store.fetchEarthquakes(),
     store.fetchHurricanes(),
-    store.fetchPireps(),
-    store.fetchSigmets(),
-    store.fetchTfrs(),
-    store.fetchCwas(),
-    store.fetchDelays(),
-    store.fetchGroundStops(),
-    store.fetchVolcanicAsh(),
-    store.fetchLightning(),
   ])
+  // Secondary data - used for stat chips only, load without blocking
+  store.fetchAlerts()
+  store.fetchPireps()
+  store.fetchSigmets()
+  store.fetchDelays()
+  // Tertiary data - least critical
+  store.fetchTfrs()
+  store.fetchCwas()
+  store.fetchGroundStops()
+  store.fetchVolcanicAsh()
+  store.fetchLightning()
 })
 </script>
 
