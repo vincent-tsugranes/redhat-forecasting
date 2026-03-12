@@ -10,12 +10,22 @@
           <span class="temp-high">{{ formatTemp(day.highF) }}</span>
           <span class="temp-low">{{ formatTemp(day.lowF) }}</span>
         </div>
+        <div v-if="day.feelsLikeHighF != null && Math.abs(day.feelsLikeHighF - day.highF) >= 3" class="day-feels">
+          Feels {{ formatTemp(day.feelsLikeHighF) }}
+        </div>
         <div class="day-details">
-          <div v-if="day.windMph != null">
-            <span aria-hidden="true">💨</span> {{ formatSpeed(day.windMph) }}
+          <div v-if="day.windMph != null" class="wind-row">
+            <span v-if="day.windDir != null" class="wind-arrow" :style="{ transform: 'rotate(' + (day.windDir + 180) + 'deg)' }" aria-hidden="true">&#x2191;</span>
+            <span v-else aria-hidden="true">&#x1F4A8;</span>
+            {{ formatSpeed(day.windMph) }}
+            <span v-if="day.windDir != null" class="wind-dir-label">{{ compassDir(day.windDir) }}</span>
           </div>
-          <div v-if="day.precipChance != null">
-            <span aria-hidden="true">☔</span> {{ day.precipChance }}%
+          <div v-if="day.precipChance != null" class="precip-row">
+            <span aria-hidden="true">&#x2614;</span> {{ day.precipChance }}%
+            <div class="precip-bar-bg"><div class="precip-bar-fill" :style="{ width: day.precipChance + '%' }"></div></div>
+          </div>
+          <div v-if="day.humidity != null" class="humidity-row">
+            <span aria-hidden="true">&#x1F4A7;</span> {{ day.humidity }}%
           </div>
         </div>
       </div>
@@ -28,6 +38,7 @@ import { computed } from 'vue'
 import { type WeatherForecast } from '../services/weatherService'
 import { getWeatherIcon } from '../utils/weatherIcons'
 import { useUnitPreferences } from '../composables/useUnitPreferences'
+import { computeFeelsLike, degreesToCompass } from '../utils/weatherCalc'
 
 const { formatTemp, formatSpeed } = useUnitPreferences()
 
@@ -43,12 +54,19 @@ interface DailyForecast {
   condition: string
   highF: number
   lowF: number
+  feelsLikeHighF: number | null
   windMph: number | null
+  windDir: number | null
   precipChance: number | null
+  humidity: number | null
 }
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+function compassDir(deg: number): string {
+  return degreesToCompass(deg)
+}
 
 const dailyForecasts = computed<DailyForecast[]>(() => {
   const grouped = new Map<string, WeatherForecast[]>()
@@ -72,24 +90,47 @@ const dailyForecasts = computed<DailyForecast[]>(() => {
     let lowF = Infinity
     let totalWind = 0
     let windCount = 0
+    let windDirSum = 0
+    let windDirCount = 0
     let maxPrecip: number | null = null
+    let totalHumidity = 0
+    let humidityCount = 0
     let bestCondition = ''
+    let highWindMph: number | null = null
+    let highHumidity: number | null = null
 
     for (const item of items) {
-      highF = Math.max(highF, item.temperatureFahrenheit)
+      if (item.temperatureFahrenheit > highF) {
+        highF = item.temperatureFahrenheit
+        highWindMph = item.windSpeedMph
+        highHumidity = item.humidity ?? null
+      }
       lowF = Math.min(lowF, item.temperatureFahrenheit)
       if (item.windSpeedMph != null) {
         totalWind += item.windSpeedMph
         windCount++
       }
+      if (item.windDirection != null) {
+        windDirSum += item.windDirection
+        windDirCount++
+      }
       if (item.precipitationProbability != null) {
         maxPrecip = Math.max(maxPrecip ?? 0, item.precipitationProbability)
       }
+      if (item.humidity != null) {
+        totalHumidity += item.humidity
+        humidityCount++
+      }
       if (!bestCondition) {
-        bestCondition =
-          item.weatherShortDescription || item.weatherDescription || ''
+        bestCondition = item.weatherShortDescription || item.weatherDescription || ''
       }
     }
+
+    const avgWind = windCount > 0 ? totalWind / windCount : null
+    const avgWindDir = windDirCount > 0 ? Math.round(windDirSum / windDirCount) : null
+    const avgHumidity = humidityCount > 0 ? Math.round(totalHumidity / humidityCount) : null
+    const hf = highF === -Infinity ? 0 : highF
+    const feelsLike = computeFeelsLike(hf, highWindMph, highHumidity)
 
     result.push({
       date: dateKey,
@@ -97,10 +138,13 @@ const dailyForecasts = computed<DailyForecast[]>(() => {
       dateLabel,
       icon: getWeatherIcon(bestCondition),
       condition: bestCondition,
-      highF: highF === -Infinity ? 0 : highF,
+      highF: hf,
       lowF: lowF === Infinity ? 0 : lowF,
-      windMph: windCount > 0 ? totalWind / windCount : null,
+      feelsLikeHighF: feelsLike,
+      windMph: avgWind,
+      windDir: avgWindDir,
       precipChance: maxPrecip,
+      humidity: avgHumidity,
     })
   }
 
@@ -176,7 +220,7 @@ const dailyForecasts = computed<DailyForecast[]>(() => {
   display: flex;
   justify-content: center;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .temp-high {
@@ -190,12 +234,121 @@ const dailyForecasts = computed<DailyForecast[]>(() => {
   font-size: 16px;
 }
 
+.day-feels {
+  font-size: 10px;
+  color: var(--text-muted, #999);
+  margin-bottom: 6px;
+}
+
 .day-details {
   font-size: 12px;
   color: var(--text-secondary, #666);
 }
 
-.day-details div {
-  margin-top: 2px;
+.day-details > div {
+  margin-top: 3px;
+}
+
+.wind-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.wind-arrow {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.wind-dir-label {
+  font-size: 10px;
+  color: var(--text-muted, #999);
+}
+
+.precip-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.precip-bar-bg {
+  width: 80%;
+  height: 3px;
+  background: var(--border-color, #ddd);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.precip-bar-fill {
+  height: 100%;
+  background: #42a5f5;
+  border-radius: 2px;
+}
+
+.humidity-row {
+  font-size: 10px;
+  color: var(--text-muted, #999);
+}
+
+/* Responsive: stack cards on small screens */
+@media (max-width: 480px) {
+  .daily-cards-scroll {
+    flex-direction: column;
+    overflow-x: visible;
+  }
+
+  .daily-card {
+    flex: none;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 0 12px;
+    text-align: left;
+    padding: 10px 14px;
+    align-items: center;
+  }
+
+  .day-icon {
+    grid-row: 1 / 3;
+    font-size: 1.6rem;
+    margin: 0;
+  }
+
+  .day-name {
+    grid-column: 2;
+  }
+
+  .day-date {
+    grid-column: 2;
+    margin-bottom: 0;
+  }
+
+  .day-condition {
+    display: none;
+  }
+
+  .day-temps {
+    grid-row: 1 / 3;
+    grid-column: 3;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 0;
+  }
+
+  .day-feels {
+    grid-column: 2 / 4;
+  }
+
+  .day-details {
+    grid-column: 1 / 4;
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--border-light, #eee);
+  }
 }
 </style>

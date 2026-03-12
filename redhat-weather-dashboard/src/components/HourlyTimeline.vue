@@ -1,18 +1,27 @@
 <template>
   <div v-if="hourlySlots.length > 0" class="hourly-timeline-container">
-    <h3>{{ $t('forecast.hourlyTimeline') }}</h3>
+    <h3 id="section-hourly">{{ $t('forecast.hourlyTimeline') }}</h3>
     <div class="hourly-timeline-scroll">
       <div v-for="slot in hourlySlots" :key="slot.time" class="hourly-slot">
         <div class="slot-time">{{ slot.timeLabel }}</div>
         <div class="slot-day">{{ slot.dayLabel }}</div>
         <div class="slot-icon" aria-hidden="true">{{ slot.icon }}</div>
         <div class="slot-temp">{{ formatTemp(slot.tempF) }}</div>
+        <div v-if="slot.feelsLikeF != null && Math.abs(slot.feelsLikeF - slot.tempF) >= 3" class="slot-feels">
+          Feels {{ formatTemp(slot.feelsLikeF) }}
+        </div>
         <div class="slot-details">
-          <div v-if="slot.precipChance != null">
-            <span aria-hidden="true">☔</span> {{ slot.precipChance }}%
+          <div v-if="slot.precipChance != null" class="slot-precip-row">
+            <span aria-hidden="true">&#x2614;</span> {{ slot.precipChance }}%
+            <div class="precip-bar-bg"><div class="precip-bar-fill" :style="{ width: slot.precipChance + '%' }"></div></div>
           </div>
-          <div v-if="slot.windMph != null">
-            <span aria-hidden="true">💨</span> {{ formatSpeed(slot.windMph) }}
+          <div v-if="slot.windMph != null" class="slot-wind-row">
+            <span v-if="slot.windDir != null" class="wind-arrow" :style="{ transform: 'rotate(' + (slot.windDir + 180) + 'deg)' }" aria-hidden="true">&#x2191;</span>
+            <span v-else aria-hidden="true">&#x1F4A8;</span>
+            {{ formatSpeed(slot.windMph) }}
+          </div>
+          <div v-if="slot.humidity != null" class="slot-humidity">
+            <span aria-hidden="true">&#x1F4A7;</span> {{ slot.humidity }}%
           </div>
         </div>
       </div>
@@ -25,6 +34,7 @@ import { computed } from 'vue'
 import { type WeatherForecast } from '../services/weatherService'
 import { getWeatherIcon } from '../utils/weatherIcons'
 import { useUnitPreferences } from '../composables/useUnitPreferences'
+import { computeFeelsLike } from '../utils/weatherCalc'
 
 const { formatTemp, formatSpeed, formatTime } = useUnitPreferences()
 
@@ -38,8 +48,11 @@ interface HourlySlot {
   dayLabel: string
   icon: string
   tempF: number
+  feelsLikeF: number | null
   precipChance: number | null
   windMph: number | null
+  windDir: number | null
+  humidity: number | null
 }
 
 const hourlySlots = computed<HourlySlot[]>(() => {
@@ -60,8 +73,11 @@ const hourlySlots = computed<HourlySlot[]>(() => {
         dayLabel: dt.toLocaleDateString('en-US', { weekday: 'short' }),
         icon: getWeatherIcon(f.weatherShortDescription || f.weatherDescription || ''),
         tempF: f.temperatureFahrenheit,
+        feelsLikeF: computeFeelsLike(f.temperatureFahrenheit, f.windSpeedMph, f.humidity ?? null),
         precipChance: f.precipitationProbability ?? null,
         windMph: f.windSpeedMph,
+        windDir: f.windDirection ?? null,
+        humidity: f.humidity ?? null,
       }
     })
 })
@@ -95,7 +111,7 @@ const hourlySlots = computed<HourlySlot[]>(() => {
 }
 
 .hourly-slot {
-  flex: 0 0 80px;
+  flex: 0 0 86px;
   scroll-snap-align: start;
   background: var(--bg-card, #fff);
   border: 1px solid var(--border-color, #ddd);
@@ -130,6 +146,12 @@ const hourlySlots = computed<HourlySlot[]>(() => {
   font-weight: 600;
   font-size: 15px;
   color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.slot-feels {
+  font-size: 10px;
+  color: var(--text-muted, #999);
   margin-bottom: 4px;
 }
 
@@ -140,5 +162,45 @@ const hourlySlots = computed<HourlySlot[]>(() => {
 
 .slot-details div {
   margin-top: 2px;
+}
+
+.slot-wind-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.wind-arrow {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.slot-precip-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.precip-bar-bg {
+  width: 100%;
+  height: 3px;
+  background: var(--border-color, #ddd);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.precip-bar-fill {
+  height: 100%;
+  background: #42a5f5;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.slot-humidity {
+  font-size: 10px;
+  color: var(--text-muted, #999);
 }
 </style>
