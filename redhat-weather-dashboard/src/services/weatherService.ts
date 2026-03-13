@@ -321,16 +321,51 @@ export const weatherService = {
 
   // Weather Forecasts
   async getForecastsByLocation(locationId: number): Promise<WeatherForecast[]> {
-    const response = await weatherApi.get(`/forecasts/location/${locationId}`, { params: { size: 500 } })
-    const body = response.data
-    return Array.isArray(body) ? body : body.data ?? []
+    const pageSize = 200
+    const firstResponse = await weatherApi.get(`/forecasts/location/${locationId}`, { params: { page: 0, size: pageSize } })
+    const firstBody = firstResponse.data
+    const firstData: WeatherForecast[] = Array.isArray(firstBody) ? firstBody : firstBody.data ?? []
+    const totalPages: number = firstBody.totalPages ?? 1
+
+    if (totalPages <= 1) return firstData
+
+    const promises = []
+    for (let page = 1; page < totalPages; page++) {
+      promises.push(weatherApi.get(`/forecasts/location/${locationId}`, { params: { page, size: pageSize } }))
+    }
+    const responses = await Promise.all(promises)
+    const allForecasts = [...firstData]
+    for (const resp of responses) {
+      const body = resp.data
+      const data: WeatherForecast[] = Array.isArray(body) ? body : body.data ?? []
+      allForecasts.push(...data)
+    }
+    return allForecasts
   },
 
   async getHistoricalForecasts(locationId: number, days: number = 7): Promise<WeatherForecast[]> {
-    const response = await weatherApi.get(`/forecasts/location/${locationId}/history`, {
-      params: { days },
+    const pageSize = 200
+    const firstResponse = await weatherApi.get(`/forecasts/location/${locationId}/history`, {
+      params: { days, page: 0, size: pageSize },
     })
-    return response.data
+    const firstBody = firstResponse.data
+    const firstData: WeatherForecast[] = Array.isArray(firstBody) ? firstBody : firstBody.data ?? []
+    const totalPages: number = firstBody.totalPages ?? 1
+
+    if (totalPages <= 1) return firstData
+
+    const promises = []
+    for (let page = 1; page < totalPages; page++) {
+      promises.push(weatherApi.get(`/forecasts/location/${locationId}/history`, { params: { days, page, size: pageSize } }))
+    }
+    const responses = await Promise.all(promises)
+    const allForecasts = [...firstData]
+    for (const resp of responses) {
+      const body = resp.data
+      const data: WeatherForecast[] = Array.isArray(body) ? body : body.data ?? []
+      allForecasts.push(...data)
+    }
+    return allForecasts
   },
 
   async getCurrentForecast(lat: number, lon: number): Promise<WeatherForecast[]> {
@@ -346,11 +381,28 @@ export const weatherService = {
     from?: string,
     to?: string,
   ): Promise<WeatherForecast[]> {
-    const response = await weatherApi.get('/forecasts/coordinates', {
-      params: { lat, lon, from, to, size: 500 },
+    const pageSize = 200
+    const firstResponse = await weatherApi.get('/forecasts/coordinates', {
+      params: { lat, lon, from, to, page: 0, size: pageSize },
     })
-    const body = response.data
-    return Array.isArray(body) ? body : body.data ?? []
+    const firstBody = firstResponse.data
+    const firstData: WeatherForecast[] = Array.isArray(firstBody) ? firstBody : firstBody.data ?? []
+    const totalPages: number = firstBody.totalPages ?? 1
+
+    if (totalPages <= 1) return firstData
+
+    const promises = []
+    for (let page = 1; page < totalPages; page++) {
+      promises.push(weatherApi.get('/forecasts/coordinates', { params: { lat, lon, from, to, page, size: pageSize } }))
+    }
+    const responses = await Promise.all(promises)
+    const allForecasts = [...firstData]
+    for (const resp of responses) {
+      const body = resp.data
+      const data: WeatherForecast[] = Array.isArray(body) ? body : body.data ?? []
+      allForecasts.push(...data)
+    }
+    return allForecasts
   },
 
   // Airport Weather
