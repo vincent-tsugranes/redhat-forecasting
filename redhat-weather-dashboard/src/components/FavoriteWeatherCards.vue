@@ -1,6 +1,6 @@
 <template>
   <div v-if="favorites.length > 0" class="favorite-weather-section">
-    <h2><span aria-hidden="true">⭐</span> {{ $t('favorites.weatherAtGlance') }}</h2>
+    <h2><Star :size="20" aria-hidden="true" style="display:inline;vertical-align:middle" /> {{ $t('favorites.weatherAtGlance') }}</h2>
     <div class="favorite-weather-scroll">
       <div
         v-for="card in weatherCards"
@@ -17,14 +17,14 @@
           <SkeletonLoader height="40px" width="60px" border-radius="8px" />
         </div>
         <template v-else-if="card.forecast">
-          <div class="fwc-icon" aria-hidden="true">{{ card.icon }}</div>
+          <div class="fwc-icon" aria-hidden="true"><component :is="card.icon" :size="24" /></div>
           <div class="fwc-temp">{{ formatTemp(card.forecast.temperatureFahrenheit) }}</div>
           <div class="fwc-details">
             <span v-if="card.forecast.windSpeedMph != null">
-              <span aria-hidden="true">💨</span> {{ formatSpeed(card.forecast.windSpeedMph) }}
+              <Wind :size="12" aria-hidden="true" /> {{ formatSpeed(card.forecast.windSpeedMph) }}
             </span>
             <span v-if="card.forecast.precipitationProbability != null">
-              <span aria-hidden="true">☔</span> {{ card.forecast.precipitationProbability }}%
+              <Droplets :size="12" aria-hidden="true" /> {{ card.forecast.precipitationProbability }}%
             </span>
           </div>
           <div class="fwc-condition">
@@ -38,13 +38,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, type Component } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFavorites } from '../composables/useFavorites'
 import { useUnitPreferences } from '../composables/useUnitPreferences'
 import weatherService, { type WeatherForecast } from '../services/weatherService'
 import { getWeatherIcon } from '../utils/weatherIcons'
 import SkeletonLoader from './SkeletonLoader.vue'
+import { Star, Wind, Droplets, Sun } from 'lucide-vue-next'
 
 const { formatTemp, formatSpeed } = useUnitPreferences()
 
@@ -56,7 +57,7 @@ interface WeatherCard {
   name: string
   loading: boolean
   forecast: WeatherForecast | null
-  icon: string
+  icon: Component
 }
 
 const weatherCards = ref<WeatherCard[]>([])
@@ -67,7 +68,7 @@ async function loadWeatherForFavorites() {
     name: fav.name,
     loading: true,
     forecast: null,
-    icon: '☀️',
+    icon: Sun,
   }))
 
   const promises = weatherCards.value.map(async (card, index) => {
@@ -86,10 +87,10 @@ async function loadWeatherForFavorites() {
         forecast: current,
         icon: current
           ? getWeatherIcon(current.weatherShortDescription || current.weatherDescription || '')
-          : '☀️',
+          : Sun,
       }
     } catch {
-      weatherCards.value[index] = { ...card, loading: false, forecast: null, icon: '☀️' }
+      weatherCards.value[index] = { ...card, loading: false, forecast: null, icon: Sun }
     }
   })
 
@@ -148,7 +149,7 @@ watch(
   background: var(--bg-card, #fff);
   border: 1px solid var(--border-color, #ddd);
   border-radius: 10px;
-  padding: 10px 8px;
+  padding: 12px 10px;
   text-align: center;
   cursor: pointer;
   transition:

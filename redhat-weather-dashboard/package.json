@@ -22,6 +22,7 @@
     "chart.js": "^4.5.1",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
+    "lucide-vue-next": "^1.0.0",
     "pinia": "^3.0.4",
     "vue": "^3.5.33",
     "vue-chartjs": "^5.3.3",

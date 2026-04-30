@@ -7,10 +7,10 @@
         <h2>{{ $t('earthquake.recentActivity') }}</h2>
         <div class="header-actions">
           <button class="btn-sm btn-icon" :class="viewMode === 'table' ? '' : 'btn-secondary'" @click="viewMode = 'table'">
-            <span aria-hidden="true">📋</span> Table
+            <ClipboardList :size="14" aria-hidden="true" /> Table
           </button>
           <button class="btn-sm btn-icon" :class="viewMode === 'cards' ? '' : 'btn-secondary'" @click="viewMode = 'cards'">
-            <span aria-hidden="true">🃏</span> Cards
+            <LayoutGrid :size="14" aria-hidden="true" /> Cards
           </button>
           <button class="btn-sm" :disabled="refreshing" @click="refreshData">
             {{ refreshing ? $t('airport.refreshing') : $t('earthquake.refreshData') }}
@@ -83,7 +83,7 @@
               </td>
               <td class="td-truncate">
                 {{ quake.place }}
-                <span v-if="quake.tsunami" class="tsunami-tag" aria-hidden="true">🌊</span>
+                <Waves v-if="quake.tsunami" :size="14" class="tsunami-tag" aria-hidden="true" />
               </td>
               <td>{{ quake.depthKm }} km</td>
               <td class="td-nowrap">{{ formatDate(quake.eventTime) }}</td>
@@ -130,7 +130,7 @@
             {{ quake.felt }} {{ $t('earthquake.reports') }}
           </div>
           <div v-if="quake.tsunami" class="info-item tsunami-warning">
-            <span aria-hidden="true">🌊</span> {{ $t('earthquake.tsunamiWarning') }}
+            <Waves :size="16" aria-hidden="true" /> {{ $t('earthquake.tsunamiWarning') }}
           </div>
           <div v-if="quake.alert" class="info-item">
             <strong>{{ $t('earthquake.alert') }}</strong>
@@ -151,7 +151,7 @@
     </div>
 
     <div v-else-if="!loading && earthquakes.length === 0" class="card">
-      <p><span aria-hidden="true">✅</span> {{ $t('earthquake.noRecent') }}</p>
+      <p><ShieldCheck :size="16" aria-hidden="true" /> {{ $t('earthquake.noRecent') }}</p>
       <p>{{ $t('earthquake.autoFetch') }}</p>
     </div>
   </div>
@@ -167,6 +167,7 @@ import FreshnessBadge from '../components/FreshnessBadge.vue'
 import EarthquakeMap from '../components/EarthquakeMap.vue'
 import EarthquakeSkeleton from '../components/skeletons/EarthquakeSkeleton.vue'
 import ErrorBoundary from '../components/ErrorBoundary.vue'
+import { ClipboardList, LayoutGrid, Waves, ShieldCheck } from 'lucide-vue-next'
 
 const store = useWeatherStore()
 const toast = useToast()

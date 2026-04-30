@@ -277,6 +277,46 @@ export interface AirportDelay {
   fetchedAt?: string
 }
 
+export interface AirQuality {
+  id: number
+  locationId?: number
+  latitude: number
+  longitude: number
+  aqi: number
+  co?: number
+  no?: number
+  no2?: number
+  o3?: number
+  so2?: number
+  pm2_5?: number
+  pm10?: number
+  nh3?: number
+  validAt: string
+  fetchedAt: string
+  source: string
+}
+
+export interface AstronomicalData {
+  sunrise: string | null
+  sunset: string | null
+  solarNoon: string | null
+  dayLength: string | null
+  civilTwilightBegin: string | null
+  civilTwilightEnd: string | null
+  nauticalTwilightBegin: string | null
+  nauticalTwilightEnd: string | null
+  moonPhaseName: string | null
+  moonIllumination: number | null
+  nextMoonPhases: MoonPhase[]
+  uvIndex: number | null
+}
+
+export interface MoonPhase {
+  phase: string
+  date: string
+  time: string
+}
+
 export interface WeatherAlert {
   id: number
   alertId: string
@@ -293,7 +333,27 @@ export interface WeatherAlert {
   fetchedAt?: string
 }
 
+export interface DashboardData {
+  earthquakes: Earthquake[]
+  hurricanes: Hurricane[]
+  alerts: WeatherAlert[]
+  pireps: Pirep[]
+  sigmets: Sigmet[]
+  cwas: Cwa[]
+  tfrs: Tfr[]
+  delays: AirportDelay[]
+  groundStops: GroundStop[]
+  volcanicAsh: VolcanicAshAdvisory[]
+  lightning: LightningStrike[]
+  spaceWeather: SpaceWeather | null
+}
+
 export const weatherService = {
+  async getDashboardData(): Promise<DashboardData> {
+    const response = await weatherApi.get('/dashboard')
+    return response.data
+  },
+
   async getAirports(): Promise<Location[]> {
     const pageSize = 200
     // Fetch first page to get total page count
@@ -577,6 +637,29 @@ export const weatherService = {
   async getClimateNormals(locationId: number): Promise<ClimateNormals> {
     const response = await weatherApi.get(`/climate/${locationId}`)
     return response.data
+  },
+
+  // Astronomical Data
+  async getAstronomicalData(lat: number, lon: number, date?: string): Promise<AstronomicalData> {
+    const params: Record<string, string | number> = { lat, lon }
+    if (date) params.date = date
+    const response = await weatherApi.get('/astronomical', { params })
+    return response.data
+  },
+
+  // Air Quality
+  async getAirQuality(locationId: number): Promise<AirQuality> {
+    const response = await weatherApi.get(`/air-quality/location/${locationId}`)
+    return response.data
+  },
+
+  async getAirQualityByCoords(lat: number, lon: number): Promise<AirQuality> {
+    const response = await weatherApi.get('/air-quality/coordinates', { params: { lat, lon } })
+    return response.data
+  },
+
+  async refreshAirQuality(): Promise<void> {
+    await weatherApi.post('/air-quality/refresh')
   },
 
   // Solar Data

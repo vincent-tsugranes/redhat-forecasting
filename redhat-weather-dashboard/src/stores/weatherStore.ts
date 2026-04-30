@@ -16,6 +16,9 @@ import weatherService, {
   type VolcanicAshAdvisory,
   type LightningStrike,
   type SpaceWeather,
+  type AirQuality,
+  type AstronomicalData,
+  type DashboardData,
 } from '../services/weatherService'
 
 const CACHE_TTLS: Record<string, number> = {
@@ -33,6 +36,8 @@ const CACHE_TTLS: Record<string, number> = {
   volcanicAsh: 5 * 60_000,
   lightning: 2 * 60_000,
   spaceWeather: 5 * 60_000,
+  airQuality: 10 * 60_000,
+  astronomical: 30 * 60_000,
 }
 const DEFAULT_CACHE_TTL = 60_000 // 1 min fallback (forecasts, history, etc.)
 const pendingRequests = new Map<string, Promise<unknown>>()
@@ -342,6 +347,52 @@ export const useWeatherStore = defineStore('weather', () => {
     }
   }
 
+  // --- Astronomical ---
+  const astronomical = ref<AstronomicalData | null>(null)
+  const astronomicalLoading = ref(false)
+  const astronomicalError = ref<string | null>(null)
+
+  async function fetchAstronomical(lat: number, lon: number) {
+    astronomicalLoading.value = true
+    astronomicalError.value = null
+    try {
+      astronomical.value = await deduplicatedFetch(`astronomical-${lat}-${lon}`, () =>
+        weatherService.getAstronomicalData(lat, lon),
+      )
+    } catch (err: unknown) {
+      astronomicalError.value = err instanceof Error ? err.message : 'Failed to load astronomical data'
+    } finally {
+      astronomicalLoading.value = false
+    }
+  }
+
+  // --- Air Quality ---
+  const airQuality = ref<AirQuality | null>(null)
+  const airQualityLoading = ref(false)
+  const airQualityError = ref<string | null>(null)
+
+  async function fetchAirQuality(locationId?: number) {
+    airQualityLoading.value = true
+    airQualityError.value = null
+    try {
+      if (locationId) {
+        airQuality.value = await deduplicatedFetch(`airQuality-${locationId}`, () =>
+          weatherService.getAirQuality(locationId),
+        )
+      }
+    } catch (err: unknown) {
+      airQualityError.value = err instanceof Error ? err.message : 'Failed to load air quality data'
+    } finally {
+      airQualityLoading.value = false
+    }
+  }
+
+  async function refreshAirQuality() {
+    clearCache('airQuality')
+    await weatherService.refreshAirQuality()
+    await new Promise((r) => setTimeout(r, 2000))
+  }
+
   // --- Alerts ---
   const alerts = ref<WeatherAlert[]>([])
   const alertsError = ref(false)
@@ -444,6 +495,85 @@ export const useWeatherStore = defineStore('weather', () => {
     await fetchLightning()
   }
 
+  // --- Composite dashboard fetch (single HTTP request for all 12 sources) ---
+  async function fetchDashboardData() {
+    earthquakesLoading.value = true
+    hurricanesLoading.value = true
+    pirepsLoading.value = true
+    sigmetsLoading.value = true
+    cwasLoading.value = true
+    tfrsLoading.value = true
+    delaysLoading.value = true
+    groundStopsLoading.value = true
+    volcanicAshLoading.value = true
+    lightningLoading.value = true
+    spaceWeatherLoading.value = true
+
+    try {
+      const data: DashboardData = await weatherService.getDashboardData()
+
+      earthquakes.value = data.earthquakes
+      hurricanes.value = data.hurricanes
+      alerts.value = data.alerts
+      pireps.value = data.pireps
+      sigmets.value = data.sigmets
+      cwas.value = data.cwas
+      tfrs.value = data.tfrs
+      delays.value = data.delays
+      groundStops.value = data.groundStops
+      volcanicAsh.value = data.volcanicAsh
+      lightning.value = data.lightning
+      spaceWeather.value = data.spaceWeather
+
+      // Populate cache so individual fetch*() calls see fresh data
+      const now = Date.now()
+      cache.set('earthquakes', { data: data.earthquakes, timestamp: now })
+      cache.set('hurricanes', { data: data.hurricanes, timestamp: now })
+      cache.set('alerts', { data: data.alerts, timestamp: now })
+      cache.set('pireps', { data: data.pireps, timestamp: now })
+      cache.set('sigmets', { data: data.sigmets, timestamp: now })
+      cache.set('cwas', { data: data.cwas, timestamp: now })
+      cache.set('tfrs', { data: data.tfrs, timestamp: now })
+      cache.set('delays', { data: data.delays, timestamp: now })
+      cache.set('groundStops', { data: data.groundStops, timestamp: now })
+      cache.set('volcanicAsh', { data: data.volcanicAsh, timestamp: now })
+      cache.set('lightning', { data: data.lightning, timestamp: now })
+      cache.set('spaceWeather', { data: data.spaceWeather, timestamp: now })
+    } finally {
+      earthquakesLoading.value = false
+      hurricanesLoading.value = false
+      pirepsLoading.value = false
+      sigmetsLoading.value = false
+      cwasLoading.value = false
+      tfrsLoading.value = false
+      delaysLoading.value = false
+      groundStopsLoading.value = false
+      volcanicAshLoading.value = false
+      lightningLoading.value = false
+      spaceWeatherLoading.value = false
+    }
+  }
+
+  // --- SSE update handler (patches a single data source from a live stream event) ---
+  function applySSEUpdate(eventName: string, data: unknown) {
+    const now = Date.now()
+    const handlers: Record<string, () => void> = {
+      earthquakes: () => { earthquakes.value = data as Earthquake[]; cache.set('earthquakes', { data, timestamp: now }) },
+      hurricanes: () => { hurricanes.value = data as Hurricane[]; cache.set('hurricanes', { data, timestamp: now }) },
+      alerts: () => { alerts.value = data as WeatherAlert[]; cache.set('alerts', { data, timestamp: now }) },
+      pireps: () => { pireps.value = data as Pirep[]; cache.set('pireps', { data, timestamp: now }) },
+      sigmets: () => { sigmets.value = data as Sigmet[]; cache.set('sigmets', { data, timestamp: now }) },
+      cwas: () => { cwas.value = data as Cwa[]; cache.set('cwas', { data, timestamp: now }) },
+      tfrs: () => { tfrs.value = data as Tfr[]; cache.set('tfrs', { data, timestamp: now }) },
+      delays: () => { delays.value = data as AirportDelay[]; cache.set('delays', { data, timestamp: now }) },
+      groundStops: () => { groundStops.value = data as GroundStop[]; cache.set('groundStops', { data, timestamp: now }) },
+      volcanicAsh: () => { volcanicAsh.value = data as VolcanicAshAdvisory[]; cache.set('volcanicAsh', { data, timestamp: now }) },
+      lightning: () => { lightning.value = data as LightningStrike[]; cache.set('lightning', { data, timestamp: now }) },
+      spaceWeather: () => { spaceWeather.value = data as SpaceWeather | null; cache.set('spaceWeather', { data, timestamp: now }) },
+    }
+    handlers[eventName]?.()
+  }
+
   return {
     // Airports
     airports,
@@ -532,10 +662,24 @@ export const useWeatherStore = defineStore('weather', () => {
     spaceWeatherError,
     fetchSpaceWeather,
     refreshSpaceWeather,
+    // Astronomical
+    astronomical,
+    astronomicalLoading,
+    astronomicalError,
+    fetchAstronomical,
+    // Air Quality
+    airQuality,
+    airQualityLoading,
+    airQualityError,
+    fetchAirQuality,
+    refreshAirQuality,
     // Alerts
     alerts,
     alertsError,
     fetchAlerts,
     refreshAlerts,
+    // Dashboard composite
+    fetchDashboardData,
+    applySSEUpdate,
   }
 })

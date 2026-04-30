@@ -5,23 +5,23 @@
       <div v-for="slot in hourlySlots" :key="slot.time" class="hourly-slot">
         <div class="slot-time">{{ slot.timeLabel }}</div>
         <div class="slot-day">{{ slot.dayLabel }}</div>
-        <div class="slot-icon" aria-hidden="true">{{ slot.icon }}</div>
+        <div class="slot-icon" aria-hidden="true"><component :is="slot.icon" :size="18" /></div>
         <div class="slot-temp">{{ formatTemp(slot.tempF) }}</div>
         <div v-if="slot.feelsLikeF != null && Math.abs(slot.feelsLikeF - slot.tempF) >= 3" class="slot-feels">
           Feels {{ formatTemp(slot.feelsLikeF) }}
         </div>
         <div class="slot-details">
           <div v-if="slot.precipChance != null" class="slot-precip-row">
-            <span aria-hidden="true">&#x2614;</span> {{ slot.precipChance }}%
+            <CloudRain :size="12" aria-hidden="true" /> {{ slot.precipChance }}%
             <div class="precip-bar-bg"><div class="precip-bar-fill" :style="{ width: slot.precipChance + '%' }"></div></div>
           </div>
           <div v-if="slot.windMph != null" class="slot-wind-row">
             <span v-if="slot.windDir != null" class="wind-arrow" :style="{ transform: 'rotate(' + (slot.windDir + 180) + 'deg)' }" aria-hidden="true">&#x2191;</span>
-            <span v-else aria-hidden="true">&#x1F4A8;</span>
+            <Wind v-else :size="12" aria-hidden="true" />
             {{ formatSpeed(slot.windMph) }}
           </div>
           <div v-if="slot.humidity != null" class="slot-humidity">
-            <span aria-hidden="true">&#x1F4A7;</span> {{ slot.humidity }}%
+            <Droplets :size="12" aria-hidden="true" /> {{ slot.humidity }}%
           </div>
         </div>
       </div>
@@ -30,11 +30,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type Component } from 'vue'
 import { type WeatherForecast } from '../services/weatherService'
 import { getWeatherIcon } from '../utils/weatherIcons'
 import { useUnitPreferences } from '../composables/useUnitPreferences'
 import { computeFeelsLike } from '../utils/weatherCalc'
+import { Wind, CloudRain, Droplets } from 'lucide-vue-next'
 
 const { formatTemp, formatSpeed, formatTime } = useUnitPreferences()
 
@@ -46,7 +47,7 @@ interface HourlySlot {
   time: string
   timeLabel: string
   dayLabel: string
-  icon: string
+  icon: Component
   tempF: number
   feelsLikeF: number | null
   precipChance: number | null

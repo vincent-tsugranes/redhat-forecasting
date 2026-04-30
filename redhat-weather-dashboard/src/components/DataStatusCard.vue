@@ -1,13 +1,13 @@
 <template>
   <div class="status-card">
     <div class="card-header">
-      <h3><span aria-hidden="true">📊</span> {{ $t('status.title') }}</h3>
+      <h3><BarChart3 :size="18" aria-hidden="true" style="display:inline;vertical-align:middle" /> {{ $t('status.title') }}</h3>
       <span
         class="status-badge"
         :class="status.loadingComplete ? 'success' : 'warning'"
         role="status"
       >
-        <span aria-hidden="true">{{ status.loadingComplete ? '✓' : '⚠' }}</span>
+        <component :is="status.loadingComplete ? Check : AlertTriangle" :size="14" aria-hidden="true" />
         {{ status.loadingComplete ? $t('status.dataReady') : $t('status.loading') }}
       </span>
     </div>
@@ -35,22 +35,22 @@
 
       <div class="data-counts-grid">
         <div class="data-count-item">
-          <span class="count-icon" aria-hidden="true">🌤️</span>
+          <span class="count-icon" aria-hidden="true"><CloudSun :size="14" /></span>
           <span class="count-value">{{ status.activeForecasts?.toLocaleString() ?? 0 }}</span>
           <span class="count-label">{{ $t('status.activeForecasts') }}</span>
         </div>
         <div class="data-count-item">
-          <span class="count-icon" aria-hidden="true">🌍</span>
+          <span class="count-icon" aria-hidden="true"><Globe :size="14" /></span>
           <span class="count-value">{{ status.activeEarthquakes?.toLocaleString() ?? 0 }}</span>
           <span class="count-label">{{ $t('status.activeEarthquakes') }}</span>
         </div>
         <div class="data-count-item">
-          <span class="count-icon" aria-hidden="true">🌀</span>
+          <span class="count-icon" aria-hidden="true"><Tornado :size="14" /></span>
           <span class="count-value">{{ status.activeHurricanes?.toLocaleString() ?? 0 }}</span>
           <span class="count-label">{{ $t('status.activeHurricanes') }}</span>
         </div>
         <div class="data-count-item">
-          <span class="count-icon" aria-hidden="true">✈️</span>
+          <span class="count-icon" aria-hidden="true"><Plane :size="14" /></span>
           <span class="count-value">{{ status.metarReports?.toLocaleString() ?? 0 }}</span>
           <span class="count-label">{{ $t('status.metarReports') }}</span>
         </div>
@@ -61,7 +61,7 @@
         <div v-for="row in schedulerRows" :key="row.name" class="scheduler-row">
           <div class="scheduler-header">
             <span class="scheduler-name">
-              <span aria-hidden="true">{{ row.icon }}</span> {{ row.name }}
+              <component :is="row.icon" :size="14" aria-hidden="true" /> {{ row.name }}
             </span>
             <span class="scheduler-timing">
               <span v-if="row.freshnessClass" class="freshness-age" :class="row.freshnessClass">{{ row.freshnessText }}</span>
@@ -101,8 +101,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import type { Component } from 'vue'
 import api from '../services/api'
 import { logger } from '../utils/logger'
+import { BarChart3, Check, AlertTriangle, CloudSun, Globe, Tornado, Plane, ClipboardList, Ban, Wind, Timer, Octagon, Mountain, Zap, Sun, Radio } from 'lucide-vue-next'
 
 interface SchedulerInfo {
   name: string
@@ -237,22 +239,22 @@ const standaloneFreshness = computed(() => {
   })
 })
 
-const SCHEDULER_ICONS: Record<string, string> = {
-  'noaa-forecast': '🌤️',
-  'aviation-metar': '✈️',
-  'usgs-earthquake': '🌍',
-  'nhc-hurricane': '🌀',
-  'noaa-alerts': '⚠️',
-  'swpc-space-weather': '☀️',
-  'awc-pirep': '📝',
-  'awc-sigmet': '🔶',
-  'awc-cwa': '📋',
-  'faa-tfr': '🚫',
-  'awc-winds-aloft': '💨',
-  'faa-delay': '⏱️',
-  'faa-ground-stop': '🛑',
-  'awc-volcanic-ash': '🌋',
-  'blitzortung-lightning': '⚡',
+const SCHEDULER_ICONS: Record<string, Component> = {
+  'noaa-forecast': CloudSun,
+  'aviation-metar': Plane,
+  'usgs-earthquake': Globe,
+  'nhc-hurricane': Tornado,
+  'noaa-alerts': AlertTriangle,
+  'swpc-space-weather': Sun,
+  'awc-pirep': ClipboardList,
+  'awc-sigmet': AlertTriangle,
+  'awc-cwa': Radio,
+  'faa-tfr': Ban,
+  'awc-winds-aloft': Wind,
+  'faa-delay': Timer,
+  'faa-ground-stop': Octagon,
+  'awc-volcanic-ash': Mountain,
+  'blitzortung-lightning': Zap,
 }
 
 // Reverse map: scheduler source key -> freshness source name
@@ -267,7 +269,7 @@ const schedulerRows = computed(() => {
   const freshnessMap = new Map(freshnessSources.value.map(f => [f.name, f]))
 
   return schedulers.filter(s => s.enabled).map(s => {
-    const icon = SCHEDULER_ICONS[s.source] || '📡'
+    const icon = SCHEDULER_ICONS[s.source] || Radio
     const age = s.ageMinutes
     const interval = s.intervalMinutes
     const nextRun = s.nextRunMinutes
@@ -345,7 +347,7 @@ onUnmounted(() => {
 .status-card {
   background: var(--bg-card, white);
   border-radius: 8px;
-  padding: 14px;
+  padding: 18px;
   box-shadow: 0 2px 4px var(--shadow, rgba(0, 0, 0, 0.1));
   margin-bottom: 16px;
 }

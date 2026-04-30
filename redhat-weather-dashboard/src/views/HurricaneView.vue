@@ -99,7 +99,7 @@
     </div>
 
     <div v-else-if="!loading" class="card">
-      <p><span aria-hidden="true">✅</span> {{ $t('hurricane.noActive') }}</p>
+      <p><ShieldCheck :size="16" aria-hidden="true" /> {{ $t('hurricane.noActive') }}</p>
       <p>{{ $t('hurricane.seasonInfo') }}</p>
       <p>{{ $t('hurricane.autoFetch') }}</p>
     </div>
@@ -118,6 +118,7 @@ import FreshnessBadge from '../components/FreshnessBadge.vue'
 import HurricaneMap from '../components/HurricaneMap.vue'
 import HurricaneSkeleton from '../components/skeletons/HurricaneSkeleton.vue'
 import ErrorBoundary from '../components/ErrorBoundary.vue'
+import { ShieldCheck } from 'lucide-vue-next'
 
 const { t } = useI18n()
 const toast = useToast()

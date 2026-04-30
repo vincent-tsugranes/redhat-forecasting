@@ -80,6 +80,16 @@ const router = createRouter({
       component: () => import('../views/LightningView.vue'),
     },
     {
+      path: '/astronomical',
+      name: 'astronomical',
+      component: () => import('../views/AstronomicalView.vue'),
+    },
+    {
+      path: '/air-quality',
+      name: 'air-quality',
+      component: () => import('../views/AirQualityView.vue'),
+    },
+    {
       path: '/map',
       name: 'map',
       component: () => import('../views/MapView.vue'),
@@ -130,6 +140,12 @@ router.beforeEach((to) => {
       break
     case 'lightning':
       store.fetchLightning()
+      break
+    case 'astronomical':
+      store.fetchAirports()
+      break
+    case 'air-quality':
+      store.fetchAirports()
       break
     case 'forecasts':
       store.fetchAirports()

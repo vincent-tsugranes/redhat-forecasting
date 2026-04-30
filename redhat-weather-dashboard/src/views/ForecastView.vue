@@ -124,15 +124,15 @@
         {{ showIconLegend ? 'Hide' : 'Show' }} Icon Legend
       </button>
       <div v-if="showIconLegend" class="icon-legend">
-        <span class="legend-item"><span class="legend-icon">&#x2600;&#xFE0F;</span> Clear</span>
-        <span class="legend-item"><span class="legend-icon">&#x26C5;</span> Partly Cloudy</span>
-        <span class="legend-item"><span class="legend-icon">&#x2601;&#xFE0F;</span> Cloudy</span>
-        <span class="legend-item"><span class="legend-icon">&#x1F326;&#xFE0F;</span> Drizzle</span>
-        <span class="legend-item"><span class="legend-icon">&#x1F327;&#xFE0F;</span> Rain</span>
-        <span class="legend-item"><span class="legend-icon">&#x26C8;&#xFE0F;</span> Thunderstorm</span>
-        <span class="legend-item"><span class="legend-icon">&#x1F328;&#xFE0F;</span> Snow</span>
-        <span class="legend-item"><span class="legend-icon">&#x1F32B;&#xFE0F;</span> Fog/Haze</span>
-        <span class="legend-item"><span class="legend-icon">&#x1F4A8;</span> Windy</span>
+        <span class="legend-item"><Sun :size="16" class="legend-icon" /> Clear</span>
+        <span class="legend-item"><CloudSun :size="16" class="legend-icon" /> Partly Cloudy</span>
+        <span class="legend-item"><Cloud :size="16" class="legend-icon" /> Cloudy</span>
+        <span class="legend-item"><CloudDrizzle :size="16" class="legend-icon" /> Drizzle</span>
+        <span class="legend-item"><CloudRain :size="16" class="legend-icon" /> Rain</span>
+        <span class="legend-item"><CloudLightning :size="16" class="legend-icon" /> Thunderstorm</span>
+        <span class="legend-item"><CloudSnow :size="16" class="legend-icon" /> Snow</span>
+        <span class="legend-item"><CloudFog :size="16" class="legend-icon" /> Fog/Haze</span>
+        <span class="legend-item"><WindIcon :size="16" class="legend-icon" /> Windy</span>
       </div>
     </div>
 
@@ -254,7 +254,7 @@
             :aria-label="$t('forecast.exportAriaLabel')"
             @click="handleExport"
           >
-            <span aria-hidden="true">&#x1F4E5;</span> {{ $t('forecast.exportCSV') }}
+            <Download :size="14" aria-hidden="true" /> {{ $t('forecast.exportCSV') }}
           </button>
         </div>
       </div>
@@ -342,6 +342,7 @@ import WindRoseChart from '../components/WindRoseChart.vue'
 import ErrorBoundary from '../components/ErrorBoundary.vue'
 import { useFavorites } from '../composables/useFavorites'
 import { exportForecastsToCSV } from '../utils/exportUtils'
+import { Download, Sun, CloudSun, Cloud, CloudDrizzle, CloudRain, CloudLightning, CloudSnow, CloudFog, Wind as WindIcon } from 'lucide-vue-next'
 
 const route = useRoute()
 const store = useWeatherStore()

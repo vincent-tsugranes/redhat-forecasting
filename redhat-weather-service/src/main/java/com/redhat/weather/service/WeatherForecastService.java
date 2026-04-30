@@ -96,8 +96,9 @@ public class WeatherForecastService {
                 return;
             }
 
-            // Get forecast data
-            String forecastResponse = noaaClient.getForecast(forecastUrl);
+            // Get forecast data — extract relative path from full NOAA URL
+            String relativePath = forecastUrl.replaceFirst("https?://api\\.weather\\.gov/", "");
+            String forecastResponse = noaaClient.getForecast(relativePath);
             JsonNode forecastData = objectMapper.readTree(forecastResponse);
 
             // Parse and store forecast periods

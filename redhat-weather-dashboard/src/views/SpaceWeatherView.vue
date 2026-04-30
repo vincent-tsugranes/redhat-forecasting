@@ -26,7 +26,7 @@
       </div>
 
       <div class="card">
-        <h3><span aria-hidden="true">☀️</span> {{ $t('space.geomagneticStorm') }}</h3>
+        <h3><Sun :size="18" aria-hidden="true" /> {{ $t('space.geomagneticStorm') }}</h3>
         <div class="metric-value" :class="getStormClass(spaceWeather.geomagneticStormLevel)">
           {{ spaceWeather.geomagneticStormLevel }}
         </div>
@@ -34,13 +34,13 @@
       </div>
 
       <div class="card">
-        <h3><span aria-hidden="true">🌌</span> {{ $t('space.auroraForecast') }}</h3>
+        <h3><Orbit :size="18" aria-hidden="true" /> {{ $t('space.auroraForecast') }}</h3>
         <div class="metric-value">{{ spaceWeather.auroraChance }}</div>
         <div class="metric-label">{{ $t('space.auroraChance') }}</div>
       </div>
 
       <div v-if="spaceWeather.solarWindSpeed" class="card">
-        <h3><span aria-hidden="true">💨</span> {{ $t('space.solarWind') }}</h3>
+        <h3><Wind :size="18" aria-hidden="true" /> {{ $t('space.solarWind') }}</h3>
         <div class="metric-value">{{ spaceWeather.solarWindSpeed?.toFixed(1) }}</div>
         <div class="metric-label">nT ({{ $t('space.magneticField') }})</div>
       </div>
@@ -72,6 +72,7 @@ import FreshnessBadge from '../components/FreshnessBadge.vue'
 import KpIndexGauge from '../components/KpIndexGauge.vue'
 import SpaceWeatherSkeleton from '../components/skeletons/SpaceWeatherSkeleton.vue'
 import ErrorBoundary from '../components/ErrorBoundary.vue'
+import { Sun, Orbit, Wind } from 'lucide-vue-next'
 
 const toast = useToast()
 const spaceWeather = ref<SpaceWeather | null>(null)

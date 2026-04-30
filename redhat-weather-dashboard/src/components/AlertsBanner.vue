@@ -8,7 +8,7 @@
       @click="expanded = !expanded"
     >
       <div class="alerts-title">
-        <span class="alert-icon" aria-hidden="true">{{ severityIcon }}</span>
+        <span class="alert-icon" aria-hidden="true"><component :is="severityIcon" :size="16" /></span>
         <span class="sr-only">Severity: {{ highestSeverity }}</span>
         <strong>{{ $t('alerts.activeAlerts', { count: alerts.length }, alerts.length) }}</strong>
       </div>
@@ -44,10 +44,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import type { Component } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import { formatDate } from '../utils/dateUtils'
 import { useAlertNotifications } from '../composables/useAlertNotifications'
+import { CircleDot, AlertTriangle } from 'lucide-vue-next'
 
 const store = useWeatherStore()
 const { alerts, alertsError: alertError } = storeToRefs(store)
@@ -83,18 +85,15 @@ const highestSeverity = computed(() => {
   return highest.severity.toLowerCase()
 })
 
-const severityIcon = computed(() => {
+const severityIcon = computed<Component>(() => {
   switch (highestSeverity.value) {
     case 'extreme':
-      return '🔴'
     case 'severe':
-      return '🟠'
     case 'moderate':
-      return '🟡'
     case 'minor':
-      return '🔵'
+      return CircleDot
     default:
-      return '⚠️'
+      return AlertTriangle
   }
 })
 
@@ -180,7 +179,7 @@ onUnmounted(() => {
 }
 
 .alerts-list {
-  padding: 0 14px 14px;
+  padding: 0 18px 18px;
   display: flex;
   flex-direction: column;
   gap: 8px;

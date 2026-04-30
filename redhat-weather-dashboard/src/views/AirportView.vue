@@ -90,38 +90,38 @@
               {{ metar.flightCategory }}
             </div>
             <div v-if="metar.temperatureCelsius != null">
-              <span aria-hidden="true">🌡️</span> {{ Math.round(metar.temperatureCelsius) }}°C
+              <Thermometer :size="16" aria-hidden="true" /> {{ Math.round(metar.temperatureCelsius) }}°C
             </div>
             <div v-if="metar.dewpointCelsius != null">
-              <span aria-hidden="true">💧</span> Dew {{ Math.round(metar.dewpointCelsius) }}°C
+              <Droplets :size="16" aria-hidden="true" /> Dew {{ Math.round(metar.dewpointCelsius) }}°C
             </div>
             <div v-if="metar.windSpeedKnots != null">
-              <span aria-hidden="true">💨</span>
+              <Wind :size="16" aria-hidden="true" />
               {{ metar.windDirection != null ? metar.windDirection + '° at ' : ''
               }}{{ metar.windSpeedKnots }} kts{{
                 metar.windGustKnots ? ', gusts ' + metar.windGustKnots + ' kts' : ''
               }}
             </div>
             <div v-if="metar.visibilityMiles != null">
-              <span aria-hidden="true">👁️</span> Visibility: {{ metar.visibilityMiles }} mi
+              <Eye :size="16" aria-hidden="true" /> Visibility: {{ metar.visibilityMiles }} mi
             </div>
             <div v-if="metar.ceilingFeet != null">
-              <span aria-hidden="true">☁️</span> Ceiling {{ metar.ceilingFeet }} ft
+              <Cloud :size="16" aria-hidden="true" /> Ceiling {{ metar.ceilingFeet }} ft
             </div>
             <div v-if="metar.altimeterInches != null">
-              <span aria-hidden="true">📊</span> Altimeter {{ metar.altimeterInches }} inHg
+              <BarChart3 :size="16" aria-hidden="true" /> Altimeter {{ metar.altimeterInches }} inHg
             </div>
             <div v-if="metar.skyCondition">
-              <span aria-hidden="true">🌤️</span> Sky: {{ metar.skyCondition }}
+              <CloudSun :size="16" aria-hidden="true" /> Sky: {{ metar.skyCondition }}
             </div>
             <div v-if="metar.weatherConditions">
-              <span aria-hidden="true">🌧️</span> {{ metar.weatherConditions }}
+              <CloudRain :size="16" aria-hidden="true" /> {{ metar.weatherConditions }}
             </div>
             <div v-if="relativeHumidity !== null">
-              <span aria-hidden="true">💦</span> RH: {{ relativeHumidity }}%
+              <Droplets :size="16" aria-hidden="true" /> RH: {{ relativeHumidity }}%
             </div>
             <div v-if="tempDewSpread !== null">
-              <span aria-hidden="true" :class="{ 'spread-warn': tempDewSpread <= 3 }">🌫️</span>
+              <CloudFog :size="16" aria-hidden="true" :class="{ 'spread-warn': tempDewSpread <= 3 }" />
               Spread: {{ tempDewSpread }}°C
               <span v-if="tempDewSpread <= 3" class="spread-alert">Fog risk</span>
             </div>
@@ -157,7 +157,7 @@
       <!-- Ground stop banner -->
       <div v-if="airportGroundStop" class="card ground-stop-banner">
         <div class="delay-header">
-          <span class="delay-icon" aria-hidden="true">&#x1F6D1;</span>
+          <Octagon :size="18" class="delay-icon" aria-hidden="true" />
           <strong>{{ airportGroundStop.airportCode }} — Ground Stop</strong>
         </div>
         <div class="delay-details">
@@ -170,7 +170,7 @@
       <!-- Delay status banner -->
       <div v-if="airportDelay && airportDelay.isDelayed" class="card delay-banner">
         <div class="delay-header">
-          <span class="delay-icon" aria-hidden="true">&#x26A0;&#xFE0F;</span>
+          <AlertTriangle :size="18" class="delay-icon" aria-hidden="true" />
           <strong>{{ airportDelay.airportCode }} — {{ airportDelay.delayType }} Delay</strong>
         </div>
         <div class="delay-details">
@@ -184,7 +184,7 @@
       <div v-if="densityAltitude !== null" class="card density-altitude-card">
         <div class="density-altitude-row">
           <div class="da-label">
-            <span aria-hidden="true">&#x26A0;&#xFE0F;</span>
+            <AlertTriangle :size="16" aria-hidden="true" />
             Density Altitude
           </div>
           <div class="da-value" :class="{ 'da-high': densityAltitude > 5000, 'da-caution': densityAltitude > 2000 && densityAltitude <= 5000 }">
@@ -424,7 +424,7 @@
           <div v-if="selectedAirport?.id" class="solar-wrapper">
             <SolarPanel :location-id="selectedAirport.id" />
             <div v-if="sunCountdown" class="sun-countdown">
-              <span class="countdown-icon" aria-hidden="true">{{ sunCountdown.icon }}</span>
+              <component :is="sunCountdown.icon" :size="16" class="countdown-icon" aria-hidden="true" />
               {{ sunCountdown.label }} in {{ sunCountdown.time }}
             </div>
           </div>
@@ -461,7 +461,7 @@
                 rel="noopener noreferrer"
                 class="resource-link"
               >
-                <span class="resource-icon" aria-hidden="true">&#x1F4C4;</span>
+                <FileText :size="20" class="resource-icon" aria-hidden="true" />
                 <div>
                   <div class="resource-title">Airport Procedures</div>
                   <div class="resource-desc">Instrument approaches &amp; diagrams</div>
@@ -473,7 +473,7 @@
                 rel="noopener noreferrer"
                 class="resource-link"
               >
-                <span class="resource-icon" aria-hidden="true">&#x1F5FA;&#xFE0F;</span>
+                <Map :size="20" class="resource-icon" aria-hidden="true" />
                 <div>
                   <div class="resource-title">SkyVector Chart</div>
                   <div class="resource-desc">Sectional &amp; IFR charts</div>
@@ -485,7 +485,7 @@
                 rel="noopener noreferrer"
                 class="resource-link"
               >
-                <span class="resource-icon" aria-hidden="true">&#x2139;&#xFE0F;</span>
+                <Info :size="20" class="resource-icon" aria-hidden="true" />
                 <div>
                   <div class="resource-title">AirNav Info</div>
                   <div class="resource-desc">Runways, frequencies, FBOs</div>
@@ -586,6 +586,7 @@ import HourlyTimeline from '../components/HourlyTimeline.vue'
 import HistoricalChart from '../components/HistoricalChart.vue'
 import SolarPanel from '../components/SolarPanel.vue'
 import AirportSkeleton from '../components/skeletons/AirportSkeleton.vue'
+import { Thermometer, Droplets, Wind, Eye, Cloud, BarChart3, CloudSun, CloudRain, CloudFog, Octagon, AlertTriangle, FileText, Map, Info, Sunrise, Sunset } from 'lucide-vue-next'
 
 const route = useRoute()
 const store = useWeatherStore()
@@ -913,21 +914,21 @@ const sunCountdown = computed(() => {
 
   let targetMs: number
   let label: string
-  let icon: string
+  let icon: typeof Sunrise | typeof Sunset
 
   if (nowMs < sunrise) {
     targetMs = sunrise - nowMs
     label = 'Sunrise'
-    icon = '🌅'
+    icon = Sunrise
   } else if (nowMs < sunset) {
     targetMs = sunset - nowMs
     label = 'Sunset'
-    icon = '🌇'
+    icon = Sunset
   } else {
     // After sunset, show next sunrise (tomorrow ~= +24h from today's sunrise)
     targetMs = sunrise + 86400000 - nowMs
     label = 'Sunrise'
-    icon = '🌅'
+    icon = Sunrise
   }
 
   if (targetMs < 0) return null

@@ -25,7 +25,7 @@
 
     <div v-if="!loading && volcanicAsh.length > 0" class="stats-bar">
       <span class="stat-chip stat-alert">
-        <span aria-hidden="true">🌋</span> {{ filteredAdvisories.length }} {{ $t('volcanicAsh.active') }}
+        <Mountain :size="14" aria-hidden="true" /> {{ filteredAdvisories.length }} {{ $t('volcanicAsh.active') }}
       </span>
     </div>
 
@@ -65,7 +65,7 @@
     </ErrorBoundary>
 
     <div v-if="!loading && volcanicAsh.length === 0" class="card">
-      <p><span aria-hidden="true">✅</span> {{ $t('volcanicAsh.noActive') }}</p>
+      <p><ShieldCheck :size="16" aria-hidden="true" /> {{ $t('volcanicAsh.noActive') }}</p>
       <p>{{ $t('volcanicAsh.autoFetch') }}</p>
     </div>
   </div>
@@ -80,6 +80,7 @@ import { formatDate } from '../utils/dateUtils'
 import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import ErrorBoundary from '../components/ErrorBoundary.vue'
+import { Mountain, ShieldCheck } from 'lucide-vue-next'
 
 const store = useWeatherStore()
 const toast = useToast()

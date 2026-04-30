@@ -7,6 +7,22 @@ import DashboardView from '../../views/DashboardView.vue'
 // Mock the weather service
 vi.mock('../../services/weatherService', () => ({
   default: {
+    getDashboardData: vi.fn().mockResolvedValue({
+      earthquakes: [
+        { id: 10, usgsId: 'us1234', magnitude: 4.5, place: 'California', eventTime: '2024-01-15T10:00:00', latitude: 34.0, longitude: -118.0, depthKm: 10 },
+      ],
+      hurricanes: [],
+      alerts: [],
+      pireps: [],
+      sigmets: [],
+      cwas: [],
+      tfrs: [],
+      delays: [],
+      groundStops: [],
+      volcanicAsh: [],
+      lightning: [],
+      spaceWeather: null,
+    }),
     getAirports: vi.fn().mockResolvedValue([
       { id: 3, name: 'JFK', latitude: 40.6, longitude: -73.7, locationType: 'airport', airportCode: 'KJFK' },
     ]),

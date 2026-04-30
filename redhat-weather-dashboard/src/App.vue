@@ -28,39 +28,39 @@
                 :aria-expanded="openDropdown === 'aviation'"
                 @click="openDropdown = openDropdown === 'aviation' ? null : 'aviation'"
               >
-                {{ $t('nav.aviation') }} <span class="caret" aria-hidden="true">▾</span>
+                {{ $t('nav.aviation') }} <ChevronDown :size="12" aria-hidden="true" class="caret" />
               </button>
               <div v-show="openDropdown === 'aviation'" class="nav-dropdown" @mouseenter="cancelCloseDropdown" @mouseleave="scheduleCloseDropdown">
                 <router-link to="/airports" class="nav-dropdown-item" @click="openDropdown = null">
-                  <span class="nav-icon" aria-hidden="true">✈️</span> {{ $t('nav.airports') }}
+                  <Plane :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.airports') }}
                   <span v-if="airports.length" class="nav-count">{{ airports.length.toLocaleString() }}</span>
                 </router-link>
                 <router-link to="/pireps" class="nav-dropdown-item" @click="openDropdown = null">
-                  <span class="nav-icon" aria-hidden="true">📋</span> {{ $t('nav.pireps') }}
+                  <ClipboardList :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.pireps') }}
                   <span v-if="pireps.length" class="nav-count">{{ pireps.length }}</span>
                 </router-link>
                 <router-link to="/sigmets" class="nav-dropdown-item" @click="openDropdown = null">
-                  <span class="nav-icon" aria-hidden="true">🚨</span> {{ $t('nav.sigmets') }}
+                  <AlertTriangle :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.sigmets') }}
                   <span v-if="sigmets.length" class="nav-count">{{ sigmets.length }}</span>
                 </router-link>
                 <router-link to="/cwas" class="nav-dropdown-item" @click="openDropdown = null">
-                  <span class="nav-icon" aria-hidden="true">📡</span> {{ $t('nav.cwas') }}
+                  <Radio :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.cwas') }}
                   <span v-if="cwas.length" class="nav-count">{{ cwas.length }}</span>
                 </router-link>
                 <router-link to="/tfrs" class="nav-dropdown-item" @click="openDropdown = null">
-                  <span class="nav-icon" aria-hidden="true">🚫</span> {{ $t('nav.tfrs') }}
+                  <Ban :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.tfrs') }}
                   <span v-if="tfrs.length" class="nav-count">{{ tfrs.length }}</span>
                 </router-link>
                 <router-link to="/winds-aloft" class="nav-dropdown-item" @click="openDropdown = null">
-                  <span class="nav-icon" aria-hidden="true">💨</span> {{ $t('nav.windsAloft') }}
+                  <Wind :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.windsAloft') }}
                   <span v-if="windsAloft.length" class="nav-count">{{ windsAloft.length }}</span>
                 </router-link>
                 <router-link to="/delays" class="nav-dropdown-item" @click="openDropdown = null">
-                  <span class="nav-icon" aria-hidden="true">⏱️</span> {{ $t('nav.delays') }}
+                  <Timer :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.delays') }}
                   <span v-if="delayedCount" class="nav-count nav-count-alert">{{ delayedCount }}</span>
                 </router-link>
                 <router-link to="/ground-stops" class="nav-dropdown-item" @click="openDropdown = null">
-                  <span class="nav-icon" aria-hidden="true">🛑</span> {{ $t('nav.groundStops') }}
+                  <Octagon :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.groundStops') }}
                   <span v-if="groundStops.length" class="nav-count nav-count-alert">{{ groundStops.length }}</span>
                 </router-link>
               </div>
@@ -73,27 +73,33 @@
                 :aria-expanded="openDropdown === 'hazards'"
                 @click="openDropdown = openDropdown === 'hazards' ? null : 'hazards'"
               >
-                {{ $t('nav.hazards') }} <span class="caret" aria-hidden="true">▾</span>
+                {{ $t('nav.hazards') }} <ChevronDown :size="12" aria-hidden="true" class="caret" />
               </button>
               <div v-show="openDropdown === 'hazards'" class="nav-dropdown" @mouseenter="cancelCloseDropdown" @mouseleave="scheduleCloseDropdown">
                 <router-link to="/hurricanes" class="nav-dropdown-item" @click="openDropdown = null">
-                  <span class="nav-icon" aria-hidden="true">🌀</span> {{ $t('nav.hurricanes') }}
+                  <Tornado :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.hurricanes') }}
                   <span v-if="hurricanes.length" class="nav-count nav-count-alert">{{ hurricanes.length }}</span>
                 </router-link>
                 <router-link to="/earthquakes" class="nav-dropdown-item" @click="openDropdown = null">
-                  <span class="nav-icon" aria-hidden="true">🌍</span> {{ $t('nav.earthquakes') }}
+                  <Globe :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.earthquakes') }}
                   <span v-if="earthquakes.length" class="nav-count">{{ earthquakes.length }}</span>
                 </router-link>
                 <router-link to="/volcanic-ash" class="nav-dropdown-item" @click="openDropdown = null">
-                  <span class="nav-icon" aria-hidden="true">🌋</span> {{ $t('nav.volcanicAsh') }}
+                  <Mountain :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.volcanicAsh') }}
                   <span v-if="volcanicAsh.length" class="nav-count nav-count-alert">{{ volcanicAsh.length }}</span>
                 </router-link>
                 <router-link to="/lightning" class="nav-dropdown-item" @click="openDropdown = null">
-                  <span class="nav-icon" aria-hidden="true">⚡</span> {{ $t('nav.lightning') }}
+                  <Zap :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.lightning') }}
                   <span v-if="lightning.length" class="nav-count">{{ lightning.length }}</span>
                 </router-link>
                 <router-link to="/space-weather" class="nav-dropdown-item" @click="openDropdown = null">
-                  <span class="nav-icon" aria-hidden="true">☀️</span> {{ $t('nav.spaceWeather') }}
+                  <Sun :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.spaceWeather') }}
+                </router-link>
+                <router-link to="/air-quality" class="nav-dropdown-item" @click="openDropdown = null">
+                  <Wind :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.airQuality') }}
+                </router-link>
+                <router-link to="/astronomical" class="nav-dropdown-item" @click="openDropdown = null">
+                  <Sun :size="14" aria-hidden="true" class="nav-icon" /> {{ $t('nav.astronomical') }}
                 </router-link>
               </div>
             </div>
@@ -107,7 +113,7 @@
               :aria-label="notificationsEnabled ? $t('notifications.disable') : $t('notifications.enable')"
               @click="toggleNotifications"
             >
-              <span aria-hidden="true">{{ notificationsEnabled ? '🔔' : '🔕' }}</span>
+              <component :is="notificationsEnabled ? Bell : BellOff" :size="16" aria-hidden="true" />
             </button>
             <button
               class="header-icon-btn"
@@ -115,7 +121,7 @@
               aria-label="Settings"
               @click="showSettings = !showSettings"
             >
-              <span aria-hidden="true">⚙</span>
+              <Settings :size="16" aria-hidden="true" />
             </button>
             <button
               class="theme-toggle"
@@ -123,7 +129,7 @@
               :aria-label="theme === 'dark' ? $t('app.themeLight') : $t('app.themeDark')"
               @click="toggleTheme"
             >
-              <span aria-hidden="true">{{ theme === 'dark' ? '☀️' : '🌙' }}</span>
+              <component :is="theme === 'dark' ? Sun : Moon" :size="16" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -159,6 +165,7 @@ import { useWeatherStore } from './stores/weatherStore'
 import ToastContainer from './components/ToastContainer.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
 import GlobalSearch from './components/GlobalSearch.vue'
+import { Plane, ClipboardList, AlertTriangle, Radio, Ban, Wind, Timer, Octagon, Tornado, Globe, Mountain, Zap, Sun, Moon, Bell, BellOff, Settings, ChevronDown } from 'lucide-vue-next'
 
 const { notificationsEnabled, toggleNotifications } = useAlertNotifications()
 
@@ -176,7 +183,7 @@ const showSettings = ref(false)
 const openDropdown = ref<string | null>(null)
 
 const aviationRoutes = ['/airports', '/pireps', '/sigmets', '/cwas', '/tfrs', '/winds-aloft', '/delays', '/ground-stops']
-const hazardRoutes = ['/hurricanes', '/earthquakes', '/volcanic-ash', '/lightning', '/space-weather']
+const hazardRoutes = ['/hurricanes', '/earthquakes', '/volcanic-ash', '/lightning', '/space-weather', '/air-quality', '/astronomical']
 
 let dropdownCloseTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -240,7 +247,9 @@ onMounted(() => {
 
 <style scoped>
 .app-header {
-  background-color: var(--header-bg, #ee0000);
+  background-color: rgba(238, 0, 0, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   color: white;
   padding: 8px 0;
   box-shadow: 0 2px 4px var(--shadow, rgba(0, 0, 0, 0.1));
@@ -355,8 +364,8 @@ nav > a.router-link-active {
 }
 
 .caret {
-  font-size: 10px;
   margin-left: 2px;
+  vertical-align: middle;
 }
 
 .nav-dropdown {
@@ -371,6 +380,19 @@ nav > a.router-link-active {
   padding: 6px 0;
   display: flex;
   flex-direction: column;
+  animation: dropdown-reveal 0.15s ease-out;
+  transform-origin: top left;
+}
+
+@keyframes dropdown-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 /* Invisible bridge so mouse can travel from trigger to dropdown */
@@ -438,7 +460,7 @@ nav > a.router-link-active {
   width: 32px;
   height: 32px;
   padding: 0;
-  font-size: 16px;
+  color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -458,7 +480,7 @@ nav > a.router-link-active {
   width: 32px;
   height: 32px;
   padding: 0;
-  font-size: 16px;
+  color: white;
   cursor: pointer;
   display: flex;
   align-items: center;

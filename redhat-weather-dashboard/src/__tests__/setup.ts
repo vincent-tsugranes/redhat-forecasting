@@ -1,5 +1,27 @@
 import { vi } from 'vitest'
 
+// Mock EventSource (not available in jsdom)
+class MockEventSource {
+  static readonly CONNECTING = 0
+  static readonly OPEN = 1
+  static readonly CLOSED = 2
+  readonly CONNECTING = 0
+  readonly OPEN = 1
+  readonly CLOSED = 2
+  readyState = MockEventSource.OPEN
+  url: string
+  onopen: ((ev: Event) => void) | null = null
+  onmessage: ((ev: MessageEvent) => void) | null = null
+  onerror: ((ev: Event) => void) | null = null
+  private listeners: Record<string, Array<(ev: MessageEvent) => void>> = {}
+  constructor(url: string) { this.url = url }
+  addEventListener(type: string, listener: (ev: MessageEvent) => void) { (this.listeners[type] ??= []).push(listener) }
+  removeEventListener(type: string, listener: (ev: MessageEvent) => void) { this.listeners[type] = (this.listeners[type] ?? []).filter(l => l !== listener) }
+  close() { this.readyState = MockEventSource.CLOSED }
+  dispatchEvent(_event: Event) { return true }
+}
+Object.defineProperty(globalThis, 'EventSource', { value: MockEventSource, writable: true })
+
 // Mock leaflet
 vi.mock('leaflet', () => {
   const mockMap = {
@@ -23,7 +45,9 @@ vi.mock('leaflet', () => {
   return {
     default: {
       map: vi.fn(() => mockMap),
-      tileLayer: vi.fn(() => mockTileLayer),
+      tileLayer: Object.assign(vi.fn(() => mockTileLayer), {
+        wms: vi.fn(() => ({ ...mockTileLayer, setOpacity: vi.fn() })),
+      }),
       marker: vi.fn(() => mockMarker),
       divIcon: vi.fn(() => ({})),
       popup: vi.fn(() => ({ setContent: vi.fn().mockReturnThis(), getElement: vi.fn() })),

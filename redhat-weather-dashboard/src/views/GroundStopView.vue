@@ -25,13 +25,13 @@
 
     <div v-if="!loading && groundStops.length > 0" class="stats-bar">
       <span class="stat-chip stat-alert">
-        <span aria-hidden="true">🛑</span> {{ filteredStops.length }} {{ $t('groundStop.active') }}
+        <Octagon :size="14" aria-hidden="true" /> {{ filteredStops.length }} {{ $t('groundStop.active') }}
       </span>
       <span v-if="gdpCount > 0" class="stat-chip">
-        <span aria-hidden="true">⏳</span> {{ gdpCount }} {{ $t('groundStop.gdps') }}
+        <Hourglass :size="14" aria-hidden="true" /> {{ gdpCount }} {{ $t('groundStop.gdps') }}
       </span>
       <span v-if="gsCount > 0" class="stat-chip stat-alert">
-        <span aria-hidden="true">🚫</span> {{ gsCount }} {{ $t('groundStop.groundStops') }}
+        <Ban :size="14" aria-hidden="true" /> {{ gsCount }} {{ $t('groundStop.groundStops') }}
       </span>
     </div>
 
@@ -85,7 +85,7 @@
     </ErrorBoundary>
 
     <div v-if="!loading && groundStops.length === 0" class="card">
-      <p><span aria-hidden="true">✅</span> {{ $t('groundStop.noActive') }}</p>
+      <p><ShieldCheck :size="16" aria-hidden="true" /> {{ $t('groundStop.noActive') }}</p>
       <p>{{ $t('groundStop.autoFetch') }}</p>
     </div>
   </div>
@@ -100,6 +100,7 @@ import type { GroundStop } from '../services/weatherService'
 import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import ErrorBoundary from '../components/ErrorBoundary.vue'
+import { Octagon, Hourglass, Ban, ShieldCheck } from 'lucide-vue-next'
 
 const store = useWeatherStore()
 const toast = useToast()

@@ -9,7 +9,7 @@
           :class="'toast-' + toast.type"
           role="status"
         >
-          <span class="toast-icon" aria-hidden="true">{{ getIcon(toast.type) }}</span>
+          <span class="toast-icon" aria-hidden="true"><component :is="getIcon(toast.type)" :size="16" /></span>
           <span class="toast-message">{{ toast.message }}</span>
         </div>
       </TransitionGroup>
@@ -18,15 +18,17 @@
 </template>
 
 <script setup lang="ts">
+import type { Component } from 'vue'
 import { useToast } from '../composables/useToast'
+import { Check, X, Info } from 'lucide-vue-next'
 
 const { toasts } = useToast()
 
-function getIcon(type: string): string {
+function getIcon(type: string): Component {
   switch (type) {
-    case 'success': return '\u2713'
-    case 'error': return '\u2717'
-    default: return '\u2139'
+    case 'success': return Check
+    case 'error': return X
+    default: return Info
   }
 }
 </script>

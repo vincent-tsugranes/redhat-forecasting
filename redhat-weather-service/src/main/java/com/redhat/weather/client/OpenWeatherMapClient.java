@@ -43,4 +43,26 @@ public interface OpenWeatherMapClient {
                             @QueryParam("lon") double lon,
                             @QueryParam("appid") String appid,
                             @QueryParam("units") String units);
+
+    @GET
+    @Path("/air_pollution")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Retry(maxRetries = 2, delay = 1000, jitter = 500,
+           retryOn = {WebApplicationException.class, IOException.class})
+    @CircuitBreaker(requestVolumeThreshold = 10, failureRatio = 0.5,
+                    delay = 120000, successThreshold = 3)
+    String getAirPollution(@QueryParam("lat") double lat,
+                           @QueryParam("lon") double lon,
+                           @QueryParam("appid") String appid);
+
+    @GET
+    @Path("/uvi")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Retry(maxRetries = 2, delay = 1000, jitter = 500,
+           retryOn = {WebApplicationException.class, IOException.class})
+    @CircuitBreaker(requestVolumeThreshold = 10, failureRatio = 0.5,
+                    delay = 120000, successThreshold = 3)
+    String getUvIndex(@QueryParam("lat") double lat,
+                      @QueryParam("lon") double lon,
+                      @QueryParam("appid") String appid);
 }

@@ -4,7 +4,7 @@
       <div v-for="day in dailyForecasts" :key="day.date" class="daily-card">
         <div class="day-name">{{ day.dayName }}</div>
         <div class="day-date">{{ day.dateLabel }}</div>
-        <div class="day-icon" aria-hidden="true">{{ day.icon }}</div>
+        <div class="day-icon" aria-hidden="true"><component :is="day.icon" :size="24" /></div>
         <div class="day-condition">{{ day.condition }}</div>
         <div class="day-temps">
           <span class="temp-high">{{ formatTemp(day.highF) }}</span>
@@ -16,16 +16,16 @@
         <div class="day-details">
           <div v-if="day.windMph != null" class="wind-row">
             <span v-if="day.windDir != null" class="wind-arrow" :style="{ transform: 'rotate(' + (day.windDir + 180) + 'deg)' }" aria-hidden="true">&#x2191;</span>
-            <span v-else aria-hidden="true">&#x1F4A8;</span>
+            <Wind v-else :size="12" aria-hidden="true" />
             {{ formatSpeed(day.windMph) }}
             <span v-if="day.windDir != null" class="wind-dir-label">{{ compassDir(day.windDir) }}</span>
           </div>
           <div v-if="day.precipChance != null" class="precip-row">
-            <span aria-hidden="true">&#x2614;</span> {{ day.precipChance }}%
+            <CloudRain :size="12" aria-hidden="true" /> {{ day.precipChance }}%
             <div class="precip-bar-bg"><div class="precip-bar-fill" :style="{ width: day.precipChance + '%' }"></div></div>
           </div>
           <div v-if="day.humidity != null" class="humidity-row">
-            <span aria-hidden="true">&#x1F4A7;</span> {{ day.humidity }}%
+            <Droplets :size="12" aria-hidden="true" /> {{ day.humidity }}%
           </div>
         </div>
       </div>
@@ -34,11 +34,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type Component } from 'vue'
 import { type WeatherForecast } from '../services/weatherService'
 import { getWeatherIcon } from '../utils/weatherIcons'
 import { useUnitPreferences } from '../composables/useUnitPreferences'
 import { computeFeelsLike, degreesToCompass } from '../utils/weatherCalc'
+import { Wind, CloudRain, Droplets } from 'lucide-vue-next'
 
 const { formatTemp, formatSpeed } = useUnitPreferences()
 
@@ -50,7 +51,7 @@ interface DailyForecast {
   date: string
   dayName: string
   dateLabel: string
-  icon: string
+  icon: Component
   condition: string
   highF: number
   lowF: number

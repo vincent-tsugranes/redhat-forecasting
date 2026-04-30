@@ -8,17 +8,17 @@
     </div>
     <div v-else-if="solarData" class="solar-grid">
       <div class="solar-item">
-        <div class="solar-icon" aria-hidden="true">🌅</div>
+        <div class="solar-icon" aria-hidden="true"><Sun :size="20" /></div>
         <div class="solar-label">{{ $t('solar.sunrise') }}</div>
         <div class="solar-value">{{ solarData.sunrise }}</div>
       </div>
       <div class="solar-item">
-        <div class="solar-icon" aria-hidden="true">🌇</div>
+        <div class="solar-icon" aria-hidden="true"><Moon :size="20" /></div>
         <div class="solar-label">{{ $t('solar.sunset') }}</div>
         <div class="solar-value">{{ solarData.sunset }}</div>
       </div>
       <div class="solar-item">
-        <div class="solar-icon" aria-hidden="true">⏱️</div>
+        <div class="solar-icon" aria-hidden="true"><Timer :size="20" /></div>
         <div class="solar-label">{{ $t('solar.dayLength') }}</div>
         <div class="solar-value">{{ solarData.dayLengthFormatted }}</div>
       </div>
@@ -49,6 +49,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import weatherService, { type SolarData } from '../services/weatherService'
+import { Sun, Moon, Timer } from 'lucide-vue-next'
 
 const props = defineProps<{
   locationId: number

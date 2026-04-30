@@ -7,7 +7,7 @@
           Updated {{ formatRelativeTime(lastRefreshed) }}
         </span>
         <button class="btn-sm btn-icon" :aria-label="$t('dashboard.refreshAriaLabel')" @click="handleRefresh">
-          <span aria-hidden="true">🔄</span> {{ $t('dashboard.refreshData') }}
+          <RefreshCw :size="14" aria-hidden="true" /> {{ $t('dashboard.refreshData') }}
         </button>
       </div>
     </div>
@@ -40,83 +40,92 @@
     <DataStatusCard />
     <FavoriteWeatherCards />
 
-    <DashboardSkeleton v-if="loading" />
-    <div v-if="error" class="error">{{ error }}</div>
+    <div v-if="airportsError" class="error">{{ airportsError }}</div>
 
-    <div v-if="!loading" class="stats-bar">
+    <div class="stats-bar">
       <router-link to="/airports" class="stat-chip-link">
-        <span class="stat-chip">
-          <span aria-hidden="true">✈️</span> <strong>{{ airports.length.toLocaleString() }}</strong> Airports
+        <span class="stat-chip" :class="{ 'stat-loading': airportsLoading }">
+          <Plane :size="12" aria-hidden="true" /> <strong v-if="!airportsLoading">{{ airportCountAnimated.toLocaleString() }}</strong><span v-else class="stat-dot-loader"></span> Airports
         </span>
       </router-link>
-      <router-link v-if="hurricanes.length > 0" to="/hurricanes" class="stat-chip-link">
-        <span class="stat-chip stat-alert">
-          <span aria-hidden="true">🌀</span> <strong>{{ hurricanes.length }}</strong> Storms
+      <router-link v-if="hurricanesLoading || hurricanes.length > 0" to="/hurricanes" class="stat-chip-link">
+        <span class="stat-chip stat-alert" :class="{ 'stat-loading': hurricanesLoading }">
+          <Tornado :size="12" aria-hidden="true" /> <strong v-if="!hurricanesLoading">{{ hurricaneCountAnimated }}</strong><span v-else class="stat-dot-loader"></span> Storms
         </span>
       </router-link>
       <router-link to="/earthquakes" class="stat-chip-link">
-        <span class="stat-chip">
-          <span aria-hidden="true">🌍</span> <strong>{{ earthquakes.length }}</strong> Quakes
+        <span class="stat-chip" :class="{ 'stat-loading': earthquakesLoading }">
+          <Globe :size="12" aria-hidden="true" /> <strong v-if="!earthquakesLoading">{{ earthquakeCountAnimated }}</strong><span v-else class="stat-dot-loader"></span> Quakes
         </span>
       </router-link>
-      <span class="stat-chip" v-if="alerts.length > 0" :class="{ 'stat-alert': true }">
-        <span aria-hidden="true">⚠️</span> <strong>{{ alerts.length }}</strong> Alerts
+      <span class="stat-chip stat-alert" v-if="alerts.length > 0">
+        <AlertTriangle :size="12" aria-hidden="true" /> <strong>{{ alerts.length }}</strong> Alerts
       </span>
       <router-link to="/pireps" class="stat-chip-link">
-        <span class="stat-chip">
-          <span aria-hidden="true">📋</span> <strong>{{ pireps.length }}</strong> PIREPs
+        <span class="stat-chip" :class="{ 'stat-loading': pirepsLoading }">
+          <ClipboardList :size="12" aria-hidden="true" /> <strong v-if="!pirepsLoading">{{ pirepCountAnimated }}</strong><span v-else class="stat-dot-loader"></span> PIREPs
         </span>
       </router-link>
       <router-link to="/sigmets" class="stat-chip-link">
-        <span class="stat-chip" :class="{ 'stat-alert': worstSigmetSeverity === 'severe' }">
-          <span aria-hidden="true">🚨</span> <strong>{{ sigmets.length }}</strong> SIGMETs
+        <span class="stat-chip" :class="{ 'stat-alert': worstSigmetSeverity === 'severe', 'stat-loading': sigmetsLoading }">
+          <AlertTriangle :size="12" aria-hidden="true" /> <strong v-if="!sigmetsLoading">{{ sigmetCountAnimated }}</strong><span v-else class="stat-dot-loader"></span> SIGMETs
         </span>
       </router-link>
-      <router-link v-if="tfrs.length > 0" to="/tfrs" class="stat-chip-link">
+      <router-link v-if="tfrsLoading || tfrs.length > 0" to="/tfrs" class="stat-chip-link">
+        <span class="stat-chip" :class="{ 'stat-loading': tfrsLoading }">
+          <Ban :size="12" aria-hidden="true" /> <strong v-if="!tfrsLoading">{{ tfrCountAnimated }}</strong><span v-else class="stat-dot-loader"></span> TFRs
+        </span>
+      </router-link>
+      <router-link v-if="cwasLoading || cwas.length > 0" to="/cwas" class="stat-chip-link">
+        <span class="stat-chip" :class="{ 'stat-loading': cwasLoading }">
+          <Radio :size="12" aria-hidden="true" /> <strong v-if="!cwasLoading">{{ cwaCountAnimated }}</strong><span v-else class="stat-dot-loader"></span> CWAs
+        </span>
+      </router-link>
+      <router-link v-if="groundStopsLoading || groundStops.length > 0" to="/ground-stops" class="stat-chip-link">
+        <span class="stat-chip stat-alert" :class="{ 'stat-loading': groundStopsLoading }">
+          <Octagon :size="12" aria-hidden="true" /> <strong v-if="!groundStopsLoading">{{ groundStopCountAnimated }}</strong><span v-else class="stat-dot-loader"></span> Ground Stops
+        </span>
+      </router-link>
+      <router-link v-if="volcanicAshLoading || volcanicAsh.length > 0" to="/volcanic-ash" class="stat-chip-link">
+        <span class="stat-chip stat-alert" :class="{ 'stat-loading': volcanicAshLoading }">
+          <Mountain :size="12" aria-hidden="true" /> <strong v-if="!volcanicAshLoading">{{ volcanicAshCountAnimated }}</strong><span v-else class="stat-dot-loader"></span> Volcanic Ash
+        </span>
+      </router-link>
+      <router-link v-if="lightningLoading || lightning.length > 0" to="/lightning" class="stat-chip-link">
+        <span class="stat-chip" :class="{ 'stat-loading': lightningLoading }">
+          <Zap :size="12" aria-hidden="true" /> <strong v-if="!lightningLoading">{{ lightningCountAnimated }}</strong><span v-else class="stat-dot-loader"></span> Lightning
+        </span>
+      </router-link>
+      <router-link to="/astronomical" class="stat-chip-link">
         <span class="stat-chip">
-          <span aria-hidden="true">🚫</span> <strong>{{ tfrs.length }}</strong> TFRs
+          <Sun :size="12" aria-hidden="true" /> Astronomy
         </span>
       </router-link>
-      <router-link v-if="cwas.length > 0" to="/cwas" class="stat-chip-link">
-        <span class="stat-chip">
-          <span aria-hidden="true">📡</span> <strong>{{ cwas.length }}</strong> CWAs
+      <router-link to="/air-quality" class="stat-chip-link">
+        <span class="stat-chip" :class="{ 'stat-loading': airQualityLoading }">
+          <Wind :size="12" aria-hidden="true" /> <strong v-if="!airQualityLoading && airQuality">AQI {{ airQuality.aqi }}</strong><span v-else-if="airQualityLoading" class="stat-dot-loader"></span><strong v-else>AQI</strong> Air Quality
         </span>
       </router-link>
-      <router-link v-if="groundStops.length > 0" to="/ground-stops" class="stat-chip-link">
-        <span class="stat-chip stat-alert">
-          <span aria-hidden="true">🛑</span> <strong>{{ groundStops.length }}</strong> Ground Stops
-        </span>
-      </router-link>
-      <router-link v-if="volcanicAsh.length > 0" to="/volcanic-ash" class="stat-chip-link">
-        <span class="stat-chip stat-alert">
-          <span aria-hidden="true">🌋</span> <strong>{{ volcanicAsh.length }}</strong> Volcanic Ash
-        </span>
-      </router-link>
-      <router-link v-if="lightning.length > 0" to="/lightning" class="stat-chip-link">
-        <span class="stat-chip">
-          <span aria-hidden="true">⚡</span> <strong>{{ lightning.length }}</strong> Lightning
-        </span>
-      </router-link>
-      <router-link v-if="delayedAirports > 0" to="/delays" class="stat-chip-link">
-        <span class="stat-chip stat-alert">
-          <span aria-hidden="true">⏱️</span> <strong>{{ delayedAirports }}</strong> Delays
+      <router-link v-if="delaysLoading || delayedAirports > 0" to="/delays" class="stat-chip-link">
+        <span class="stat-chip stat-alert" :class="{ 'stat-loading': delaysLoading }">
+          <Timer :size="12" aria-hidden="true" /> <strong v-if="!delaysLoading">{{ delayCountAnimated }}</strong><span v-else class="stat-dot-loader"></span> Delays
         </span>
       </router-link>
     </div>
 
     <!-- What's happening now -->
-    <div v-if="!loading && situationSummary" class="card situation-card">
-      <h2><span aria-hidden="true">📡</span> Situation Summary</h2>
+    <div v-if="situationSummary" class="card situation-card">
+      <h2><Radio :size="18" aria-hidden="true" /> Situation Summary</h2>
       <p class="situation-text">{{ situationSummary }}</p>
     </div>
 
-    <div v-if="!loading" class="dashboard-grid">
+    <div class="dashboard-grid">
       <div class="dashboard-main">
 
         <!-- Weather alerts summary -->
         <div v-if="alerts.length > 0" class="card alerts-summary-card">
           <div class="card-header-row">
-            <h2><span aria-hidden="true">⚠️</span> Active Alerts</h2>
+            <h2><AlertTriangle :size="18" aria-hidden="true" /> Active Alerts</h2>
             <span class="alert-count-badge" :class="'severity-' + highestAlertSeverity">{{ filteredAlerts.length }}/{{ alerts.length }}</span>
           </div>
           <div class="alert-filter-row">
@@ -152,24 +161,27 @@
         </div>
 
         <!-- Airport delays & ground stops -->
-        <div v-if="delayedAirports > 0 || groundStops.length > 0" class="card">
+        <div v-if="delaysLoading || groundStopsLoading || delayedAirports > 0 || groundStops.length > 0" class="card">
           <div class="card-header-row">
-            <h2><span aria-hidden="true">⏱️</span> Delays &amp; Ground Stops</h2>
+            <h2><Timer :size="18" aria-hidden="true" /> Delays &amp; Ground Stops</h2>
             <router-link to="/delays">
               <button class="btn-sm btn-outline">View All</button>
             </router-link>
           </div>
+          <div v-if="delaysLoading || groundStopsLoading" class="card-inline-skeleton">
+            <SkeletonLoader width="80%" height="16px" /><SkeletonLoader width="60%" height="16px" />
+          </div>
           <!-- Ground stops -->
-          <div v-if="groundStops.length > 0" class="gs-list">
+          <div v-else-if="groundStops.length > 0" class="gs-list">
             <div v-for="gs in groundStops" :key="gs.id" class="gs-item">
-              <span class="gs-icon" aria-hidden="true">🛑</span>
+              <Octagon :size="14" aria-hidden="true" class="gs-icon" />
               <strong>{{ gs.airportCode }}</strong>
               <span class="gs-label">Ground Stop</span>
               <span v-if="gs.reason" class="gs-reason">{{ gs.reason }}</span>
             </div>
           </div>
           <!-- Delayed airports -->
-          <div v-if="delayedAirportsList.length > 0" class="delay-list">
+          <div v-if="!delaysLoading && !groundStopsLoading && delayedAirportsList.length > 0" class="delay-list">
             <div v-for="d in delayedAirportsList" :key="d.id" class="delay-item">
               <router-link :to="{ path: '/airports', query: { code: d.airportCode } }" class="delay-code">{{ d.airportCode }}</router-link>
               <span class="delay-type-label">{{ d.delayType }}</span>
@@ -182,12 +194,15 @@
         <!-- Recent earthquakes table -->
         <div class="card">
           <div class="card-header-row">
-            <h2><span aria-hidden="true">🌍</span> {{ $t('dashboard.earthquakeMonitor') }}</h2>
+            <h2><Globe :size="18" aria-hidden="true" /> {{ $t('dashboard.earthquakeMonitor') }}</h2>
             <router-link to="/earthquakes">
               <button class="btn-sm btn-outline">{{ $t('dashboard.viewEarthquakes') }}</button>
             </router-link>
           </div>
-          <div v-if="earthquakes.length > 0" class="table-wrapper">
+          <div v-if="earthquakesLoading" class="card-inline-skeleton">
+            <SkeletonLoader width="100%" height="16px" /><SkeletonLoader width="90%" height="16px" /><SkeletonLoader width="95%" height="16px" />
+          </div>
+          <div v-else-if="earthquakes.length > 0" class="table-wrapper">
             <table class="data-table" aria-label="Recent earthquakes">
               <thead>
                 <tr>
@@ -215,12 +230,15 @@
         <!-- Active storms -->
         <div class="card">
           <div class="card-header-row">
-            <h2><span aria-hidden="true">🌀</span> {{ $t('dashboard.hurricaneTracking') }}</h2>
+            <h2><Tornado :size="18" aria-hidden="true" /> {{ $t('dashboard.hurricaneTracking') }}</h2>
             <router-link to="/hurricanes">
               <button class="btn-sm btn-outline">{{ $t('dashboard.viewHurricanes') }}</button>
             </router-link>
           </div>
-          <div v-if="hurricanes.length > 0" class="table-wrapper">
+          <div v-if="hurricanesLoading" class="card-inline-skeleton">
+            <SkeletonLoader width="100%" height="16px" /><SkeletonLoader width="85%" height="16px" /><SkeletonLoader width="90%" height="16px" />
+          </div>
+          <div v-else-if="hurricanes.length > 0" class="table-wrapper">
             <table class="data-table" aria-label="Active tropical storms">
               <thead>
                 <tr>
@@ -250,14 +268,17 @@
         </div>
 
         <!-- PIREP hazard summary -->
-        <div v-if="pireps.length > 0" class="card">
+        <div v-if="pirepsLoading || pireps.length > 0" class="card">
           <div class="card-header-row">
-            <h2><span aria-hidden="true">📋</span> PIREP Hazard Summary</h2>
+            <h2><ClipboardList :size="18" aria-hidden="true" /> PIREP Hazard Summary</h2>
             <router-link to="/pireps">
               <button class="btn-sm btn-outline">View PIREPs</button>
             </router-link>
           </div>
-          <div class="hazard-summary">
+          <div v-if="pirepsLoading" class="card-inline-skeleton">
+            <SkeletonLoader width="60%" height="16px" /><SkeletonLoader width="40%" height="16px" />
+          </div>
+          <div v-else class="hazard-summary">
             <div v-if="pirepHazards.turbulence > 0" class="hazard-chip hazard-turb">
               <span class="hazard-count">{{ pirepHazards.turbulence }}</span>
               <span>Turbulence</span>
@@ -278,14 +299,17 @@
         </div>
 
         <!-- TFR breakdown -->
-        <div v-if="tfrs.length > 0" class="card">
+        <div v-if="tfrsLoading || tfrs.length > 0" class="card">
           <div class="card-header-row">
-            <h2><span aria-hidden="true">🚫</span> Active TFRs</h2>
+            <h2><Ban :size="18" aria-hidden="true" /> Active TFRs</h2>
             <router-link to="/tfrs">
               <button class="btn-sm btn-outline">View TFRs</button>
             </router-link>
           </div>
-          <div class="tfr-breakdown">
+          <div v-if="tfrsLoading" class="card-inline-skeleton">
+            <SkeletonLoader width="50%" height="16px" /><SkeletonLoader width="35%" height="16px" />
+          </div>
+          <div v-else class="tfr-breakdown">
             <div v-for="(count, type) in tfrByType" :key="type" class="tfr-type-chip">
               <span class="tfr-type-count">{{ count }}</span>
               <span class="tfr-type-label">{{ type }}</span>
@@ -294,10 +318,10 @@
         </div>
 
         <!-- SIGMET/CWA hazard list -->
-        <div v-if="sigmets.length > 0 || cwas.length > 0" class="card">
+        <div v-if="sigmetsLoading || cwasLoading || sigmets.length > 0 || cwas.length > 0" class="card">
           <div class="card-header-row">
             <h2>
-              <span aria-hidden="true">🚨</span> Aviation Hazards
+              <AlertTriangle :size="18" aria-hidden="true" /> Aviation Hazards
               <span v-if="worstSigmetSeverity === 'severe'" class="hazard-severity-dot severity-severe-dot"></span>
               <span v-else-if="sigmets.some(s => s.sigmetType === 'CONVECTIVE')" class="hazard-severity-dot severity-convective-dot"></span>
             </h2>
@@ -305,7 +329,10 @@
               <button class="btn-sm btn-outline">View All</button>
             </router-link>
           </div>
-          <div class="aviation-hazard-list">
+          <div v-if="sigmetsLoading || cwasLoading" class="card-inline-skeleton">
+            <SkeletonLoader width="90%" height="16px" /><SkeletonLoader width="75%" height="16px" /><SkeletonLoader width="80%" height="16px" />
+          </div>
+          <div v-else class="aviation-hazard-list">
             <div v-for="s in sigmets.slice(0, 5)" :key="s.id" class="aviation-hazard-item" :class="{ 'hazard-convective': s.sigmetType === 'CONVECTIVE' }">
               <span class="hazard-type-badge" :class="s.sigmetType === 'CONVECTIVE' ? 'badge-convective' : 'badge-sigmet'">{{ s.sigmetType === 'CONVECTIVE' ? 'CONV' : 'SIGMET' }}</span>
               <span class="hazard-detail">{{ s.hazard || s.sigmetType }}</span>
@@ -324,14 +351,17 @@
         </div>
 
         <!-- Volcanic ash detail -->
-        <div v-if="volcanicAsh.length > 0" class="card">
+        <div v-if="volcanicAshLoading || volcanicAsh.length > 0" class="card">
           <div class="card-header-row">
-            <h2><span aria-hidden="true">🌋</span> Volcanic Ash Advisories</h2>
+            <h2><Mountain :size="18" aria-hidden="true" /> Volcanic Ash Advisories</h2>
             <router-link to="/volcanic-ash">
               <button class="btn-sm btn-outline">View All</button>
             </router-link>
           </div>
-          <div class="volcanic-ash-list">
+          <div v-if="volcanicAshLoading" class="card-inline-skeleton">
+            <SkeletonLoader width="70%" height="16px" /><SkeletonLoader width="55%" height="16px" />
+          </div>
+          <div v-else class="volcanic-ash-list">
             <div v-for="va in volcanicAsh.slice(0, 5)" :key="va.id" class="va-item">
               <span class="va-name">{{ va.volcanoName || 'Unknown Volcano' }}</span>
               <span v-if="va.firName" class="va-fir">{{ va.firName }}</span>
@@ -343,10 +373,10 @@
 
         <!-- Recent activity feed -->
         <div v-if="activityFeed.length > 0" class="card">
-          <h2><span aria-hidden="true">🕐</span> Recent Activity</h2>
+          <h2><Clock :size="18" aria-hidden="true" /> Recent Activity</h2>
           <div class="activity-feed">
             <div v-for="item in activityFeed" :key="item.key" class="activity-item">
-              <span class="activity-icon" aria-hidden="true">{{ item.icon }}</span>
+              <component :is="item.icon" :size="14" aria-hidden="true" class="activity-icon" />
               <span class="activity-text">{{ item.text }}</span>
               <span class="activity-time">{{ item.timeAgo }}</span>
             </div>
@@ -357,8 +387,15 @@
       <!-- Right column: map + space weather -->
       <div class="dashboard-sidebar">
         <!-- Space weather card -->
-        <div v-if="spaceWeather" class="card space-weather-card">
-          <h3><span aria-hidden="true">☀️</span> Space Weather</h3>
+        <div v-if="spaceWeatherLoading" class="card space-weather-card">
+          <h3><Sun :size="16" aria-hidden="true" /> Space Weather</h3>
+          <div class="card-inline-skeleton">
+            <SkeletonLoader width="50%" height="20px" /><SkeletonLoader width="50%" height="20px" />
+            <SkeletonLoader width="50%" height="20px" /><SkeletonLoader width="50%" height="20px" />
+          </div>
+        </div>
+        <div v-else-if="spaceWeather" class="card space-weather-card">
+          <h3><Sun :size="16" aria-hidden="true" /> Space Weather</h3>
           <div class="sw-grid">
             <div class="sw-item">
               <div class="sw-label">Kp Index</div>
@@ -387,7 +424,7 @@
         </div>
 
         <div class="card map-card">
-          <h2><span aria-hidden="true">🗺️</span> {{ $t('dashboard.globalMap') }}</h2>
+          <h2><MapIcon :size="18" aria-hidden="true" /> {{ $t('dashboard.globalMap') }}</h2>
           <div class="dashboard-map">
             <ErrorBoundary>
               <UnifiedMap />
@@ -400,17 +437,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, type Component } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
+import { useDashboardSSE } from '../composables/useDashboardSSE'
 import { formatRelativeTime } from '../utils/dateUtils'
 import UnifiedMap from '../components/UnifiedMap.vue'
 import ErrorBoundary from '../components/ErrorBoundary.vue'
 import DataStatusCard from '../components/DataStatusCard.vue'
-import DashboardSkeleton from '../components/skeletons/DashboardSkeleton.vue'
+import SkeletonLoader from '../components/SkeletonLoader.vue'
 import FavoriteWeatherCards from '../components/FavoriteWeatherCards.vue'
+import {
+  RefreshCw, Plane, Tornado, Globe, AlertTriangle, ClipboardList,
+  Ban, Radio, Octagon, Mountain, Zap, Timer, Sun, MapIcon, Clock,
+} from '../utils/icons'
+import { useAnimatedNumber } from '../composables/useAnimatedNumber'
 
 const router = useRouter()
 const store = useWeatherStore()
@@ -428,10 +471,24 @@ const {
   volcanicAsh,
   lightning,
   spaceWeather,
-  airportsLoading: loading,
-  airportsError: error,
+  airportsLoading,
+  airportsError,
+  hurricanesLoading,
+  earthquakesLoading,
+  pirepsLoading,
+  sigmetsLoading,
+  tfrsLoading,
+  cwasLoading,
+  delaysLoading,
+  groundStopsLoading,
+  volcanicAshLoading,
+  lightningLoading,
+  spaceWeatherLoading,
+  airQuality,
+  airQualityLoading,
 } = storeToRefs(store)
 const toast = useToast()
+const { connect: connectSSE, disconnect: disconnectSSE } = useDashboardSSE()
 
 const lastRefreshed = ref<string | null>(null)
 const alertMinSeverity = ref<string>('extreme')
@@ -444,10 +501,22 @@ const severityOptions = [
 ]
 const quickSearch = ref('')
 const quickSearchResults = ref<{ id: number; airportCode?: string; name: string }[]>([])
-let autoRefreshInterval: ReturnType<typeof setInterval> | null = null
+
 
 const delayedAirports = computed(() => delays.value.filter(d => d.isDelayed).length)
 const delayedAirportsList = computed(() => delays.value.filter(d => d.isDelayed).slice(0, 8))
+
+const airportCountAnimated = useAnimatedNumber(computed(() => airports.value.length))
+const hurricaneCountAnimated = useAnimatedNumber(computed(() => hurricanes.value.length))
+const earthquakeCountAnimated = useAnimatedNumber(computed(() => earthquakes.value.length))
+const pirepCountAnimated = useAnimatedNumber(computed(() => pireps.value.length))
+const sigmetCountAnimated = useAnimatedNumber(computed(() => sigmets.value.length))
+const tfrCountAnimated = useAnimatedNumber(computed(() => tfrs.value.length))
+const cwaCountAnimated = useAnimatedNumber(computed(() => cwas.value.length))
+const groundStopCountAnimated = useAnimatedNumber(computed(() => groundStops.value.length))
+const volcanicAshCountAnimated = useAnimatedNumber(computed(() => volcanicAsh.value.length))
+const lightningCountAnimated = useAnimatedNumber(computed(() => lightning.value.length))
+const delayCountAnimated = useAnimatedNumber(delayedAirports)
 
 const highestAlertSeverity = computed(() => {
   let highest = 'unknown'
@@ -564,13 +633,13 @@ const situationSummary = computed(() => {
 
 // Recent activity feed — aggregated from fetchedAt timestamps across data sources
 const activityFeed = computed(() => {
-  const items: { key: string; icon: string; text: string; time: number; timeAgo: string }[] = []
+  const items: { key: string; icon: Component; text: string; time: number; timeAgo: string }[] = []
 
   for (const a of alerts.value.slice(0, 3)) {
     if (a.effective) {
       items.push({
         key: `alert-${a.id}`,
-        icon: '⚠️',
+        icon: AlertTriangle,
         text: `${a.event}${a.areaDesc ? ' - ' + a.areaDesc.substring(0, 60) : ''}`,
         time: new Date(a.effective).getTime(),
         timeAgo: formatRelativeTime(a.effective),
@@ -582,7 +651,7 @@ const activityFeed = computed(() => {
     if (s.fetchedAt) {
       items.push({
         key: `storm-${s.id}`,
-        icon: '🌀',
+        icon: Tornado,
         text: `${s.stormName || s.stormId} advisory updated`,
         time: new Date(s.fetchedAt).getTime(),
         timeAgo: formatRelativeTime(s.fetchedAt),
@@ -594,7 +663,7 @@ const activityFeed = computed(() => {
     if (gs.fetchedAt) {
       items.push({
         key: `gs-${gs.id}`,
-        icon: '🛑',
+        icon: Octagon,
         text: `Ground stop at ${gs.airportCode}${gs.reason ? ': ' + gs.reason : ''}`,
         time: new Date(gs.fetchedAt).getTime(),
         timeAgo: formatRelativeTime(gs.fetchedAt),
@@ -605,7 +674,7 @@ const activityFeed = computed(() => {
   for (const eq of earthquakes.value.filter(e => e.magnitude >= 4.5).slice(0, 3)) {
     items.push({
       key: `eq-${eq.id}`,
-      icon: '🌍',
+      icon: Globe,
       text: `M${eq.magnitude} earthquake - ${eq.place}`,
       time: new Date(eq.eventTime).getTime(),
       timeAgo: formatRelativeTime(eq.eventTime),
@@ -616,7 +685,7 @@ const activityFeed = computed(() => {
     if (s.fetchedAt) {
       items.push({
         key: `sigmet-${s.id}`,
-        icon: '🚨',
+        icon: AlertTriangle,
         text: `Convective SIGMET${s.firName ? ' - ' + s.firName : ''}`,
         time: new Date(s.fetchedAt).getTime(),
         timeAgo: formatRelativeTime(s.fetchedAt),
@@ -628,7 +697,7 @@ const activityFeed = computed(() => {
     if (va.fetchedAt) {
       items.push({
         key: `va-${va.id}`,
-        icon: '🌋',
+        icon: Mountain,
         text: `Volcanic ash advisory${va.volcanoName ? ': ' + va.volcanoName : ''}`,
         time: new Date(va.fetchedAt).getTime(),
         timeAgo: formatRelativeTime(va.fetchedAt),
@@ -684,7 +753,10 @@ function getKpClass(kp: number): string {
 
 async function handleRefresh() {
   try {
-    await store.fetchAirports()
+    await Promise.allSettled([
+      store.fetchDashboardData(),
+      store.fetchAirports(),
+    ])
     lastRefreshed.value = new Date().toISOString()
     toast.success('Data refreshed successfully')
   } catch {
@@ -693,43 +765,19 @@ async function handleRefresh() {
 }
 
 onMounted(async () => {
-  // Critical data first
-  await Promise.all([
+  // Fetch all dashboard data in one request + airports separately
+  await Promise.allSettled([
+    store.fetchDashboardData(),
     store.fetchAirports(),
-    store.fetchEarthquakes(),
-    store.fetchHurricanes(),
   ])
   lastRefreshed.value = new Date().toISOString()
 
-  // Secondary data
-  store.fetchAlerts()
-  store.fetchPireps()
-  store.fetchSigmets()
-  store.fetchDelays()
-  store.fetchSpaceWeather()
-
-  // Tertiary data
-  store.fetchTfrs()
-  store.fetchCwas()
-  store.fetchGroundStops()
-  store.fetchVolcanicAsh()
-  store.fetchLightning()
-
-  // Auto-refresh every 5 minutes
-  autoRefreshInterval = setInterval(() => {
-    store.fetchAlerts()
-    store.fetchDelays()
-    store.fetchGroundStops()
-    store.fetchSpaceWeather()
-    lastRefreshed.value = new Date().toISOString()
-  }, 5 * 60_000)
+  // Connect SSE for live updates (replaces polling)
+  connectSSE()
 })
 
 onUnmounted(() => {
-  if (autoRefreshInterval) {
-    clearInterval(autoRefreshInterval)
-    autoRefreshInterval = null
-  }
+  disconnectSSE()
 })
 </script>
 
@@ -1292,6 +1340,40 @@ onUnmounted(() => {
     align-items: flex-start;
     gap: 4px;
   }
+}
+
+/* Per-section inline skeleton */
+.card-inline-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+/* Stat chip loading state */
+.stat-loading {
+  opacity: 0.7;
+}
+
+.stat-dot-loader {
+  display: inline-block;
+  width: 18px;
+  height: 12px;
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-base, #e0e0e0) 25%,
+    var(--skeleton-shine, #f0f0f0) 50%,
+    var(--skeleton-base, #e0e0e0) 75%
+  );
+  background-size: 200% 100%;
+  animation: stat-shimmer 1.5s ease-in-out infinite;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+@keyframes stat-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 /* Clickable stat chips */

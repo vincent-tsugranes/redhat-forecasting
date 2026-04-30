@@ -5,11 +5,13 @@
     :aria-label="active ? $t('favorites.remove') : $t('favorites.add')"
     @click="$emit('toggle')"
   >
-    <span aria-hidden="true">{{ active ? '★' : '☆' }}</span>
+    <component :is="active ? Star : StarOff" :size="20" aria-hidden="true" />
   </button>
 </template>
 
 <script setup lang="ts">
+import { Star, StarOff } from 'lucide-vue-next'
+
 defineProps<{
   active: boolean
 }>()

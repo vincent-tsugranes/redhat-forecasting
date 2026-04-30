@@ -1,6 +1,6 @@
 <template>
   <div v-if="favorites.length > 0" class="favorites-section">
-    <h2><span aria-hidden="true">★</span> {{ $t('favorites.title') }}</h2>
+    <h2><Star :size="20" aria-hidden="true" style="display:inline;vertical-align:middle" /> {{ $t('favorites.title') }}</h2>
     <div class="favorites-chips">
       <div v-for="fav in favorites" :key="fav.id" class="favorite-chip">
         <router-link :to="{ name: 'forecasts', query: { locationId: fav.id } }" class="chip-link">
@@ -19,6 +19,7 @@
 </template>
 
 <script setup lang="ts">
+import { Star } from 'lucide-vue-next'
 import { useFavorites } from '../composables/useFavorites'
 
 const { favorites, removeFavorite } = useFavorites()

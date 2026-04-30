@@ -4,7 +4,9 @@ import com.redhat.weather.domain.entity.LocationEntity;
 import com.redhat.weather.domain.repository.LocationRepository;
 import com.redhat.weather.service.AirportDelayService;
 import com.redhat.weather.service.AirportWeatherService;
+import com.redhat.weather.service.AirQualityService;
 import com.redhat.weather.service.CwaService;
+import com.redhat.weather.service.DashboardSseBroadcaster;
 import com.redhat.weather.service.DataFreshnessService;
 import com.redhat.weather.service.EarthquakeService;
 import com.redhat.weather.service.GroundStopService;
@@ -82,10 +84,16 @@ public class WeatherDataScheduler {
     LightningService lightningService;
 
     @Inject
+    AirQualityService airQualityService;
+
+    @Inject
     LocationRepository locationRepository;
 
     @Inject
     DataFreshnessService dataFreshnessService;
+
+    @Inject
+    DashboardSseBroadcaster sseBroadcaster;
 
     @Inject
     MeterRegistry meterRegistry;
@@ -134,6 +142,9 @@ public class WeatherDataScheduler {
 
     @ConfigProperty(name = "weather.scheduler.lightning.enabled", defaultValue = "false")
     boolean lightningEnabled;
+
+    @ConfigProperty(name = "weather.scheduler.air-quality.enabled", defaultValue = "true")
+    boolean airQualityEnabled;
 
     @ConfigProperty(name = "weather.scheduler.airport.batch-size", defaultValue = "500")
     int airportBatchSize;
@@ -184,6 +195,7 @@ public class WeatherDataScheduler {
                             hurricaneService.fetchAndStoreActiveStorms();
                             dataFreshnessService.recordSuccess("nhc-hurricane");
                             meterRegistry.counter("weather_scheduler_execution_total", "job", "nhc-hurricane", "result", "success").increment();
+                            try { sseBroadcaster.broadcast("hurricanes", hurricaneService.getActiveStorms()); } catch (Exception sse) { LOG.debug("SSE broadcast failed", sse); }
                         } catch (Exception e) {
                             meterRegistry.counter("weather_scheduler_execution_total", "job", "nhc-hurricane", "result", "failure").increment();
                             LOG.error("Initial hurricane fetch failed", e);
@@ -254,6 +266,12 @@ public class WeatherDataScheduler {
                     initialFetches.add(CompletableFuture.runAsync(() -> {
                         LOG.info("Initial fetch: Lightning");
                         fetchLightning();
+                    }));
+                }
+                if (airQualityEnabled) {
+                    initialFetches.add(CompletableFuture.runAsync(() -> {
+                        LOG.info("Initial fetch: Air quality");
+                        fetchAirQuality();
                     }));
                 }
 
@@ -468,6 +486,7 @@ public class WeatherDataScheduler {
             dataFreshnessService.recordSuccess("nhc-hurricane");
             meterRegistry.counter("weather_scheduler_execution_total", "job", "nhc-hurricane", "result", "success").increment();
             LOG.info("Tropical cyclone data fetch completed");
+            try { sseBroadcaster.broadcast("hurricanes", hurricaneService.getActiveStorms()); } catch (Exception sse) { LOG.debug("SSE broadcast failed", sse); }
 
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "nhc-hurricane", "result", "failure").increment();
@@ -493,6 +512,7 @@ public class WeatherDataScheduler {
             dataFreshnessService.recordSuccess("noaa-alerts");
             meterRegistry.counter("weather_scheduler_execution_total", "job", "noaa-alerts", "result", "success").increment();
             LOG.info("Weather alerts fetch completed");
+            try { sseBroadcaster.broadcast("alerts", weatherAlertService.getActiveAlerts()); } catch (Exception sse) { LOG.debug("SSE broadcast failed", sse); }
 
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "noaa-alerts", "result", "failure").increment();
@@ -517,6 +537,7 @@ public class WeatherDataScheduler {
             dataFreshnessService.recordSuccess("usgs-earthquake");
             meterRegistry.counter("weather_scheduler_execution_total", "job", "usgs-earthquake", "result", "success").increment();
             LOG.info("Earthquake data fetch completed");
+            try { sseBroadcaster.broadcast("earthquakes", earthquakeService.getRecentEarthquakes()); } catch (Exception sse) { LOG.debug("SSE broadcast failed", sse); }
 
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "usgs-earthquake", "result", "failure").increment();
@@ -540,6 +561,7 @@ public class WeatherDataScheduler {
             dataFreshnessService.recordSuccess("awc-pireps");
             meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-pireps", "result", "success").increment();
             LOG.info("PIREP data fetch completed");
+            try { sseBroadcaster.broadcast("pireps", pirepService.getRecentPireps()); } catch (Exception sse) { LOG.debug("SSE broadcast failed", sse); }
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-pireps", "result", "failure").increment();
             LOG.error("Error in PIREP scheduler", e);
@@ -564,6 +586,7 @@ public class WeatherDataScheduler {
             dataFreshnessService.recordSuccess("awc-sigmets");
             meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-sigmets", "result", "success").increment();
             LOG.info("SIGMET/AIRMET data fetch completed (domestic + international)");
+            try { sseBroadcaster.broadcast("sigmets", sigmetService.getActiveSigmets()); } catch (Exception sse) { LOG.debug("SSE broadcast failed", sse); }
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-sigmets", "result", "failure").increment();
             LOG.error("Error in SIGMET scheduler", e);
@@ -586,6 +609,7 @@ public class WeatherDataScheduler {
             dataFreshnessService.recordSuccess("faa-delays");
             meterRegistry.counter("weather_scheduler_execution_total", "job", "faa-delays", "result", "success").increment();
             LOG.info("Airport delay data fetch completed");
+            try { sseBroadcaster.broadcast("delays", airportDelayService.getActiveDelays()); } catch (Exception sse) { LOG.debug("SSE broadcast failed", sse); }
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "faa-delays", "result", "failure").increment();
             LOG.error("Error in airport delay scheduler", e);
@@ -609,6 +633,7 @@ public class WeatherDataScheduler {
             dataFreshnessService.recordSuccess("awc-cwas");
             meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-cwas", "result", "success").increment();
             LOG.info("CWA data fetch completed");
+            try { sseBroadcaster.broadcast("cwas", cwaService.getActiveCwas()); } catch (Exception sse) { LOG.debug("SSE broadcast failed", sse); }
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-cwas", "result", "failure").increment();
             LOG.error("Error in CWA scheduler", e);
@@ -631,6 +656,7 @@ public class WeatherDataScheduler {
             dataFreshnessService.recordSuccess("faa-tfrs");
             meterRegistry.counter("weather_scheduler_execution_total", "job", "faa-tfrs", "result", "success").increment();
             LOG.info("TFR data fetch completed");
+            try { sseBroadcaster.broadcast("tfrs", tfrService.getActiveTfrs()); } catch (Exception sse) { LOG.debug("SSE broadcast failed", sse); }
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "faa-tfrs", "result", "failure").increment();
             LOG.error("Error in TFR scheduler", e);
@@ -675,6 +701,7 @@ public class WeatherDataScheduler {
             dataFreshnessService.recordSuccess("faa-ground-stops");
             meterRegistry.counter("weather_scheduler_execution_total", "job", "faa-ground-stops", "result", "success").increment();
             LOG.info("Ground stop data fetch completed");
+            try { sseBroadcaster.broadcast("groundStops", groundStopService.getActiveGroundStops()); } catch (Exception sse) { LOG.debug("SSE broadcast failed", sse); }
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "faa-ground-stops", "result", "failure").increment();
             LOG.error("Error in ground stop scheduler", e);
@@ -698,6 +725,7 @@ public class WeatherDataScheduler {
             dataFreshnessService.recordSuccess("awc-volcanic-ash");
             meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-volcanic-ash", "result", "success").increment();
             LOG.info("Volcanic ash advisory fetch completed");
+            try { sseBroadcaster.broadcast("volcanicAsh", volcanicAshService.getActiveAdvisories()); } catch (Exception sse) { LOG.debug("SSE broadcast failed", sse); }
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "awc-volcanic-ash", "result", "failure").increment();
             LOG.error("Error in volcanic ash scheduler", e);
@@ -721,9 +749,53 @@ public class WeatherDataScheduler {
             dataFreshnessService.recordSuccess("lightning");
             meterRegistry.counter("weather_scheduler_execution_total", "job", "lightning", "result", "success").increment();
             LOG.info("Lightning data fetch completed");
+            try { sseBroadcaster.broadcast("lightning", lightningService.getRecentStrikes()); } catch (Exception sse) { LOG.debug("SSE broadcast failed", sse); }
         } catch (Exception e) {
             meterRegistry.counter("weather_scheduler_execution_total", "job", "lightning", "result", "failure").increment();
             LOG.error("Error in lightning scheduler", e);
+        }
+    }
+
+    /**
+     * Fetch air quality data every 30 minutes
+     */
+    @Scheduled(cron = "0 */30 * * * ?", identity = "air-quality-fetch")
+    public void fetchAirQuality() {
+        if (!airQualityEnabled) {
+            LOG.debug("Air quality scheduler is disabled");
+            return;
+        }
+
+        try {
+            List<LocationEntity> locations = locationRepository.findAirportLocations();
+            int total = locations.size();
+
+            if (total == 0) {
+                LOG.info("No locations found for air quality fetch");
+                return;
+            }
+
+            LOG.info("Starting air quality fetch for " + total + " locations (parallelism=" + parallelism + ")");
+
+            int[] counts = parallelProcess(locations, location -> {
+                airQualityService.fetchAndStoreAirQuality(location.id);
+            }, "air quality");
+            int successCount = counts[0];
+            int failureCount = counts[1];
+
+            LOG.info("Air quality fetch completed. Success: " + successCount + ", Failures: " + failureCount);
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "air-quality", "result", "success").increment(successCount);
+            meterRegistry.counter("weather_scheduler_execution_total", "job", "air-quality", "result", "failure").increment(failureCount);
+
+            if (successCount > 0) {
+                dataFreshnessService.recordSuccess("air-quality");
+            }
+            if (failureCount > 0 && successCount == 0) {
+                LOG.warn("Air quality fetch completely failed for all " + failureCount + " locations");
+            }
+
+        } catch (Exception e) {
+            LOG.error("Error in air quality scheduler", e);
         }
     }
 
@@ -773,6 +845,7 @@ public class WeatherDataScheduler {
             volcanicAshService.deactivateExpired();
             volcanicAshService.deactivateOldEntries(sevenDaysAgo);
             lightningService.deactivateOldStrikes(sevenDaysAgo);
+            airQualityService.deactivateOld(sevenDaysAgo);
 
             LOG.info("Old data cleanup completed");
 

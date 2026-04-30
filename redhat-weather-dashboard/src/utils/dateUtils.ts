@@ -1,4 +1,4 @@
-export type DataType = 'forecast' | 'airport' | 'hurricane' | 'earthquake' | 'space' | 'pirep' | 'sigmet' | 'cwa' | 'tfr' | 'delay' | 'windsAloft' | 'groundStop' | 'volcanicAsh' | 'lightning'
+export type DataType = 'forecast' | 'airport' | 'hurricane' | 'earthquake' | 'space' | 'pirep' | 'sigmet' | 'cwa' | 'tfr' | 'delay' | 'windsAloft' | 'groundStop' | 'volcanicAsh' | 'lightning' | 'airQuality'
 export type FreshnessLevel = 'fresh' | 'aging' | 'stale'
 
 // Thresholds in minutes, matched to scheduler refresh intervals
@@ -17,6 +17,7 @@ const STALENESS_THRESHOLDS: Record<DataType, { aging: number; stale: number }> =
   groundStop: { aging: 4, stale: 8 }, // refreshes every 5 min
   volcanicAsh: { aging: 12, stale: 20 }, // refreshes every 15 min
   lightning: { aging: 4, stale: 8 }, // refreshes every 5 min
+  airQuality: { aging: 25, stale: 45 }, // refreshes every 30 min
 }
 
 export function formatDate(dateString: string): string {

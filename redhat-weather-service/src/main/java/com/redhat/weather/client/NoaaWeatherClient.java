@@ -30,12 +30,13 @@ public interface NoaaWeatherClient {
                         @PathParam("longitude") double longitude);
 
     @GET
+    @Path("/{path: .+}")
     @Produces(MediaType.APPLICATION_JSON)
     @Retry(maxRetries = 2, delay = 3000, jitter = 1000,
            retryOn = {WebApplicationException.class, IOException.class})
     @CircuitBreaker(requestVolumeThreshold = 10, failureRatio = 0.5,
                     delay = 60000, successThreshold = 3)
-    String getForecast(@jakarta.ws.rs.QueryParam("url") String forecastUrl);
+    String getForecast(@PathParam("path") String relativePath);
 
     @GET
     @Path("/alerts/active")

@@ -23,7 +23,7 @@
           @keydown.enter.prevent="selectResult(result)"
           @keydown.space.prevent="selectResult(result)"
         >
-          <span class="result-icon" aria-hidden="true">{{ result.icon }}</span>
+          <span class="result-icon" aria-hidden="true"><component :is="result.icon" :size="16" /></span>
           <div class="result-info">
             <div class="result-title">{{ result.title }}</div>
             <div class="result-subtitle">{{ result.subtitle }}</div>
@@ -34,47 +34,47 @@
     <div class="layer-controls">
       <label class="layer-toggle">
         <input v-model="showAirports" type="checkbox" />
-        <span aria-hidden="true">✈️</span> {{ $t('map.layerAirports') }}
+        <Plane :size="14" aria-hidden="true" /> {{ $t('map.layerAirports') }}
       </label>
       <label class="layer-toggle">
         <input v-model="showEarthquakes" type="checkbox" />
-        <span aria-hidden="true">🌍</span> {{ $t('map.layerEarthquakes') }}
+        <Globe :size="14" aria-hidden="true" /> {{ $t('map.layerEarthquakes') }}
       </label>
       <label class="layer-toggle">
         <input v-model="showHurricanes" type="checkbox" />
-        <span aria-hidden="true">🌀</span> {{ $t('map.layerHurricanes') }}
+        <Tornado :size="14" aria-hidden="true" /> {{ $t('map.layerHurricanes') }}
       </label>
       <label class="layer-toggle">
         <input v-model="showPireps" type="checkbox" />
-        <span aria-hidden="true">📋</span> {{ $t('map.layerPireps') }}
+        <ClipboardList :size="14" aria-hidden="true" /> {{ $t('map.layerPireps') }}
       </label>
       <label class="layer-toggle">
         <input v-model="showSigmets" type="checkbox" />
-        <span aria-hidden="true">🚨</span> {{ $t('map.layerSigmets') }}
+        <AlertTriangle :size="14" aria-hidden="true" /> {{ $t('map.layerSigmets') }}
       </label>
       <label class="layer-toggle">
         <input v-model="showCwas" type="checkbox" />
-        <span aria-hidden="true">📡</span> {{ $t('map.layerCwas') }}
+        <Radio :size="14" aria-hidden="true" /> {{ $t('map.layerCwas') }}
       </label>
       <label class="layer-toggle">
         <input v-model="showTfrs" type="checkbox" />
-        <span aria-hidden="true">🚫</span> {{ $t('map.layerTfrs') }}
+        <Ban :size="14" aria-hidden="true" /> {{ $t('map.layerTfrs') }}
       </label>
       <label class="layer-toggle">
         <input v-model="showGroundStops" type="checkbox" />
-        <span aria-hidden="true">🛑</span> {{ $t('map.layerGroundStops') }}
+        <Octagon :size="14" aria-hidden="true" /> {{ $t('map.layerGroundStops') }}
       </label>
       <label class="layer-toggle">
         <input v-model="showVolcanicAsh" type="checkbox" />
-        <span aria-hidden="true">🌋</span> {{ $t('map.layerVolcanicAsh') }}
+        <Mountain :size="14" aria-hidden="true" /> {{ $t('map.layerVolcanicAsh') }}
       </label>
       <label class="layer-toggle">
         <input v-model="showLightning" type="checkbox" />
-        <span aria-hidden="true">⚡</span> {{ $t('map.layerLightning') }}
+        <Zap :size="14" aria-hidden="true" /> {{ $t('map.layerLightning') }}
       </label>
       <label class="layer-toggle">
         <input v-model="showRadar" type="checkbox" />
-        <span aria-hidden="true">📡</span> {{ $t('map.layerRadar') }}
+        <Radio :size="14" aria-hidden="true" /> {{ $t('map.layerRadar') }}
       </label>
       <div v-if="showRadar" class="radar-controls">
         <select v-model="radarProduct" class="radar-select" :aria-label="$t('map.radarProduct')">
@@ -87,6 +87,22 @@
           {{ $t('map.radarOpacity') }}
           <input v-model.number="radarOpacity" type="range" min="10" max="90" step="10" class="opacity-slider" />
           <span class="opacity-value">{{ radarOpacity }}%</span>
+        </label>
+      </div>
+      <label class="layer-toggle">
+        <input v-model="showSatellite" type="checkbox" />
+        <Satellite :size="14" aria-hidden="true" /> {{ $t('map.layerSatellite') }}
+      </label>
+      <div v-if="showSatellite" class="radar-controls">
+        <select v-model="satelliteProduct" class="radar-select" :aria-label="$t('map.satelliteProduct')">
+          <option value="goes_conus_ir">{{ $t('map.satelliteInfrared') }}</option>
+          <option value="goes_conus_vis">{{ $t('map.satelliteVisible') }}</option>
+          <option value="goes_conus_wv">{{ $t('map.satelliteWaterVapor') }}</option>
+        </select>
+        <label class="opacity-control">
+          {{ $t('map.satelliteOpacity') }}
+          <input v-model.number="satelliteOpacity" type="range" min="10" max="90" step="10" class="opacity-slider" />
+          <span class="opacity-value">{{ satelliteOpacity }}%</span>
         </label>
       </div>
     </div>
@@ -150,12 +166,18 @@
         <div class="legend-title">Lightning</div>
         <div class="legend-item"><span class="legend-dot dot-lightning"></span> Recent Strike</div>
       </div>
+      <div v-if="showSatellite" class="legend-section">
+        <div class="legend-title">{{ $t('map.layerSatellite') }}</div>
+        <div class="legend-item">GOES-16/18 Imagery</div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, shallowRef, watch, onMounted, onBeforeUnmount, nextTick, markRaw } from 'vue'
+import type { Component } from 'vue'
+import { Plane, Globe, Tornado, ClipboardList, AlertTriangle, Radio, Ban, Octagon, Mountain, Zap, Satellite } from 'lucide-vue-next'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { storeToRefs } from 'pinia'
@@ -182,6 +204,7 @@ const groundStopLayer = shallowRef<L.LayerGroup | null>(null)
 const volcanicAshLayer = shallowRef<L.LayerGroup | null>(null)
 const lightningLayer = shallowRef<L.LayerGroup | null>(null)
 const radarLayer = shallowRef<L.TileLayer | null>(null)
+const satelliteLayer = shallowRef<L.TileLayer | null>(null)
 
 const showAirports = ref(true)
 const showEarthquakes = ref(true)
@@ -196,6 +219,9 @@ const showLightning = ref(false)
 const showRadar = ref(false)
 const radarProduct = ref('nexrad-n0q-900913')
 const radarOpacity = ref(50)
+const showSatellite = ref(false)
+const satelliteProduct = ref('goes_conus_ir')
+const satelliteOpacity = ref(50)
 
 function getStormTypeName(basin?: string): string {
   const types: Record<string, string> = { AT: 'Hurricane', EP: 'Hurricane', CP: 'Hurricane', WP: 'Typhoon', IO: 'Cyclone', SH: 'Cyclone' }
@@ -208,7 +234,7 @@ const showResults = ref(false)
 
 interface SearchResult {
   key: string
-  icon: string
+  icon: Component
   title: string
   subtitle: string
   lat: number
@@ -240,7 +266,7 @@ function onSearchInput() {
       ) {
         results.push({
           key: `airport-${apt.id}`,
-          icon: '✈️',
+          icon: Plane,
           title: `${apt.airportCode || ''} - ${apt.name}`,
           subtitle: [apt.state, apt.country].filter(Boolean).join(', '),
           lat: apt.latitude,
@@ -259,7 +285,7 @@ function onSearchInput() {
       if (eq.place?.toLowerCase().includes(query)) {
         results.push({
           key: `eq-${eq.id}`,
-          icon: '🌍',
+          icon: Globe,
           title: `M${eq.magnitude} - ${eq.place}`,
           subtitle: `Depth: ${eq.depthKm} km`,
           lat: eq.latitude,
@@ -279,7 +305,7 @@ function onSearchInput() {
       if (name.toLowerCase().includes(query)) {
         results.push({
           key: `storm-${storm.id}`,
-          icon: '🌀',
+          icon: Tornado,
           title: name,
           subtitle: storm.category != null
             ? (storm.category === 0 ? 'Tropical Storm' : `${getStormTypeName(storm.basin)} Cat ${storm.category}`)
@@ -305,7 +331,7 @@ function onSearchInput() {
       ) {
         results.push({
           key: `tfr-${tfr.id}`,
-          icon: '🚫',
+          icon: Ban,
           title: `TFR ${tfr.notamId}`,
           subtitle: `${tfr.tfrType} - ${tfr.facility}${tfr.state ? ', ' + tfr.state : ''}`,
           lat: tfr.latitude,
@@ -331,7 +357,7 @@ function onSearchInput() {
         if (apt?.latitude && apt?.longitude) {
           results.push({
             key: `gs-${gs.id}`,
-            icon: '🛑',
+            icon: Octagon,
             title: `${gs.airportCode} - ${gs.programType}`,
             subtitle: gs.reason || gs.airportName || '',
             lat: apt.latitude,
@@ -420,6 +446,17 @@ function initMap() {
     `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/${radarProduct.value}/{z}/{x}/{y}.png`,
     { attribution: 'NEXRAD radar data &copy; Iowa State University', opacity: radarOpacity.value / 100, maxZoom: 18 },
   ))
+  satelliteLayer.value = markRaw(L.tileLayer.wms(
+    'https://nowcoast.noaa.gov/geoserver/satellite/wms',
+    {
+      layers: satelliteProduct.value,
+      format: 'image/png',
+      transparent: true,
+      attribution: 'GOES satellite imagery &copy; NOAA',
+      opacity: satelliteOpacity.value / 100,
+      maxZoom: 18,
+    },
+  ))
 
   if (showAirports.value) airportLayer.value.addTo(map.value)
   if (showEarthquakes.value) earthquakeLayer.value.addTo(map.value)
@@ -431,6 +468,7 @@ function initMap() {
   if (showGroundStops.value) groundStopLayer.value.addTo(map.value)
   if (showVolcanicAsh.value) volcanicAshLayer.value.addTo(map.value)
   if (showLightning.value) lightningLayer.value.addTo(map.value)
+  if (showSatellite.value && satelliteLayer.value) satelliteLayer.value.addTo(map.value)
 
   // Intercept airport detail links in popups to use Vue Router
   mapContainer.value.addEventListener('click', (e: Event) => {
@@ -682,7 +720,7 @@ function placeHurricaneMarkers() {
     const marker = L.marker([storm.latitude, storm.longitude], {
       icon: L.divIcon({
         className: 'storm-marker-unified',
-        html: `<div style="background:${color};width:24px;height:24px;border-radius:50%;border:2px solid ${color};display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,0.3)">🌀</div>`,
+        html: `<div style="background:${color};width:24px;height:24px;border-radius:50%;border:2px solid ${color};display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.3)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H3"/><path d="M18 8H6"/><path d="M19 12H9"/><path d="M16 16h-6"/><path d="M11 20H9"/></svg></div>`,
         iconSize: [24, 24],
         iconAnchor: [12, 12],
       }),
@@ -1021,6 +1059,34 @@ watch(radarOpacity, (opacity) => {
   if (radarLayer.value) radarLayer.value.setOpacity(opacity / 100)
 })
 
+watch(showSatellite, (visible) => {
+  if (!map.value || !satelliteLayer.value) return
+  if (visible) map.value.addLayer(satelliteLayer.value)
+  else map.value.removeLayer(satelliteLayer.value)
+})
+
+watch(satelliteProduct, (product) => {
+  if (!map.value || !satelliteLayer.value) return
+  const wasVisible = map.value.hasLayer(satelliteLayer.value)
+  if (wasVisible) map.value.removeLayer(satelliteLayer.value)
+  satelliteLayer.value = markRaw(L.tileLayer.wms(
+    'https://nowcoast.noaa.gov/geoserver/satellite/wms',
+    {
+      layers: product,
+      format: 'image/png',
+      transparent: true,
+      attribution: 'GOES satellite imagery &copy; NOAA',
+      opacity: satelliteOpacity.value / 100,
+      maxZoom: 18,
+    },
+  ))
+  if (wasVisible) map.value.addLayer(satelliteLayer.value)
+})
+
+watch(satelliteOpacity, (opacity) => {
+  if (satelliteLayer.value) satelliteLayer.value.setOpacity(opacity / 100)
+})
+
 // Re-render markers when data changes (shallow watch — store replaces arrays, not mutates)
 watch(airports, placeAirportMarkers)
 watch(earthquakes, placeEarthquakeMarkers)
@@ -1053,6 +1119,7 @@ onBeforeUnmount(() => {
   volcanicAshLayer.value = null
   lightningLayer.value = null
   radarLayer.value = null
+  satelliteLayer.value = null
 })
 </script>
 

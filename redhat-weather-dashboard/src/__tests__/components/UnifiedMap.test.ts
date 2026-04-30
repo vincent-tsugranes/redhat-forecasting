@@ -39,7 +39,7 @@ describe('UnifiedMap', () => {
     await flushPromises()
 
     const checkboxes = wrapper.findAll('.layer-toggle input[type="checkbox"]')
-    expect(checkboxes).toHaveLength(11)
+    expect(checkboxes).toHaveLength(12)
   })
 
   it('renders legend sections based on active layers', async () => {

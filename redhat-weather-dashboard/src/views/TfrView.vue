@@ -26,16 +26,16 @@
 
     <div v-if="!loading && tfrs.length > 0" class="stats-bar">
       <span class="stat-chip">
-        <span aria-hidden="true">🚫</span> {{ filteredTfrs.length }} Active TFRs
+        <Ban :size="14" aria-hidden="true" /> {{ filteredTfrs.length }} Active TFRs
       </span>
       <span v-if="newCount > 0" class="stat-chip stat-alert">
-        <span aria-hidden="true">🆕</span> {{ newCount }} New (24h)
+        <Sparkles :size="14" aria-hidden="true" /> {{ newCount }} New (24h)
       </span>
       <span v-if="securityCount > 0" class="stat-chip stat-alert">
-        <span aria-hidden="true">🔒</span> {{ securityCount }} Security
+        <Lock :size="14" aria-hidden="true" /> {{ securityCount }} Security
       </span>
       <span v-if="hazardCount > 0" class="stat-chip">
-        <span aria-hidden="true">⚠️</span> {{ hazardCount }} Hazards
+        <AlertTriangle :size="14" aria-hidden="true" /> {{ hazardCount }} Hazards
       </span>
     </div>
 
@@ -89,6 +89,7 @@ import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
 import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
 import ErrorBoundary from '../components/ErrorBoundary.vue'
+import { Ban, Sparkles, Lock, AlertTriangle } from 'lucide-vue-next'
 
 const store = useWeatherStore()
 const toast = useToast()

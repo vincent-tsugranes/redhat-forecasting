@@ -18,7 +18,7 @@
 
     <div v-if="!loading" class="stats-bar">
       <span class="stat-chip">
-        <span aria-hidden="true">⚡</span> {{ lightning.length }} {{ $t('lightning.strikes') }}
+        <Zap :size="14" aria-hidden="true" /> {{ lightning.length }} {{ $t('lightning.strikes') }}
       </span>
       <FreshnessBadge v-if="lightning.length > 0 && lightning[0].fetchedAt" :fetched-at="lightning[0].fetchedAt" data-type="lightning" />
     </div>
@@ -66,7 +66,7 @@
     </ErrorBoundary>
 
     <div v-if="!loading && lightning.length === 0" class="card">
-      <p><span aria-hidden="true">✅</span> {{ $t('lightning.noRecent') }}</p>
+      <p><ShieldCheck :size="16" aria-hidden="true" /> {{ $t('lightning.noRecent') }}</p>
       <p>{{ $t('lightning.autoFetch') }}</p>
     </div>
   </div>
@@ -83,6 +83,7 @@ import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
 import FreshnessBadge from '../components/FreshnessBadge.vue'
 import ErrorBoundary from '../components/ErrorBoundary.vue'
 import LightningMap from '../components/LightningMap.vue'
+import { Zap, ShieldCheck } from 'lucide-vue-next'
 
 const store = useWeatherStore()
 const toast = useToast()

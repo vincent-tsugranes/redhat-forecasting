@@ -18,10 +18,10 @@
 
     <div v-if="!loading" class="stats-bar">
       <span class="stat-chip" :class="delayedCount > 0 ? 'stat-alert' : ''">
-        <span aria-hidden="true">🔴</span> {{ delayedCount }} Airports Delayed
+        <CircleDot :size="14" aria-hidden="true" /> {{ delayedCount }} Airports Delayed
       </span>
       <span class="stat-chip">
-        <span aria-hidden="true">⏱️</span> Avg {{ avgDelay ? avgDelay + ' min' : '-' }}
+        <Timer :size="14" aria-hidden="true" /> Avg {{ avgDelay ? avgDelay + ' min' : '-' }}
       </span>
     </div>
 
@@ -61,7 +61,7 @@
         </div>
       </div>
       <div v-else-if="!loading" class="card">
-        <p><span aria-hidden="true">✅</span> {{ $t('delay.noDelays') }}</p>
+        <p><ShieldCheck :size="16" aria-hidden="true" /> {{ $t('delay.noDelays') }}</p>
         <p>{{ $t('delay.autoFetch') }}</p>
       </div>
     </ErrorBoundary>
@@ -75,6 +75,7 @@ import { useWeatherStore } from '../stores/weatherStore'
 import { useToast } from '../composables/useToast'
 import TableSkeleton from '../components/skeletons/TableSkeleton.vue'
 import ErrorBoundary from '../components/ErrorBoundary.vue'
+import { CircleDot, Timer, ShieldCheck } from 'lucide-vue-next'
 
 const store = useWeatherStore()
 const toast = useToast()

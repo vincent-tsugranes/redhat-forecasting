@@ -1,7 +1,7 @@
 <template>
   <div class="global-search-wrapper">
     <button ref="triggerRef" class="search-trigger" aria-label="Open search" @click="openSearch">
-      <span aria-hidden="true">🔍</span>
+      <Search :size="16" aria-hidden="true" />
     </button>
 
     <Teleport to="body">
@@ -9,7 +9,7 @@
         <div v-if="isOpen" class="search-overlay" @click.self="closeSearch">
           <div ref="modalRef" class="search-modal" role="dialog" aria-modal="true" aria-label="Search">
             <div class="search-input-wrapper">
-              <span class="search-icon" aria-hidden="true">🔍</span>
+              <Search :size="18" class="search-icon" aria-hidden="true" />
               <input
                 ref="searchInputRef"
                 v-model="query"
@@ -43,7 +43,7 @@
                   @keydown.space.prevent="navigateTo(item)"
                   @mouseenter="highlightedIndex = flatIndex(group, idx)"
                 >
-                  <span class="result-icon" aria-hidden="true">{{ item.icon }}</span>
+                  <span class="result-icon" aria-hidden="true"><component :is="item.icon" :size="18" /></span>
                   <div class="result-text">
                     <div class="result-name">{{ item.name }}</div>
                     <div v-if="item.detail" class="result-detail">{{ item.detail }}</div>
@@ -60,15 +60,17 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import type { Component } from 'vue'
 import { useRouter } from 'vue-router'
 import { useWeatherStore } from '../stores/weatherStore'
 import { storeToRefs } from 'pinia'
+import { Search, Plane, Globe, Tornado, Octagon, Mountain } from 'lucide-vue-next'
 
 interface SearchResult {
   id: string
   name: string
   detail?: string
-  icon: string
+  icon: Component
   category: 'airports' | 'earthquakes' | 'hurricanes' | 'groundStops' | 'volcanicAsh' | 'lightning'
   route: { name: string; query?: Record<string, string> }
 }
@@ -106,7 +108,7 @@ const results = computed<SearchResult[]>(() => {
         id: `apt-${apt.id}`,
         name: `${code} - ${apt.name}`,
         detail: apt.state || apt.country,
-        icon: '✈️',
+        icon: Plane,
         category: 'airports',
         route: { name: 'forecasts', query: { locationId: String(apt.id) } },
       })
@@ -120,7 +122,7 @@ const results = computed<SearchResult[]>(() => {
         id: `eq-${eq.id}`,
         name: `M${eq.magnitude} - ${eq.place}`,
         detail: eq.alert ? `Alert: ${eq.alert}` : undefined,
-        icon: '🌍',
+        icon: Globe,
         category: 'earthquakes',
         route: { name: 'earthquakes' },
       })
@@ -136,7 +138,7 @@ const results = computed<SearchResult[]>(() => {
         detail: h.category != null
           ? (h.category === 0 ? 'Tropical Storm' : `Cat ${h.category}${h.basin ? ' (' + h.basin + ')' : ''}`)
           : undefined,
-        icon: '🌀',
+        icon: Tornado,
         category: 'hurricanes',
         route: { name: 'hurricanes' },
       })
@@ -150,7 +152,7 @@ const results = computed<SearchResult[]>(() => {
         id: `gs-${gs.id}`,
         name: `${gs.airportCode} - ${gs.programType}`,
         detail: gs.reason || undefined,
-        icon: '🛑',
+        icon: Octagon,
         category: 'groundStops',
         route: { name: 'ground-stops' },
       })
@@ -165,7 +167,7 @@ const results = computed<SearchResult[]>(() => {
         id: `va-${va.id}`,
         name: name || 'Volcanic Ash Advisory',
         detail: va.firName || undefined,
-        icon: '🌋',
+        icon: Mountain,
         category: 'volcanicAsh',
         route: { name: 'volcanic-ash' },
       })
