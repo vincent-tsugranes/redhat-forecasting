@@ -1,16 +1,20 @@
 <template>
   <div class="status-card">
-    <div class="card-header">
+    <button class="card-header" @click="expanded = !expanded" :aria-expanded="expanded">
       <h3><BarChart3 :size="18" aria-hidden="true" style="display:inline;vertical-align:middle" /> {{ $t('status.title') }}</h3>
-      <span
-        class="status-badge"
-        :class="status.loadingComplete ? 'success' : 'warning'"
-        role="status"
-      >
-        <component :is="status.loadingComplete ? Check : AlertTriangle" :size="14" aria-hidden="true" />
-        {{ status.loadingComplete ? $t('status.dataReady') : $t('status.loading') }}
+      <span class="card-header-right">
+        <span
+          class="status-badge"
+          :class="status.loadingComplete ? 'success' : 'warning'"
+          role="status"
+        >
+          <component :is="status.loadingComplete ? Check : AlertTriangle" :size="14" aria-hidden="true" />
+          {{ status.loadingComplete ? $t('status.dataReady') : $t('status.loading') }}
+        </span>
+        <ChevronDown :size="16" aria-hidden="true" class="collapse-icon" :class="{ 'collapse-icon-open': expanded }" />
       </span>
-    </div>
+    </button>
+    <div v-show="expanded" class="card-body">
     <div v-if="loading" class="loading">{{ $t('status.loadingStatus') }}</div>
     <div v-else-if="error" class="error">{{ error }}</div>
     <div v-else class="status-content">
@@ -96,6 +100,7 @@
         </div>
       </div>
     </div>
+    </div>
   </div>
 </template>
 
@@ -104,7 +109,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { Component } from 'vue'
 import api from '../services/api'
 import { logger } from '../utils/logger'
-import { BarChart3, Check, AlertTriangle, CloudSun, Globe, Tornado, Plane, ClipboardList, Ban, Wind, Timer, Octagon, Mountain, Zap, Sun, Radio } from 'lucide-vue-next'
+import { BarChart3, Check, AlertTriangle, CloudSun, Globe, Tornado, Plane, ClipboardList, Ban, Wind, Timer, Octagon, Mountain, Zap, Sun, Radio, ChevronDown } from 'lucide-vue-next'
 
 interface SchedulerInfo {
   name: string
@@ -129,6 +134,8 @@ interface DataStatus {
   dataFreshness: Record<string, string | number>
   schedulers: SchedulerInfo[]
 }
+
+const expanded = ref(false)
 
 const status = ref<DataStatus>({
   airports: 0,
@@ -356,7 +363,33 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.card-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.collapse-icon {
+  transition: transform 0.2s ease;
+  color: var(--text-muted, #999);
+}
+
+.collapse-icon-open {
+  transform: rotate(180deg);
+}
+
+.card-body {
+  margin-top: 10px;
 }
 
 h3 {
